@@ -1,0 +1,30 @@
+.badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.badge-disponible,
+.badge-devuelto {
+  background: #e9f7ef;
+  color: var(--color-success);
+}
+
+.badge-prestado,
+.badge-activo {
+  background: #fff7d6;
+  color: #8a6500;
+}
+
+.badge-danado,
+.badge-vencido {
+  background: #fff0df;
+  color: #a14f00;
+}
+
+.badge-no-disponible {
+  background: #eef0f3;
+  color: var(--color-muted);
+}

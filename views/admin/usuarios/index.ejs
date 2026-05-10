@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">LDAP y aprobación</p>
+        <h1>Usuarios</h1>
+      </div>
+    </section>
+
+    <section class="panel">
+      <form class="toolbar" method="get" action="/admin/usuarios">
+        <label>
+          Buscar
+          <input type="search" name="q" value="<%= filtros.q %>" placeholder="Nombre, documento, correo, ficha">
+        </label>
+        <label>
+          Estado
+          <select name="estado">
+            <option value="">Todos</option>
+            <% ['Pendiente de aprobación', 'Activo', 'Sancionado', 'Suspendido', 'Rechazado'].forEach((estado) => { %>
+              <option value="<%= estado %>" <%= filtros.estado === estado ? 'selected' : '' %>><%= estado %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit">Filtrar</button>
+        <% if (filtros.q || filtros.estado) { %>
+          <a class="secondary-link" href="/admin/usuarios">Limpiar</a>
+        <% } %>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Documento</th>
+              <th>Programa</th>
+              <th>Ficha</th>
+              <th>Estado</th>
+              <th>Préstamos</th>
+              <th>Reservas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!usuarios.length) { %>
+              <tr><td colspan="8">No hay usuarios registrados.</td></tr>
+            <% } %>
+
+            <% usuarios.forEach((usuario) => { %>
+              <tr>
+                <td>
+                  <strong><%= usuario.nombre %></strong>
+                  <small><%= usuario.correo %></small>
+                </td>
+                <td><%= usuario.tipo_documento %> <%= usuario.documento %></td>
+                <td><%= usuario.programa_formacion || 'No registrado' %></td>
+                <td><%= usuario.ficha || 'No registrada' %></td>
+                <td>
+                  <span class="badge <%= usuario.estado === 'Activo' ? 'badge-disponible' : usuario.estado === 'Pendiente de aprobación' ? 'badge-prestado' : 'badge-no-disponible' %>">
+                    <%= usuario.estado %>
+                  </span>
+                </td>
+                <td><%= usuario.prestamos_activos || 0 %></td>
+                <td><%= usuario.reservas_activas || 0 %></td>
+                <td>
+                  <div class="actions">
+                    <% if (usuario.estado === 'Pendiente de aprobación') { %>
+                      <form method="post" action="/admin/usuarios/<%= usuario._id %>/aprobar">
+                        <button type="submit">Aprobar</button>
+                      </form>
+                      <form method="post" action="/admin/usuarios/<%= usuario._id %>/rechazar">
+                        <button class="danger-button" type="submit">Rechazar</button>
+                      </form>
+                    <% } else if (usuario.estado === 'Activo') { %>
+                      <form method="post" action="/admin/usuarios/<%= usuario._id %>/suspender">
+                        <button class="danger-button" type="submit">Suspender</button>
+                      </form>
+                    <% } else { %>
+                      <span class="muted">Sin acciones</span>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

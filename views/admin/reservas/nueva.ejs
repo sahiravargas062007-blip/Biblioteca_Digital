@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/forms.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Reserva directa</p>
+        <h1>Nueva reserva</h1>
+      </div>
+      <a class="secondary-link" href="/admin/reservas">Volver</a>
+    </section>
+
+    <section class="panel">
+      <form method="post" action="/admin/reservas" class="form-stack">
+        <label>
+          Usuario activo
+          <select name="usuario_id" required>
+            <option value="">Seleccione</option>
+            <% usuarios.forEach((usuario) => { %>
+              <option value="<%= usuario._id %>"><%= usuario.nombre %> · <%= usuario.documento %> · reservas activas: <%= usuario.reservas_activas || 0 %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <label>
+          Recurso físico o mixto
+          <select name="recurso_id" required>
+            <option value="">Seleccione</option>
+            <% recursos.forEach((recurso) => { %>
+              <option value="<%= recurso._id %>"><%= recurso.titulo %> · disponibles: <%= recurso.fisico?.ejemplares_disponibles || 0 %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <div class="panel-note">
+          La reserva solo será aceptada si el recurso no tiene ejemplares disponibles y el usuario no tiene sanciones ni supera el límite configurado.
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">Registrar reserva</button>
+          <a class="secondary-link" href="/admin/reservas">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

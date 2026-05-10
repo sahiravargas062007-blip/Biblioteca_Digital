@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Colas de espera</p>
+        <h1>Reservas</h1>
+      </div>
+      <a class="button-link" href="/admin/reservas/nueva">Nueva reserva</a>
+    </section>
+
+    <% if (!grupos.length) { %>
+      <section class="panel"><p>No hay reservas activas.</p></section>
+    <% } %>
+
+    <section class="reservation-grid">
+      <% grupos.forEach((grupo) => { %>
+        <article class="panel reservation-card">
+          <div class="reservation-head">
+            <img src="<%= grupo.recurso_imagen || '/img/placeholder.png' %>" alt="">
+            <div>
+              <h2><%= grupo.recurso_titulo %></h2>
+              <p><%= grupo.tipo %> · <%= grupo.reservas.length %> reserva(s)</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Posición</th>
+                  <th>Usuario</th>
+                  <th>Estado</th>
+                  <th>Límite reclamo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% grupo.reservas.forEach((reserva) => { %>
+                  <tr>
+                    <td><%= reserva.posicion %></td>
+                    <td><strong><%= reserva.usuario_nombre %></strong><small><%= reserva.usuario_documento %></small></td>
+                    <td>
+                      <span class="badge <%= reserva.estado === 'Disponible para reclamar' ? 'badge-disponible' : 'badge-prestado' %>">
+                        <%= reserva.estado %>
+                      </span>
+                    </td>
+                    <td><%= reserva.fecha_limite_reclamo ? new Date(reserva.fecha_limite_reclamo).toLocaleString('es-CO') : 'No asignado' %></td>
+                    <td>
+                      <div class="actions">
+                        <% if (reserva.estado === 'Pendiente') { %>
+                          <form method="post" action="/admin/reservas/<%= reserva._id %>/liberar">
+                            <button type="submit">Liberar turno</button>
+                          </form>
+                        <% } %>
+                        <% if (reserva.estado === 'Disponible para reclamar') { %>
+                          <form method="post" action="/admin/reservas/<%= reserva._id %>/procesar">
+                            <button type="submit">Procesar préstamo</button>
+                          </form>
+                        <% } %>
+                        <form method="post" action="/admin/reservas/<%= reserva._id %>/cancelar">
+                          <input type="hidden" name="motivo_cancelacion" value="Cancelada desde panel administrativo">
+                          <button class="danger-button" type="submit">Cancelar</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+  </main>
+</body>
+</html>

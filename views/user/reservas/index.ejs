@@ -1,0 +1,52 @@
+<%- include('../../partials/userPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Actividad</p>
+    <h1>Mis reservas</h1>
+    <p class="muted">Aqui se mostraran tus reservas activas y el estado de cada solicitud.</p>
+  </section>
+
+  <section class="panel">
+    <% if (!reservas.length) { %>
+      <p>No tienes reservas registradas.</p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Recurso</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Posición</th>
+              <th>Reserva</th>
+              <th>Reclamo hasta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% reservas.forEach((reserva) => { %>
+              <tr>
+                <td><strong><%= reserva.recurso_titulo %></strong></td>
+                <td><%= reserva.tipo %></td>
+                <td>
+                  <span class="badge <%= reserva.estado === 'Disponible para reclamar' ? 'badge-disponible' : reserva.estado === 'Pendiente' ? 'badge-warning' : 'badge-no-disponible' %>"><%= reserva.estado %></span>
+                </td>
+                <td><%= reserva.posicion %></td>
+                <td><%= new Date(reserva.fecha_reserva).toLocaleString('es-CO') %></td>
+                <td><%= reserva.fecha_limite_reclamo ? new Date(reserva.fecha_limite_reclamo).toLocaleString('es-CO') : 'No asignado' %></td>
+                <td>
+                  <% if (['Pendiente', 'Disponible para reclamar'].includes(reserva.estado)) { %>
+                    <form method="post" action="/reservas/<%= reserva._id %>/cancelar">
+                      <button type="submit" class="secondary-link">Cancelar</button>
+                    </form>
+                  <% } else { %>
+                    <span class="muted">No disponible</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+<%- include('../../partials/userPageEnd') %>

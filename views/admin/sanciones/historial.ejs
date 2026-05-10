@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+  <main class="admin-main">
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Auditoría</p>
+        <h1>Historial de sanciones</h1>
+      </div>
+      <a class="secondary-link" href="/admin/sanciones">Activas</a>
+    </section>
+
+    <section class="panel">
+      <form class="toolbar" method="get" action="/admin/sanciones/historial">
+        <label>
+          Buscar
+          <input type="search" name="q" value="<%= filtros.q %>">
+        </label>
+        <label>
+          Estado
+          <select name="estado">
+            <option value="">Todos</option>
+            <% ['Activa', 'Levantada'].forEach((estado) => { %>
+              <option value="<%= estado %>" <%= filtros.estado === estado ? 'selected' : '' %>><%= estado %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit">Filtrar</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Recurso</th>
+              <th>Incidencia</th>
+              <th>Sanción</th>
+              <th>Estado</th>
+              <th>Levantamiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!sanciones.length) { %>
+              <tr><td colspan="6">No hay sanciones registradas.</td></tr>
+            <% } %>
+            <% sanciones.forEach((sancion) => { %>
+              <tr>
+                <td><strong><%= sancion.usuario_nombre %></strong><small><%= sancion.usuario_documento %></small></td>
+                <td><%= sancion.recurso_titulo || 'Sin recurso' %><small><%= sancion.ejemplar_codigo || '' %></small></td>
+                <td><%= sancion.tipo_incidencia %><small><%= sancion.gravedad %></small></td>
+                <td><%= sancion.tipo_sancion %></td>
+                <td><%= sancion.estado %></td>
+                <td>
+                  <small><%= sancion.levantada_por_nombre || 'No aplica' %></small>
+                  <small><%= sancion.fecha_levantamiento ? new Date(sancion.fecha_levantamiento).toLocaleDateString('es-CO') : '' %></small>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

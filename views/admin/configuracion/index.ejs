@@ -1,0 +1,63 @@
+<%- include('../../partials/adminPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Sistema</p>
+    <h1>Configuración</h1>
+    <p class="muted">Ajusta los parámetros de préstamos, reservas y sanciones del sistema.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Préstamos físicos</h2>
+    <form method="post" action="/admin/configuracion?_method=PUT" class="form-stack">
+      <label>
+        Máximo de préstamos activos por usuario
+        <input type="number" name="max_prestamos_fisicos" value="<%= config.prestamos_fisicos.max_recursos_por_usuario %>" min="1" max="20">
+      </label>
+      <label>
+        Días de préstamo (defecto)
+        <input type="number" name="dias_prestamo" value="<%= config.prestamos_fisicos.dias_prestamo_defecto %>" min="1" max="60">
+      </label>
+      <label>
+        Días de renovación
+        <input type="number" name="dias_renovacion" value="<%= config.prestamos_fisicos.dias_renovacion %>" min="1" max="30">
+      </label>
+      <label>
+        Máximo de renovaciones por préstamo
+        <input type="number" name="max_renovaciones" value="<%= config.prestamos_fisicos.max_renovaciones %>" min="0" max="5">
+      </label>
+      <label>
+        Días de tolerancia para vencimiento
+        <input type="number" name="dias_tolerancia" value="<%= config.prestamos_fisicos.dias_tolerancia %>" min="0" max="10">
+      </label>
+
+      <hr>
+
+      <h2>Préstamos digitales</h2>
+      <label>
+        Máximo de préstamos digitales por usuario
+        <input type="number" name="max_prestamos_digitales" value="<%= config.prestamos_digitales.max_prestamos_por_usuario %>" min="1" max="50">
+      </label>
+      <label>
+        Duración defecto (días)
+        <input type="number" name="duracion_digital" value="<%= config.prestamos_digitales.duracion_defecto_dias %>" min="1" max="60">
+      </label>
+      <label>
+        Renovaciones permitidas
+        <input type="number" name="renovaciones_digitales" value="<%= config.prestamos_digitales.renovaciones_permitidas %>" min="0" max="5">
+      </label>
+
+      <hr>
+
+      <h2>Reservas</h2>
+      <label>
+        Máximo de reservas por usuario
+        <input type="number" name="max_reservas" value="<%= config.reservas.max_reservas_por_usuario %>" min="1" max="10">
+      </label>
+      <label>
+        Tiempo máximo de reclamo (horas)
+        <input type="number" name="tiempo_reclamo_horas" value="<%= config.reservas.tiempo_max_reclamo_horas %>" min="1" max="72">
+      </label>
+
+      <button type="submit">Guardar configuración</button>
+    </form>
+  </section>
+<%- include('../../partials/adminPageEnd') %>

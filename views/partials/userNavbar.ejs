@@ -1,0 +1,11 @@
+<nav class="navbar" aria-label="Navegacion principal">
+  <a class="brand-link" href="/catalogo">Biblioteca Digital</a>
+  <div class="navbar-links">
+    <a class="<%= currentPath?.startsWith('/catalogo') ? 'is-active' : '' %>" href="/catalogo">Catalogo</a>
+    <a class="<%= currentPath?.startsWith('/prestamos') ? 'is-active' : '' %>" href="/prestamos">Prestamos</a>
+    <a class="<%= currentPath?.startsWith('/reservas') ? 'is-active' : '' %>" href="/reservas">Reservas</a>
+    <a class="<%= currentPath?.startsWith('/historial') ? 'is-active' : '' %>" href="/historial">Historial</a>
+    <a class="<%= currentPath?.startsWith('/sanciones') ? 'is-active' : '' %>" href="/sanciones">Sanciones</a>
+    <a class="<%= currentPath?.startsWith('/perfil') ? 'is-active' : '' %>" href="/perfil">Perfil</a>
+  </div>
+</nav>

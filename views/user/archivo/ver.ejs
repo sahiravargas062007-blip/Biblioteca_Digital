@@ -1,0 +1,33 @@
+<%- include('../../partials/userPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Acceso digital</p>
+    <h1><%= recurso.titulo %></h1>
+  </section>
+
+  <section class="panel">
+    <p class="muted">Accede al recurso digital dentro de la plataforma.</p>
+
+    <% if (archivo.tipo === 'pdf') { %>
+      <iframe src="<%= archivoViewUrl %>" width="100%" height="800" style="border:none;"></iframe>
+    <% } else if (archivo.tipo === 'epub') { %>
+      <p>Este archivo EPUB no puede verse directamente en el navegador.</p>
+      <a class="button-link" href="<%= archivo.url %>" target="_blank" rel="noreferrer">Abrir EPUB</a>
+    <% } else if (archivo.tipo === 'mp3') { %>
+      <audio controls src="<%= archivoViewUrl || archivo.url %>" style="width:100%;"></audio>
+    <% } else if (archivo.tipo === 'mp4') { %>
+      <video controls src="<%= archivoViewUrl || archivo.url %>" style="width:100%; max-height:650px;"></video>
+    <% } else { %>
+      <p>No es posible mostrar este archivo en el visor.</p>
+      <a class="button-link" href="<%= archivo.url %>" target="_blank" rel="noreferrer">Abrir archivo</a>
+    <% } %>
+
+    <p class="muted">Si no se visualiza correctamente, usa el enláce anterior para abrirlo en otra pestaña.</p>
+    
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+      <% if (downloadLink) { %>
+        <a class="button-link" href="<%= downloadLink %>">Descargar</a>
+      <% } %>
+      <a class="secondary-link" href="<%= backUrl %>">Volver</a>
+    </div>
+  </section>
+<%- include('../../partials/userPageEnd') %>

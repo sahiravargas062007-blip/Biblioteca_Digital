@@ -1,0 +1,55 @@
+<%- include('../../partials/userPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Actividad</p>
+    <h1>Historial</h1>
+    <p class="muted">Aquí se lista el historial de préstamos, devoluciones y consultas realizadas.</p>
+  </section>
+
+  <% if (!prestamos.length) { %>
+    <section class="panel">
+      <p>No hay historial de préstamos aún.</p>
+    </section>
+  <% } else { %>
+    <% prestamos.forEach((prestamo) => { %>
+      <section class="panel historial-panel">
+        <div class="historial-header">
+          <h2><%= prestamo.tipo %> · <%= prestamo.items.length %> recurso(s)</h2>
+          <span class="badge <%= prestamo.estado === 'Devuelto' ? 'badge-disponible' : 'badge-no-disponible' %>">
+            <%= prestamo.estado %>
+          </span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Recurso</th>
+                <th>Inicio</th>
+                <th>Vencimiento</th>
+                <th>Devolución</th>
+                <th>Días usados</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% prestamo.items.forEach((item) => { %>
+                <tr>
+                  <td><strong><%= item.recurso_titulo %></strong></td>
+                  <td><%= new Date(item.fecha_inicio).toLocaleString('es-CO') %></td>
+                  <td><%= new Date(item.fecha_limite).toLocaleString('es-CO') %></td>
+                  <td><%= item.fecha_devolucion_real ? new Date(item.fecha_devolucion_real).toLocaleString('es-CO') : 'Pendiente' %></td>
+                  <td><%= item.diasUsados || '-' %></td>
+                  <td>
+                    <span class="badge badge-<%= item.estado === 'Devuelto' ? 'disponible' : 'no-disponible' %>">
+                      <%= item.estado %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% }) %>
+  <% } %>
+<%- include('../../partials/userPageEnd') %>

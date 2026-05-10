@@ -1,0 +1,87 @@
+<%- include('../../partials/userPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Estado del usuario</p>
+    <h1>Mis sanciones</h1>
+    <p class="muted">Consulta tus sanciones activas e historial de sanciones levantadas.</p>
+  </section>
+
+  <% if (!sanciones.length) { %>
+    <section class="panel">
+      <p class="success-message">No tienes sanciones registradas. ¡Continúa así!</p>
+    </section>
+  <% } else { %>
+    <% if (sancionsActivas > 0) { %>
+      <section class="panel alert-panel">
+        <h2>Sanciones activas</h2>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Incidencia</th>
+                <th>Gravedad</th>
+                <th>Observaciones</th>
+                <th>Registrada</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% sanciones.forEach((sancion) => {
+                if (sancion.estaVigente) { %>
+                <tr>
+                  <td><strong><%= sancion.tipo_sancion %></strong></td>
+                  <td><%= sancion.tipo_incidencia %></td>
+                  <td>
+                    <span class="badge <%= sancion.gravedad === 'Grave' ? 'badge-no-disponible' : sancion.gravedad === 'Moderada' ? 'badge-warning' : 'badge-disponible' %>">
+                      <%= sancion.gravedad %>
+                    </span>
+                  </td>
+                  <td><small><%= sancion.observaciones || '-' %></small></td>
+                  <td><%= new Date(sancion.creado_en).toLocaleString('es-CO') %></td>
+                  <td>
+                    <% if (sancion.tipo_sancion === 'Suspensión' && sancion.diasFaltantes) { %>
+                      <span class="badge badge-warning"><%= sancion.diasFaltantes %> días</span>
+                    <% } else { %>
+                      <span class="badge badge-no-disponible">Activa</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }
+              }); %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (sancionsHistorico > 0) { %>
+      <section class="panel">
+        <h2>Historial de sanciones</h2>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Incidencia</th>
+                <th>Registrada</th>
+                <th>Levantada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% sanciones.forEach((sancion) => {
+                if (sancion.estado === 'Levantada') { %>
+                <tr>
+                  <td><strong><%= sancion.tipo_sancion %></strong></td>
+                  <td><%= sancion.tipo_incidencia %></td>
+                  <td><%= new Date(sancion.creado_en).toLocaleString('es-CO') %></td>
+                  <td><%= sancion.fecha_levantamiento ? new Date(sancion.fecha_levantamiento).toLocaleString('es-CO') : '-' %></td>
+                </tr>
+              <% }
+              }); %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+  <% } %>
+<%- include('../../partials/userPageEnd') %>

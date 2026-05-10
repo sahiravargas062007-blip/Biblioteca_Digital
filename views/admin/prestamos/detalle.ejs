@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow"><%= prestamo.tipo %></p>
+        <h1><%= prestamo.usuario_nombre %></h1>
+      </div>
+      <a class="secondary-link" href="/admin/prestamos">Volver</a>
+    </section>
+
+    <section class="panel detail-info">
+      <p><strong>Documento:</strong> <%= prestamo.usuario_documento %></p>
+      <p><strong>Estado general:</strong> <span class="badge <%= prestamo.estado === 'Devuelto' ? 'badge-disponible' : prestamo.estado === 'Vencido' ? 'badge-danado' : 'badge-prestado' %>"><%= prestamo.estado %></span></p>
+      <p><strong>Registrado:</strong> <%= new Date(prestamo.creado_en).toLocaleString('es-CO') %></p>
+    </section>
+
+    <section class="loan-item-grid">
+      <% prestamo.items.forEach((item) => { %>
+        <article class="panel loan-item">
+          <div class="resource-card-meta">
+            <span class="badge <%= item.estado === 'Devuelto' ? 'badge-disponible' : item.estado === 'Vencido' ? 'badge-danado' : 'badge-prestado' %>"><%= item.estado %></span>
+            <span class="badge badge-no-disponible"><%= item.codigo_inventario %></span>
+          </div>
+          <h2><%= item.recurso_titulo %></h2>
+          <p><strong>Inicio:</strong> <%= new Date(item.fecha_inicio).toLocaleDateString('es-CO') %></p>
+          <p><strong>Límite:</strong> <%= new Date(item.fecha_limite).toLocaleDateString('es-CO') %></p>
+          <p><strong>Tolerancia:</strong> <%= item.dias_tolerancia || 0 %> días</p>
+
+          <% if (['Activo', 'Vencido'].includes(item.estado)) { %>
+            <form class="form-stack" method="post" action="/admin/devoluciones">
+              <input type="hidden" name="prestamo_id" value="<%= prestamo._id %>">
+              <input type="hidden" name="item_id" value="<%= item._id %>">
+              <label>
+                Estado al devolver
+                <select name="estado_ejemplar_al_devolver">
+                  <option value="Bueno">Bueno</option>
+                  <option value="Dañado">Dañado</option>
+                  <option value="Perdido">Perdido</option>
+                </select>
+              </label>
+              <label>
+                Observaciones
+                <textarea name="observaciones" rows="2"></textarea>
+              </label>
+              <button type="submit">Registrar devolución</button>
+            </form>
+
+            <% if (!item.renovado && item.estado === 'Activo') { %>
+              <form method="post" action="/admin/prestamos/<%= prestamo._id %>/renovar">
+                <input type="hidden" name="item_id" value="<%= item._id %>">
+                <button class="secondary-action" type="submit">Renovar</button>
+              </form>
+            <% } %>
+
+            <details class="sanction-box">
+              <summary>Registrar sanción</summary>
+              <form class="form-stack" method="post" action="/admin/sanciones">
+                <input type="hidden" name="redirect_to" value="/admin/prestamos/<%= prestamo._id %>">
+                <input type="hidden" name="usuario_id" value="<%= prestamo.usuario_id %>">
+                <input type="hidden" name="prestamo_id" value="<%= prestamo._id %>">
+                <input type="hidden" name="item_prestamo_id" value="<%= item._id %>">
+                <input type="hidden" name="recurso_titulo" value="<%= item.recurso_titulo %>">
+                <input type="hidden" name="ejemplar_codigo" value="<%= item.codigo_inventario %>">
+                <label>
+                  Incidencia
+                  <select name="tipo_incidencia">
+                    <option value="Retraso">Retraso</option>
+                    <option value="Daño">Daño</option>
+                    <option value="Pérdida">Pérdida</option>
+                  </select>
+                </label>
+                <label>
+                  Gravedad
+                  <select name="gravedad">
+                    <option value="Leve">Leve</option>
+                    <option value="Moderada">Moderada</option>
+                    <option value="Grave">Grave</option>
+                  </select>
+                </label>
+                <label>
+                  Tipo de sanción
+                  <select name="tipo_sancion">
+                    <option value="">Sugerida por configuración</option>
+                    <option value="Advertencia">Advertencia</option>
+                    <option value="Suspensión">Suspensión</option>
+                    <option value="Reposición">Reposición</option>
+                  </select>
+                </label>
+                <label>
+                  Días suspensión
+                  <input type="number" name="dias_suspension" min="0">
+                </label>
+                <label>
+                  Observaciones
+                  <textarea name="observaciones" rows="2"></textarea>
+                </label>
+                <button type="submit">Confirmar sanción</button>
+              </form>
+            </details>
+          <% } else { %>
+            <p><strong>Devuelto:</strong> <%= item.fecha_devolucion_real ? new Date(item.fecha_devolucion_real).toLocaleString('es-CO') : 'No registrado' %></p>
+            <p><strong>Observación:</strong> <%= item.devolucion?.observaciones || 'Sin observaciones' %></p>
+          <% } %>
+        </article>
+      <% }) %>
+    </section>
+  </main>
+</body>
+</html>

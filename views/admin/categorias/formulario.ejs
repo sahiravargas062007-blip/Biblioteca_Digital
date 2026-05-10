@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/forms.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Clasificación bibliográfica</p>
+        <h1><%= categoria ? 'Editar categoría' : 'Nueva categoría' %></h1>
+      </div>
+      <a class="secondary-link" href="/admin/categorias">Volver</a>
+    </section>
+
+    <section class="panel">
+      <form method="post" action="<%= categoria ? `/admin/categorias/${categoria._id}?_method=PUT` : '/admin/categorias' %>" class="form-stack">
+        <div class="field-row">
+          <label>
+            Nombre de la categoría
+            <input name="nombre" required value="<%= categoria?.nombre || '' %>">
+          </label>
+          <label>
+            Código Dewey
+            <input name="codigo_dewey" value="<%= categoria?.codigo_dewey || '' %>">
+          </label>
+          <label>
+            Estado
+            <select name="activa">
+              <option value="true" <%= !categoria || categoria.activa ? 'selected' : '' %>>Activa</option>
+              <option value="false" <%= categoria && !categoria.activa ? 'selected' : '' %>>Inactiva</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Descripción
+          <textarea name="descripcion" rows="3"><%= categoria?.descripcion || '' %></textarea>
+        </label>
+
+        <div class="subheading-row">
+          <h2>Subcategorías</h2>
+          <button type="button" data-add-subcategoria="#subcategorias">Agregar subcategoría</button>
+        </div>
+
+        <div id="subcategorias" class="subcategoria-list">
+          <% const subcategorias = categoria?.subcategorias?.length ? categoria.subcategorias : [{ nombre: '', codigo_dewey: '', descripcion: '' }]; %>
+          <% subcategorias.forEach((subcategoria) => { %>
+            <div class="subcategoria-row">
+              <label>
+                Nombre
+                <input name="sub_nombre" value="<%= subcategoria.nombre || '' %>">
+              </label>
+              <label>
+                Código Dewey
+                <input name="sub_codigo_dewey" value="<%= subcategoria.codigo_dewey || '' %>">
+              </label>
+              <label>
+                Descripción
+                <input name="sub_descripcion" value="<%= subcategoria.descripcion || '' %>">
+              </label>
+              <button type="button" class="danger-button" data-remove-subcategoria>Quitar</button>
+            </div>
+          <% }) %>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit"><%= categoria ? 'Guardar cambios' : 'Crear categoría' %></button>
+          <a class="secondary-link" href="/admin/categorias">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/js/admin/categorias.js"></script>
+</body>
+</html>

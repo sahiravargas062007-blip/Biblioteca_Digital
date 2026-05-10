@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow"><%= recurso.tipo_contenido %> · <%= recurso.tipo_material %></p>
+        <h1><%= recurso.titulo %></h1>
+      </div>
+      <div class="actions">
+        <a class="secondary-link" href="/admin/recursos">Volver</a>
+        <a class="button-link" href="/admin/recursos/<%= recurso._id %>/editar">Editar</a>
+        <form method="post" action="/admin/recursos/<%= recurso._id %>?_method=DELETE" onsubmit="return confirm('¿Eliminar este recurso y sus ejemplares?');">
+          <button class="danger-button" type="submit">Eliminar</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="resource-detail">
+      <div class="panel">
+        <img class="detail-cover" src="<%= recurso.imagen?.url || '/img/placeholder.png' %>" alt="">
+      </div>
+
+      <div class="panel detail-info">
+        <div class="resource-card-meta">
+          <span class="badge <%= recurso.estado === 'Activo' ? 'badge-disponible' : 'badge-no-disponible' %>"><%= recurso.estado %></span>
+          <span class="badge badge-no-disponible"><%= recurso.tipo_naturaleza %></span>
+        </div>
+        <p><strong>Autor:</strong> <%= recurso.autor %></p>
+        <p><strong>Editorial:</strong> <%= recurso.editorial || 'No registrada' %></p>
+        <p><strong>Idioma:</strong> <%= recurso.idioma || 'No registrado' %></p>
+        <% if (recurso.isbn) { %><p><strong>ISBN:</strong> <%= recurso.isbn %></p><% } %>
+        <% if (recurso.cantidad_paginas) { %><p><strong>Páginas:</strong> <%= recurso.cantidad_paginas %></p><% } %>
+        <% if (recurso.duracion_segundos) { %><p><strong>Duración:</strong> <%= recurso.duracion_segundos %> segundos</p><% } %>
+        <p><%= recurso.descripcion %></p>
+        <div class="tag-list">
+          <% recurso.categorias.forEach((categoria) => { %>
+            <span class="tag"><%= categoria.categoria_nombre %><% if (categoria.subcategoria_nombre) { %> · <%= categoria.subcategoria_nombre %><% } %></span>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <% if (recurso.digital) { %>
+      <section class="panel">
+        <h2>Disponibilidad digital</h2>
+        <p><strong>Licencia:</strong> <%= recurso.digital.tipo_licencia %></p>
+        <p><strong>Estado:</strong> <%= recurso.digital.estado_disponibilidad || 'No definido' %></p>
+        <% if (recurso.digital.licencia) { %>
+          <p><strong>Usuarios simultáneos:</strong> <%= recurso.digital.licencia.usuarios_simultaneos %></p>
+          <p><strong>Duración:</strong> <%= recurso.digital.licencia.duracion_prestamo %> <%= recurso.digital.licencia.unidad_duracion %></p>
+        <% } %>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Principal</th>
+                <th>URL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (!recurso.digital.archivos?.length) { %>
+                <tr><td colspan="3">No hay archivos digitales registrados.</td></tr>
+              <% } %>
+              <% recurso.digital.archivos?.forEach((archivo) => { %>
+                <tr>
+                  <td><%= archivo.tipo %></td>
+                  <td><%= archivo.es_principal ? 'Sí' : 'No' %></td>
+                  <td><a href="<%= archivo.url %>" target="_blank" rel="noreferrer">Abrir</a></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (recurso.fisico) { %>
+      <section class="panel">
+        <h2>Ejemplares físicos</h2>
+        <p><strong>Total:</strong> <%= recurso.fisico.total_ejemplares %> · <strong>Disponibles:</strong> <%= recurso.fisico.ejemplares_disponibles %></p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Estado</th>
+                <th>Daño</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (!ejemplares.length) { %>
+                <tr><td colspan="3">No hay ejemplares generados.</td></tr>
+              <% } %>
+              <% ejemplares.forEach((ejemplar) => { %>
+                <tr>
+                  <td><%= ejemplar.codigo_inventario %></td>
+                  <td><span class="badge badge-<%= ejemplar.estado === 'Disponible' ? 'disponible' : 'no-disponible' %>"><%= ejemplar.estado %></span></td>
+                  <td><%= ejemplar.descripcion_dano || 'Sin observación' %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+  </main>
+</body>
+</html>

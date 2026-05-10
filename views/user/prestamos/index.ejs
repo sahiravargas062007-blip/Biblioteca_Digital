@@ -1,0 +1,70 @@
+<%- include('../../partials/userPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Actividad</p>
+    <h1>Mis préstamos</h1>
+    <p class="muted">Aquí se muestran los recursos que tienes prestados y sus fechas de vencimiento.</p>
+  </section>
+
+  <% if (!prestamos.length) { %>
+    <section class="panel">
+      <p>No tienes préstamos activos en este momento.</p>
+    </section>
+  <% } else { %>
+    <% prestamos.forEach((prestamo) => { %>
+      <section class="panel prestamo-panel">
+        <div class="prestamo-header">
+          <h2><%= prestamo.tipo %> · <%= prestamo.items.length %> recurso(s)</h2>
+          <span class="badge <%= prestamo.tieneAlgunVencido ? 'badge-no-disponible' : prestamo.tieneAlgunProximoVencer ? 'badge-warning' : 'badge-disponible' %>">
+            <%= prestamo.tieneAlgunVencido ? 'Vencido' : prestamo.tieneAlgunProximoVencer ? 'Próximo a vencer' : 'Activo' %>
+          </span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Recurso</th>
+                <th>Fecha inicio</th>
+                <th>Fecha límite</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% prestamo.items.forEach((item) => { %>
+                <tr>
+                  <td><strong><%= item.recurso_titulo %></strong></td>
+                  <td><%= new Date(item.fecha_inicio).toLocaleString('es-CO') %></td>
+                  <td>
+                    <strong><%= new Date(item.fecha_limite).toLocaleString('es-CO') %></strong>
+                    <% if (item.diasFaltantes >= 0) { %>
+                      <small>(<%= item.diasFaltantes %> día<%= item.diasFaltantes !== 1 ? 's' : '' %>)</small>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="badge <%= item.estaVencido ? 'badge-no-disponible' : item.proximoVencer ? 'badge-warning' : 'badge-disponible' %>">
+                      <%= item.estado_visual %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if (item.estado === 'Activo' && prestamo.tipo === 'Digital') { %>
+                      <div class="button-group">
+                        <a class="button-link" href="/prestamos/<%= prestamo._id %>/acceder/<%= item._id %>">Acceder</a>
+                        <form method="post" action="/prestamos/<%= prestamo._id %>/devolver" style="display:inline-block; margin-left:0.5rem;">
+                          <input type="hidden" name="item_id" value="<%= item._id %>">
+                          <button type="submit" class="secondary-link">Devolver</button>
+                        </form>
+                      </div>
+                    <% } else { %>
+                      <span class="muted">No disponible</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% }) %>
+  <% } %>
+<%- include('../../partials/userPageEnd') %>

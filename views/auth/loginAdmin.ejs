@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <section class="auth-card">
+    <%- include('../partials/alertas') %>
+    <h1>Ingreso administrador</h1>
+    <form method="post" action="/admin/login">
+      <label>
+        Correo
+        <input type="email" name="usuario" required autocomplete="username">
+      </label>
+      <label>
+        Contraseña
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button type="submit">Ingresar</button>
+    </form>
+  </section>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/forms.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Registro por lotes</p>
+        <h1>Carga masiva ZIP</h1>
+      </div>
+      <a class="secondary-link" href="/admin/recursos">Volver</a>
+    </section>
+
+    <section class="panel">
+      <form class="form-stack" method="post" action="/admin/recursos/masivo" enctype="multipart/form-data">
+        <label>
+          Tipo de contenido del ZIP
+          <select name="tipo_contenido" required>
+            <option value="Lectura">Lectura: PDF o ePub</option>
+            <option value="Audio">Audio: MP3</option>
+            <option value="Video">Video: MP4</option>
+          </select>
+        </label>
+
+        <label>
+          Archivo ZIP
+          <input type="file" name="zip" accept=".zip" required>
+        </label>
+
+        <div class="panel-note">
+          Cada carpeta dentro del ZIP será registrada como un recurso pendiente de configuración. Luego debe completar metadatos, categorías, licencia y publicación desde la edición individual.
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">Procesar ZIP</button>
+          <a class="secondary-link" href="/admin/recursos">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

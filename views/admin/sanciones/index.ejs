@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Control disciplinario</p>
+        <h1>Sanciones activas</h1>
+      </div>
+      <a class="secondary-link" href="/admin/sanciones/historial">Historial</a>
+    </section>
+
+    <section class="panel">
+      <form class="toolbar" method="get" action="/admin/sanciones">
+        <label>
+          Buscar
+          <input type="search" name="q" value="<%= filtros.q %>" placeholder="Usuario, documento, recurso, ejemplar">
+        </label>
+        <label>
+          Tipo
+          <select name="tipo_sancion">
+            <option value="">Todas</option>
+            <% ['Advertencia', 'Suspensión', 'Reposición'].forEach((tipo) => { %>
+              <option value="<%= tipo %>" <%= filtros.tipo_sancion === tipo ? 'selected' : '' %>><%= tipo %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit">Filtrar</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Recurso</th>
+              <th>Incidencia</th>
+              <th>Sanción</th>
+              <th>Fechas</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!sanciones.length) { %>
+              <tr><td colspan="7">No hay sanciones activas.</td></tr>
+            <% } %>
+            <% sanciones.forEach((sancion) => { %>
+              <tr>
+                <td><strong><%= sancion.usuario_nombre %></strong><small><%= sancion.usuario_documento %></small></td>
+                <td><%= sancion.recurso_titulo || 'Sin recurso' %><small><%= sancion.ejemplar_codigo || '' %></small></td>
+                <td><%= sancion.tipo_incidencia %><small><%= sancion.gravedad %></small></td>
+                <td><%= sancion.tipo_sancion %><% if (sancion.dias_suspension) { %><small><%= sancion.dias_suspension %> días</small><% } %></td>
+                <td>
+                  <small>Inicio: <%= new Date(sancion.fecha_inicio).toLocaleDateString('es-CO') %></small>
+                  <small>Fin: <%= sancion.fecha_fin ? new Date(sancion.fecha_fin).toLocaleDateString('es-CO') : 'No aplica' %></small>
+                </td>
+                <td><span class="badge badge-danado"><%= sancion.estado %></span></td>
+                <td>
+                  <form method="post" action="/admin/sanciones/<%= sancion._id %>/levantar">
+                    <input type="hidden" name="motivo_levantamiento" value="Levantada desde panel de sanciones">
+                    <button type="submit">Levantar</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

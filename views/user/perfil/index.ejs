@@ -1,0 +1,40 @@
+<%- include('../../partials/userPageStart') %>
+  <section class="panel page-title-panel">
+    <p class="eyebrow">Cuenta</p>
+    <h1>Perfil</h1>
+    <p class="muted">Consulta y actualiza la información de tu cuenta de biblioteca.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Información personal</h2>
+    <dl class="detail-list">
+      <div><dt>Nombre</dt><dd><%= usuario.nombre %></dd></div>
+      <div><dt>Documento</dt><dd><%= usuario.documento %></dd></div>
+      <div><dt>Tipo</dt><dd><%= usuario.tipo_documento %></dd></div>
+      <div><dt>Correo institucional</dt><dd><%= usuario.correo %></dd></div>
+      <div><dt>Programa de formación</dt><dd><%= usuario.programa_formacion || 'No especificado' %></dd></div>
+      <div><dt>Ficha</dt><dd><%= usuario.ficha || 'No especificado' %></dd></div>
+      <div><dt>Estado</dt><dd><span class="badge <%= usuario.estado === 'Activo' ? 'badge-disponible' : 'badge-no-disponible' %>"><%= usuario.estado %></span></dd></div>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <h2>Información de contacto</h2>
+    <form method="post" action="/perfil?_method=PUT" class="form-stack">
+      <label>
+        Teléfono
+        <input type="tel" name="telefono" value="<%= usuario.telefono || '' %>" placeholder="Ej: 3012345678">
+      </label>
+      <button type="submit">Guardar cambios</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Estadísticas</h2>
+    <dl class="detail-list">
+      <div><dt>Préstamos activos</dt><dd><%= usuario.prestamos_activos || 0 %></dd></div>
+      <div><dt>Reservas activas</dt><dd><%= usuario.reservas_activas || 0 %></dd></div>
+      <div><dt>Se unió</dt><dd><%= new Date(usuario.creado_en).toLocaleString('es-CO') %></dd></div>
+    </dl>
+  </section>
+<%- include('../../partials/userPageEnd') %>

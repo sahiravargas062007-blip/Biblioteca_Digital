@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Circulación física</p>
+        <h1>Préstamos</h1>
+      </div>
+      <div class="actions">
+        <a class="secondary-link" href="/admin/prestamos/historial">Historial</a>
+        <a class="button-link" href="/admin/prestamos/nuevo">Nuevo préstamo</a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <form class="toolbar" method="get" action="/admin/prestamos">
+        <label>
+          Buscar
+          <input type="search" name="q" value="<%= filtros.q %>" placeholder="Usuario, documento, recurso o inventario">
+        </label>
+        <label>
+          Estado
+          <select name="estado">
+            <option value="">Activos y pendientes</option>
+            <% ['Activo', 'Parcialmente devuelto', 'Vencido', 'Devuelto', 'Pendiente de reposición'].forEach((estado) => { %>
+              <option value="<%= estado %>" <%= filtros.estado === estado ? 'selected' : '' %>><%= estado %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit">Filtrar</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Recursos</th>
+              <th>Inicio</th>
+              <th>Fecha límite más próxima</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!prestamos.length) { %>
+              <tr><td colspan="6">No hay préstamos registrados.</td></tr>
+            <% } %>
+            <% prestamos.forEach((prestamo) => { %>
+              <% const activeItems = prestamo.items.filter((item) => !['Devuelto', 'Devuelto con daño'].includes(item.estado)); %>
+              <% const nextLimit = activeItems.length ? activeItems.map((item) => new Date(item.fecha_limite)).sort((a, b) => a - b)[0] : null; %>
+              <tr>
+                <td>
+                  <strong><%= prestamo.usuario_nombre %></strong>
+                  <small><%= prestamo.usuario_documento %></small>
+                </td>
+                <td>
+                  <% prestamo.items.forEach((item) => { %>
+                    <small><%= item.recurso_titulo %> · <%= item.codigo_inventario %></small>
+                  <% }) %>
+                </td>
+                <td><%= new Date(prestamo.creado_en).toLocaleDateString('es-CO') %></td>
+                <td><%= nextLimit ? nextLimit.toLocaleDateString('es-CO') : 'Cerrado' %></td>
+                <td><span class="badge <%= prestamo.estado === 'Devuelto' ? 'badge-disponible' : prestamo.estado === 'Vencido' ? 'badge-danado' : 'badge-prestado' %>"><%= prestamo.estado %></span></td>
+                <td><a href="/admin/prestamos/<%= prestamo._id %>">Ver detalle</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

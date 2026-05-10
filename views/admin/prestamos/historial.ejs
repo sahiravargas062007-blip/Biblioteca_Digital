@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <link rel="stylesheet" href="/css/components/badges.css">
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+  <main class="admin-main">
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Consulta histórica</p>
+        <h1>Historial de préstamos</h1>
+      </div>
+      <a class="secondary-link" href="/admin/prestamos">Volver</a>
+    </section>
+    <section class="panel">
+      <form class="toolbar" method="get" action="/admin/prestamos/historial">
+        <label>Buscar <input type="search" name="q" value="<%= q %>"></label>
+        <button>Filtrar</button>
+      </form>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Usuario</th><th>Tipo</th><th>Ítems</th><th>Estado</th><th>Fecha</th></tr></thead>
+          <tbody>
+            <% prestamos.forEach((prestamo) => { %>
+              <tr>
+                <td><%= prestamo.usuario_nombre %><small><%= prestamo.usuario_documento %></small></td>
+                <td><%= prestamo.tipo %></td>
+                <td><%= prestamo.items.length %></td>
+                <td><%= prestamo.estado %></td>
+                <td><%= new Date(prestamo.creado_en).toLocaleDateString('es-CO') %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

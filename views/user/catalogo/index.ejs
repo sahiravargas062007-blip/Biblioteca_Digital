@@ -1,0 +1,79 @@
+<%- include('../../partials/userPageStart', { pageClass: 'catalog-page' }) %>
+
+    <section class="catalog-hero">
+      <div>
+        <p class="eyebrow">Biblioteca SENA</p>
+        <h1>Catalogo de recursos</h1>
+        <p>Busca materiales digitales y fisicos por titulo, autor, ISBN, tipo o categoria.</p>
+      </div>
+      <div class="hero-stat">
+        <strong><%= recursos.length %></strong>
+        <span>recursos disponibles</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <form class="catalog-filters" method="get" action="/catalogo">
+        <label>
+          Buscar
+          <input data-catalog-search type="search" name="q" value="<%= filtros.q %>" placeholder="Titulo, autor, ISBN o categoria">
+        </label>
+        <label>
+          Tipo
+          <select name="tipo_contenido">
+            <option value="">Todos</option>
+            <% ['Lectura', 'Audio', 'Video'].forEach((tipo) => { %>
+              <option value="<%= tipo %>" <%= filtros.tipo_contenido === tipo ? 'selected' : '' %>><%= tipo %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>
+          Categoria
+          <select name="categoria_id">
+            <option value="">Todas</option>
+            <% categorias.forEach((categoria) => { %>
+              <option value="<%= categoria._id %>" <%= filtros.categoria_id === String(categoria._id) ? 'selected' : '' %>><%= categoria.nombre %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit">Filtrar</button>
+        <% if (filtros.q || filtros.tipo_contenido || filtros.categoria_id) { %>
+          <a class="secondary-link" href="/catalogo">Limpiar</a>
+        <% } %>
+      </form>
+    </section>
+
+    <section class="catalog-grid" aria-label="Recursos del catalogo">
+      <% if (!recursos.length) { %>
+        <div class="empty-state">
+          <h2>No hay recursos para mostrar</h2>
+          <p>Cuando el administrador publique materiales activos, apareceran aqui. Ajusta los filtros si estabas buscando algo especifico.</p>
+        </div>
+      <% } %>
+
+      <% recursos.forEach((recurso) => { %>
+        <article class="catalog-card">
+          <a class="catalog-cover-link" href="/catalogo/<%= recurso._id %>">
+            <img src="<%= recurso.imagen?.url || '/img/placeholder.png' %>" alt="">
+          </a>
+          <div class="catalog-card-body">
+            <div class="resource-card-meta">
+              <span class="badge badge-no-disponible"><%= recurso.tipo_contenido %></span>
+              <span class="badge <%= recurso.disponibilidad === 'No disponible' ? 'badge-no-disponible' : 'badge-disponible' %>"><%= recurso.disponibilidad %></span>
+            </div>
+            <h2><a href="/catalogo/<%= recurso._id %>"><%= recurso.titulo %></a></h2>
+            <p class="author"><%= recurso.autor %></p>
+            <p class="muted"><%= recurso.tipo_naturaleza %> / <%= recurso.tipo_material %></p>
+            <p><%= String(recurso.descripcion || '').slice(0, 140) %><%= String(recurso.descripcion || '').length > 140 ? '...' : '' %></p>
+            <div class="tag-list">
+              <% (recurso.categorias || []).slice(0, 3).forEach((categoria) => { %>
+                <span class="tag"><%= categoria.subcategoria_nombre || categoria.categoria_nombre %></span>
+              <% }) %>
+            </div>
+            <a class="button-link" href="/catalogo/<%= recurso._id %>">Ver detalle</a>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+  <script src="/js/user/catalogo.js"></script>
+<%- include('../../partials/userPageEnd') %>
