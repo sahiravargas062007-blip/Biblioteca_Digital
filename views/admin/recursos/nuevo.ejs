@@ -16,8 +16,8 @@
 
     <% const isEdit = Boolean(recurso); %>
     <% const firstCategoria = recurso?.categorias?.[0]; %>
-    <% const principal = recurso?.digital?.archivos?.find((archivo) => archivo.es_principal); %>
-    <% const audioComplementario = recurso?.digital?.archivos?.find((archivo) => archivo.tipo === 'mp3' && !archivo.es_principal); %>
+    <% const principal = recurso?.digital?.archivos?.find(function(a){ return a.es_principal; }); %>
+    <% const audioComplementario = recurso?.digital?.archivos?.find(function(a){ return a.tipo === 'mp3' && !a.es_principal; }); %>
 
     <section class="panel page-header">
       <div>
@@ -28,62 +28,105 @@
     </section>
 
     <section class="panel">
-      <form class="form-stack" enctype="multipart/form-data" method="post" action="<%= isEdit ? `/admin/recursos/${recurso._id}?_method=PUT` : '/admin/recursos' %>">
+      <form class="form-stack" enctype="multipart/form-data" method="post"
+            action="<%= isEdit ? `/admin/recursos/${recurso._id}?_method=PUT` : '/admin/recursos' %>">
+
+        <!-- ── TIPO ──────────────────────────────────────────────────────── -->
         <div class="field-row">
           <label>
-            Disponibilidad
-            <select name="tipo_naturaleza" data-resource-nature required>
-              <% ['Digital', 'Físico', 'Mixto'].forEach((tipo) => { %>
-                <option value="<%= tipo %>" <%= (recurso?.tipo_naturaleza || 'Digital') === tipo ? 'selected' : '' %>><%= tipo %></option>
-              <% }) %>
-            </select>
-          </label>
-          <label>
             Tipo de contenido
-            <select name="tipo_contenido" data-content-type required>
-              <% ['Lectura', 'Audio', 'Video'].forEach((tipo) => { %>
+            <select name="tipo_contenido" id="tipo_contenido" required>
+              <% ['Lectura', 'Audio', 'Video'].forEach(function(tipo) { %>
                 <option value="<%= tipo %>" <%= (recurso?.tipo_contenido || 'Lectura') === tipo ? 'selected' : '' %>><%= tipo %></option>
-              <% }) %>
+              <% }); %>
             </select>
           </label>
           <label>
             Tipo de material
-            <select name="tipo_material" data-material-type required>
-              <% ['Libro', 'Revista', 'Tesis', 'Artículo', 'Ley y Normativa', 'Mapa', 'Audiolibro', 'Video'].forEach((tipo) => { %>
+            <select name="tipo_material" id="tipo_material" required>
+              <% ['Libro', 'Revista', 'Tesis', 'Artículo', 'Ley y Normativa', 'Mapa', 'Audiolibro', 'Video'].forEach(function(tipo) { %>
                 <option value="<%= tipo %>" <%= (recurso?.tipo_material || 'Libro') === tipo ? 'selected' : '' %>><%= tipo %></option>
-              <% }) %>
+              <% }); %>
+            </select>
+          </label>
+          <label>
+            Disponibilidad
+            <select name="tipo_naturaleza" id="tipo_naturaleza" required>
+              <% ['Digital', 'Físico', 'Mixto'].forEach(function(tipo) { %>
+                <option value="<%= tipo %>" <%= (recurso?.tipo_naturaleza || 'Digital') === tipo ? 'selected' : '' %>><%= tipo %></option>
+              <% }); %>
             </select>
           </label>
           <label>
             Estado
             <select name="estado">
-              <% ['Activo', 'Inactivo', 'Pendiente de configuración', 'Bloqueado'].forEach((estado) => { %>
+              <% ['Activo', 'Inactivo', 'Pendiente de configuración', 'Bloqueado'].forEach(function(estado) { %>
                 <option value="<%= estado %>" <%= (recurso?.estado || 'Pendiente de configuración') === estado ? 'selected' : '' %>><%= estado %></option>
-              <% }) %>
+              <% }); %>
             </select>
           </label>
         </div>
 
-        <div class="isbn-row">
+        <!-- ── ISBN (solo Lectura y Audiolibro comercial) ────────────────── -->
+        <div class="isbn-row" id="isbn-row">
           <label>
             ISBN
-            <input name="isbn" data-isbn value="<%= recurso?.isbn || '' %>">
+            <input name="isbn" id="isbn-input" value="<%= recurso?.isbn || '' %>" placeholder="978-...">
           </label>
-          <button type="button" data-isbn-search>Buscar ISBN</button>
+          <button type="button" id="isbn-search-btn">Buscar ISBN</button>
+          <small id="isbn-hint"></small>
         </div>
 
+        <!-- ── CAMPOS COMUNES ─────────────────────────────────────────────── -->
         <div class="field-row">
           <label>
             Título
-            <input name="titulo" required value="<%= recurso?.titulo || '' %>">
+            <input name="titulo" id="titulo" required value="<%= recurso?.titulo || '' %>">
           </label>
+          <!-- Autor/Creador (todos los tipos) -->
           <label>
-            Autor / Creador
-            <input name="autor" required value="<%= recurso?.autor || '' %>">
+            <span id="label-autor">Autor / Creador</span>
+            <input name="autor" id="autor" required value="<%= recurso?.autor || '' %>">
           </label>
-          <label>
+          <label id="label-editorial-wrap">
             Editorial
             <input name="editorial" value="<%= recurso?.editorial || '' %>">
+          </label>
+        </div>
+
+        <!-- ── CAMPOS ESPECÍFICOS AUDIO ──────────────────────────────────── -->
+        <div class="field-row" id="audio-fields" style="display:none;">
+          <label>
+            Narrador / Locutor
+            <input name="narrador" value="<%= recurso?.narrador || '' %>" placeholder="Quién presta la voz">
+          </label>
+          <label>
+            Formato de audio
+            <select name="audio_formato_tipo" id="audio-format-select">
+              <% ['MP3', 'WAV', 'M4B', 'AAC', 'OGG', 'Otro'].forEach(function(f) { %>
+                <option value="<%= f.toLowerCase() %>"><%= f %></option>
+              <% }); %>
+            </select>
+          </label>
+        </div>
+
+        <!-- ── CAMPOS ESPECÍFICOS VIDEO ──────────────────────────────────── -->
+        <div class="field-row" id="video-fields" style="display:none;">
+          <label>
+            Director / Creador
+            <input name="director" value="<%= recurso?.director || '' %>">
+          </label>
+          <label>
+            Productora / Editor
+            <input name="productora" value="<%= recurso?.productora || '' %>" placeholder="Netflix, SENA, Discovery...">
+          </label>
+          <label>
+            Resolución
+            <select name="resolucion">
+              <% ['720p', '1080p', '4K', 'SD', 'Otra'].forEach(function(r) { %>
+                <option value="<%= r %>" <%= recurso?.resolucion === r ? 'selected' : '' %>><%= r %></option>
+              <% }); %>
+            </select>
           </label>
         </div>
 
@@ -94,144 +137,230 @@
           </label>
           <label>
             Fecha de publicación
-            <input type="date" name="fecha_publicacion" value="<%= recurso?.fecha_publicacion ? new Date(recurso.fecha_publicacion).toISOString().slice(0, 10) : '' %>">
+            <input type="date" name="fecha_publicacion"
+                   value="<%= recurso?.fecha_publicacion ? new Date(recurso.fecha_publicacion).toISOString().slice(0,10) : '' %>">
           </label>
-          <label>
+          <!-- Páginas solo para Lectura -->
+          <label id="paginas-wrap">
             Páginas
             <input type="number" min="0" name="cantidad_paginas" value="<%= recurso?.cantidad_paginas || '' %>">
           </label>
-          <label>
-            Duración segundos
-            <input type="number" min="0" name="duracion_segundos" value="<%= recurso?.duracion_segundos || '' %>">
+          <!-- Duración para Audio y Video -->
+          <label id="duracion-wrap">
+            Duración (HH:MM:SS)
+            <input name="duracion_hhmmss" id="duracion-hhmmss" placeholder="00:00:00"
+                   value="<%= recurso?.duracion_segundos ? new Date(recurso.duracion_segundos * 1000).toISOString().slice(11,19) : '' %>">
+            <input type="hidden" name="duracion_segundos" id="duracion-segundos"
+                   value="<%= recurso?.duracion_segundos || '' %>">
           </label>
         </div>
 
         <label>
-          Descripción
+          Descripción / Sinopsis
           <textarea name="descripcion" rows="4" required><%= recurso?.descripcion || '' %></textarea>
         </label>
 
-        <label>
-          URL de portada o imagen representativa
-          <input name="imagen_url" value="<%= recurso?.imagen?.es_default ? '' : recurso?.imagen?.url || '' %>" placeholder="https://...">
-        </label>
+        <!-- ── IMAGEN ─────────────────────────────────────────────────────── -->
+        <div class="field-row">
+          <label>
+            <span id="label-imagen">Imagen de portada / carátula</span>
+            <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
+            <small>JPG, PNG o WEBP. Si no subes imagen se usará la imagen por defecto.</small>
+            <% if (recurso && !recurso.imagen?.es_default) { %>
+              <p class="muted">Imagen actual: <a href="<%= recurso.imagen.url %>" target="_blank">Ver</a></p>
+            <% } %>
+          </label>
+          <label>
+            O URL de imagen
+            <input name="imagen_url"
+                   value="<%= recurso?.imagen?.es_default ? '' : recurso?.imagen?.url || '' %>"
+                   placeholder="https://...">
+          </label>
+        </div>
 
+        <!-- ── CATEGORÍA ──────────────────────────────────────────────────── -->
         <div class="field-row">
           <label>
             Categoría
-            <select name="categoria_id" data-category-select required>
+            <select name="categoria_id" id="categoria-select" required>
               <option value="">Seleccione</option>
-              <% categorias.forEach((categoria) => { %>
-                <option value="<%= categoria._id %>" <%= String(firstCategoria?.categoria_id || '') === String(categoria._id) ? 'selected' : '' %>><%= categoria.nombre %></option>
-              <% }) %>
+              <% categorias.forEach(function(categoria) { %>
+                <option value="<%= categoria._id %>"
+                  <%= String(firstCategoria?.categoria_id || '') === String(categoria._id) ? 'selected' : '' %>>
+                  <%= categoria.nombre %>
+                </option>
+              <% }); %>
             </select>
           </label>
           <label>
             Subcategoría
-            <select name="subcategoria_id" data-subcategory-select>
+            <select name="subcategoria_id" id="subcategoria-select">
               <option value="">Sin subcategoría</option>
             </select>
           </label>
         </div>
 
-        <section class="embedded-section" data-digital-section>
-          <div class="subheading-row">
-            <h2>Configuración digital</h2>
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- SECCIÓN DIGITAL                                                   -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <section class="embedded-section" id="digital-section">
+          <div class="subheading-row"><h2>Configuración digital</h2></div>
+
+          <!-- Archivo para Lectura (PDF / ePub) -->
+          <div id="archivo-lectura-block">
+            <div class="field-row">
+              <label>
+                Tipo de archivo
+                <select name="archivo_tipo" id="archivo-tipo-select">
+                  <% ['pdf', 'epub', 'url'].forEach(function(tipo) { %>
+                    <option value="<%= tipo %>" <%= principal?.tipo === tipo ? 'selected' : '' %>><%= tipo.toUpperCase() %></option>
+                  <% }); %>
+                </select>
+              </label>
+              <label>
+                Subir archivo (PDF o ePub)
+                <input type="file" name="archivo" id="archivo-file-lectura" accept=".pdf,.epub">
+                <% if (principal?.url) { %><p class="muted"><a href="<%= principal.url %>" target="_blank">Archivo actual</a></p><% } %>
+              </label>
+              <label>
+                O URL del archivo
+                <input name="archivo_url" value="<%= principal?.url || '' %>" placeholder="https://...">
+                <small>Si subes archivo, no es necesario URL.</small>
+              </label>
+            </div>
+            <!-- Audiolibro complementario solo para Lectura -->
+            <div class="field-row">
+              <label>
+                Audiolibro MP3 complementario (opcional)
+                <input name="audio_url" value="<%= audioComplementario?.url || '' %>" placeholder="URL del MP3">
+              </label>
+            </div>
           </div>
 
-          <div class="field-row">
-            <label>
-              Tipo de archivo principal
-              <select name="archivo_tipo">
-                <% ['pdf', 'epub', 'mp3', 'mp4', 'url'].forEach((tipo) => { %>
-                  <option value="<%= tipo %>" <%= principal?.tipo === tipo ? 'selected' : '' %>><%= tipo %></option>
-                <% }) %>
-              </select>
-            </label>
-            <label>
-              Archivo principal
-              <input type="file" name="archivo" accept=".pdf,.epub,.mp3,.mp4">
-              <small>Selecciona un archivo para subir. Si usas archivo, no es necesario ingresar URL.</small>
-              <% if (principal?.url) { %>
-                <p class="muted">Archivo actual: <a href="<%= principal.url %>" target="_blank" rel="noreferrer">Abrir archivo</a></p>
-              <% } %>
-            </label>
-            <label>
-              URL archivo principal
-              <input name="archivo_url" value="<%= principal?.url || '' %>" placeholder="Cloudinary o URL externa">
-              <small>O utiliza URL externa si no deseas subir un archivo.</small>
-            </label>
-            <label>
-              Audiolibro MP3 complementario
-              <input name="audio_url" value="<%= audioComplementario?.url || '' %>" placeholder="Opcional">
-              <% if (audioComplementario?.url) { %>
-                <p class="muted">Audio actual: <a href="<%= audioComplementario.url %>" target="_blank" rel="noreferrer">Abrir audio</a></p>
-              <% } %>
-            </label>
+          <!-- Archivo para Audio -->
+          <div id="archivo-audio-block" style="display:none;">
+            <div class="field-row">
+              <label>
+                Subir archivo de audio
+                <input type="file" name="archivo" id="archivo-file-audio"
+                       accept="audio/*,.mp3,.wav,.m4b,.aac,.ogg,.flac,.wma">
+                <small>MP3, WAV, M4B, AAC, OGG, FLAC u otros formatos de audio.</small>
+                <% if (principal?.url && recurso?.tipo_contenido === 'Audio') { %>
+                  <p class="muted"><a href="<%= principal.url %>" target="_blank">Archivo actual</a></p>
+                <% } %>
+              </label>
+              <label>
+                O URL del audio
+                <input name="archivo_url" id="audio-url-input"
+                       value="<%= recurso?.tipo_contenido === 'Audio' ? (principal?.url || '') : '' %>"
+                       placeholder="https://...">
+              </label>
+            </div>
           </div>
 
+          <!-- Archivo para Video -->
+          <div id="archivo-video-block" style="display:none;">
+            <div class="field-row">
+              <label>
+                Origen del video
+                <select id="video-origen-select" name="video_origen">
+                  <option value="url" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? 'selected' : '' %>>URL externa (YouTube, etc.)</option>
+                  <option value="archivo" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? 'selected' : '' %>>Subir archivo</option>
+                </select>
+              </label>
+            </div>
+            <div id="video-url-block">
+              <label>
+                URL del video
+                <input name="archivo_url" id="video-url-input"
+                       value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? (principal?.url || '') : '' %>"
+                       placeholder="https://youtube.com/watch?v=...">
+              </label>
+              <input type="hidden" name="archivo_tipo" value="url">
+            </div>
+            <div id="video-archivo-block" style="display:none;">
+              <label>
+                Subir archivo de video
+                <input type="file" name="archivo" id="archivo-file-video"
+                       accept="video/*,.mp4,.webm,.avi,.mov,.mkv">
+                <small>MP4, WebM, AVI, MOV, MKV u otros formatos de video.</small>
+                <% if (principal?.url && recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url') { %>
+                  <p class="muted"><a href="<%= principal.url %>" target="_blank">Archivo actual</a></p>
+                <% } %>
+              </label>
+            </div>
+          </div>
+
+          <!-- Licencia -->
           <div class="field-row">
             <label>
               Licencia
-              <select name="tipo_licencia" data-license-type>
-                <% ['Libre', 'Restringida'].forEach((tipo) => { %>
+              <select name="tipo_licencia" id="licencia-select">
+                <% ['Libre', 'Restringida'].forEach(function(tipo) { %>
                   <option value="<%= tipo %>" <%= (recurso?.digital?.tipo_licencia || 'Libre') === tipo ? 'selected' : '' %>><%= tipo %></option>
-                <% }) %>
-              </select>
-            </label>
-            <label>
-              Usuarios simultáneos
-              <input type="number" min="1" name="usuarios_simultaneos" value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>">
-            </label>
-            <label>
-              Duración préstamo
-              <input type="number" min="1" name="duracion_prestamo" value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>">
-            </label>
-            <label>
-              Unidad
-              <select name="unidad_duracion">
-                <% ['horas', 'dias', 'semanas'].forEach((unidad) => { %>
-                  <option value="<%= unidad %>" <%= (recurso?.digital?.licencia?.unidad_duracion || 'dias') === unidad ? 'selected' : '' %>><%= unidad %></option>
-                <% }) %>
+                <% }); %>
               </select>
             </label>
           </div>
 
-          <div class="field-row">
-            <label>
-              Máximo préstamos por usuario
-              <input type="number" min="1" name="max_prestamos_por_usuario" value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>">
-            </label>
-            <label>
-              Reservas digitales
-              <select name="cola_reservas_habilitada">
-                <option value="true" <%= recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>Sí</option>
-                <option value="false" <%= !recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>No</option>
-              </select>
-            </label>
-            <label>
-              Espera cola días
-              <input type="number" min="1" name="tiempo_max_espera_cola_dias" value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>">
-            </label>
-            <label>
-              Vencimiento licencia
-              <input type="date" name="fecha_vencimiento_licencia" value="<%= recurso?.digital?.licencia?.fecha_vencimiento_licencia ? new Date(recurso.digital.licencia.fecha_vencimiento_licencia).toISOString().slice(0, 10) : '' %>">
-            </label>
+          <div id="licencia-restringida-block" style="display:none;">
+            <div class="field-row">
+              <label>
+                Usuarios simultáneos
+                <input type="number" min="1" name="usuarios_simultaneos"
+                       value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>">
+              </label>
+              <label>
+                Duración préstamo
+                <input type="number" min="1" name="duracion_prestamo"
+                       value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>">
+              </label>
+              <label>
+                Unidad
+                <select name="unidad_duracion">
+                  <% ['horas', 'dias', 'semanas'].forEach(function(u) { %>
+                    <option value="<%= u %>" <%= (recurso?.digital?.licencia?.unidad_duracion || 'dias') === u ? 'selected' : '' %>><%= u %></option>
+                  <% }); %>
+                </select>
+              </label>
+              <label>
+                Máx. préstamos por usuario
+                <input type="number" min="1" name="max_prestamos_por_usuario"
+                       value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>">
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Reservas digitales
+                <select name="cola_reservas_habilitada">
+                  <option value="true"  <%= recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>Sí</option>
+                  <option value="false" <%= !recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>No</option>
+                </select>
+              </label>
+              <label>
+                Espera cola (días)
+                <input type="number" min="1" name="tiempo_max_espera_cola_dias"
+                       value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>">
+              </label>
+              <label>
+                Vencimiento licencia
+                <input type="date" name="fecha_vencimiento_licencia"
+                       value="<%= recurso?.digital?.licencia?.fecha_vencimiento_licencia ? new Date(recurso.digital.licencia.fecha_vencimiento_licencia).toISOString().slice(0,10) : '' %>">
+              </label>
+            </div>
           </div>
         </section>
 
-        <section class="embedded-section" data-physical-section>
-          <div class="subheading-row">
-            <h2>Configuración física</h2>
-          </div>
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- SECCIÓN FÍSICA                                                    -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <section class="embedded-section" id="physical-section" style="display:none;">
+          <div class="subheading-row"><h2>Configuración física</h2></div>
           <div class="field-row">
             <label>
               Cantidad de ejemplares
-              <input type="number" min="0" name="total_ejemplares" value="<%= recurso?.fisico?.total_ejemplares || 0 %>">
-            </label>
-            <label>
-              URL externa
-              <input name="url_externa" value="<%= recurso?.fisico?.url_externa || '' %>" placeholder="Opcional para video externo">
+              <input type="number" min="0" name="total_ejemplares"
+                     value="<%= recurso?.fisico?.total_ejemplares || 0 %>">
             </label>
           </div>
         </section>
@@ -250,7 +379,7 @@
   </main>
 
   <script>
-    window.BIBLIOTECA_CATEGORIAS = <%- JSON.stringify(categorias) %>;
+    window.BIBLIOTECA_CATEGORIAS          = <%- JSON.stringify(categorias) %>;
     window.BIBLIOTECA_SUBCATEGORIA_ACTUAL = "<%= firstCategoria?.subcategoria_id || '' %>";
   </script>
   <script src="/js/admin/recursos.js"></script>

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 📚 Biblioteca Digital SENA
 
 Sistema web de gestión de biblioteca para el SENA que permite administrar recursos bibliográficos físicos y digitales, préstamos, reservas, sanciones y notificaciones. Está orientado a aprendices, instructores y funcionarios autenticados mediante LDAP institucional.
@@ -312,6 +311,4 @@ Los archivos PDF, MP3 y MP4 se entregan con el nombre del recurso para que la de
 ## Licencia
 
 Proyecto académico desarrollado para el SENA. Uso interno institucional.
-=======
 # Biblioteca_Digital
->>>>>>> 20bca4129b005bdb00adb62e58691805ee3ced85

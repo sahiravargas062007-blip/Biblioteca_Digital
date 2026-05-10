@@ -2,9 +2,30 @@ const Prestamo = require('../../models/Prestamo');
 const Recurso = require('../../models/Recurso');
 const Usuario = require('../../models/Usuario');
 const Notificacion = require('../../models/Notificacion');
+const cloudinary = require('../../config/cloudinary');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
+}
+
+function nombreDescarga(recurso, archivo) {
+  const ext = archivo.tipo === 'url' ? 'html' : archivo.tipo;
+  const nombre = String(recurso.titulo || archivo.public_id || 'archivo')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .trim()
+    .replace(/\s+/g, '_');
+  return `${nombre}.${ext}`;
+}
+
+function buildCloudinaryUrl(archivo, options = {}) {
+  if (!archivo?.public_id) return archivo.url;
+  return cloudinary.url(archivo.public_id, {
+    resource_type: 'raw',
+    secure: true,
+    ...options
+  });
 }
 
 exports.index = async (req, res, next) => {
@@ -163,21 +184,14 @@ exports.archivo = async (req, res, next) => {
       return res.redirect('/prestamos');
     }
 
-    const ext = archivo.tipo === 'url' ? 'html' : archivo.tipo;
+    let archivoUrl = archivo.url;
+    if (archivo.tipo !== 'url' && archivo.public_id) {
+      archivoUrl = buildCloudinaryUrl(archivo, {
+        flags: 'attachment:false'
+      });
+    }
 
-    // Nombre de descarga limpio: sin caracteres especiales
-    const nombreLimpio = recurso.titulo
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9 ]/g, ' ')
-      .trim()
-      .replace(/\s+/g, '_');
-
-    const filename = `${nombreLimpio}.${ext}`;
-
-    // Redirigir directamente a la URL de Cloudinary
-    // El flag attachment en Cloudinary ya garantiza el nombre correcto
-    return res.redirect(archivo.url);
+    return res.redirect(archivoUrl);
 
   } catch (error) {
     next(error);
@@ -206,8 +220,14 @@ exports.descargarPrestamo = async (req, res, next) => {
       return res.redirect('/prestamos');
     }
 
-    // Redirigir a Cloudinary — el flag attachment ya viene configurado desde la subida
-    return res.redirect(archivo.url);
+    let descargaUrl = archivo.url;
+    if (archivo.tipo !== 'url' && archivo.public_id) {
+      descargaUrl = buildCloudinaryUrl(archivo, {
+        flags: `attachment:${nombreDescarga(recurso, archivo)}`
+      });
+    }
+
+    return res.redirect(descargaUrl);
 
   } catch (error) {
     next(error);

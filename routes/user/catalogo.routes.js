@@ -1,10 +1,10 @@
-const router = require('express').Router();
-const controller = require('../../controllers/user/catalogoController');
+const router  = require('express').Router();
+const ctrl    = require('../../controllers/user/catalogoController');
 
-router.get('/', controller.index);
-router.get('/:id/ver', controller.ver);
-router.get('/:id/archivo', controller.archivo);
-router.get('/:id/descargar', controller.descargar);
-router.get('/:id', controller.detalle);
+router.get('/',                 ctrl.index);
+router.get('/:id',              ctrl.detalle);
+router.post('/:id/prestar',     ctrl.prestar);
+router.get('/:id/ver',          ctrl.ver);
+router.get('/:id/descargar',    ctrl.descargar);
 
 module.exports = router;

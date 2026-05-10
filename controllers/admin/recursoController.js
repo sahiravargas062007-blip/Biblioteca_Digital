@@ -6,66 +6,69 @@ const Ejemplar = require('../../models/Ejemplar');
 const Recurso = require('../../models/Recurso');
 const { subirBuffer, eliminar } = require('../../services/cloudinaryService');
 
-// Mapea cada extensión al resource_type que necesita Cloudinary
-const RESOURCE_TYPE = {
-  pdf:  'raw',
-  epub: 'raw',
-  mp3:  'video',   // Cloudinary trata audio como "video"
-  mp4:  'video',
-  jpg:  'image',
-  jpeg: 'image',
-  png:  'image',
-  webp: 'image'
-};
+// ── Resource type correcto para Cloudinary según extensión ────────────────
+function cloudinaryResourceType(ext) {
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) return 'image';
+  // Cloudinary trata TODOS los audios y videos como resource_type "video"
+  if (['mp3', 'wav', 'm4b', 'm4a', 'ogg', 'aac', 'flac', 'wma'].includes(ext)) return 'video';
+  if (['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv'].includes(ext)) return 'video';
+  // PDF, ePub y cualquier otro → raw
+  return 'raw';
+}
 
-// Genera el public_id limpio: sin tildes, sin espacios, sin caracteres raros
-function generarPublicId(titulo, tipo) {
+// ── Extensión desde el mimetype (fallback si originalname no tiene ext) ───
+function extFromMime(mime) {
+  const map = {
+    'application/pdf':       'pdf',
+    'application/epub+zip':  'epub',
+    'audio/mpeg':            'mp3',
+    'audio/mp4':             'm4a',
+    'audio/wav':             'wav',
+    'audio/ogg':             'ogg',
+    'audio/aac':             'aac',
+    'audio/flac':            'flac',
+    'video/mp4':             'mp4',
+    'video/webm':            'webm',
+    'video/avi':             'avi',
+    'video/quicktime':       'mov',
+  };
+  return map[mime] || 'bin';
+}
+
+// ── Genera public_id limpio para Cloudinary ───────────────────────────────
+function generarPublicId(titulo, carpeta) {
   const nombre = String(titulo || 'recurso')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-zA-Z0-9]/g, '_')
     .toLowerCase()
     .slice(0, 60);
-  const ts = Date.now();
-  return `biblioteca/${tipo}/${nombre}_${ts}`;
+  return `biblioteca/${carpeta}/${nombre}_${Date.now()}`;
 }
 
-// Sube un archivo a Cloudinary y devuelve { url, public_id, tamano_bytes }
-async function subirArchivoCloudinary(fileBuffer, originalname, titulo) {
-  const ext = originalname.split('.').pop().toLowerCase();
-  const resourceType = RESOURCE_TYPE[ext] || 'raw';
-  const publicId = generarPublicId(titulo, ext);
+// ── Sube archivo a Cloudinary ─────────────────────────────────────────────
+// NO usa flags de attachment — eso se maneja en el servidor al descargar
+async function subirArchivoCloudinary(fileBuffer, originalname, mimetype, titulo) {
+  const ext = (originalname.includes('.')
+    ? originalname.split('.').pop().toLowerCase()
+    : extFromMime(mimetype));
+
+  const resourceType = cloudinaryResourceType(ext);
+  const publicId     = generarPublicId(titulo, ext);
 
   const result = await subirBuffer(fileBuffer, {
     resource_type: resourceType,
-    public_id: publicId,
-    // "attachment" hace que el navegador descargue el archivo con nombre correcto
-    // "inline" lo mostraría en el navegador (solo lo usamos para epub)
-    type: 'upload',
-    // Para PDF, MP3, MP4 → forzar descarga con nombre legible
-    // Para ePub → entregar inline para el visor
-    ...(ext === 'epub'
-      ? { flags: 'attachment:false' }
-      : { flags: `attachment:${nombre_descarga(originalname, titulo, ext)}` }
-    )
+    public_id:     publicId,
+    // Sin flags de attachment — Cloudinary raw no los soporta
+    // La descarga con nombre correcto se hace vía proxy en el servidor
   });
 
   return {
-    url: result.secure_url,
-    public_id: result.public_id,
-    tamano_bytes: result.bytes || 0
+    url:          result.secure_url,
+    public_id:    result.public_id,
+    tamano_bytes: result.bytes || 0,
+    ext
   };
-}
-
-// Genera el nombre de descarga limpio: "Titulo del libro.pdf"
-function nombre_descarga(originalname, titulo, ext) {
-  const nombre = String(titulo || originalname)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9 ]/g, ' ')
-    .trim()
-    .replace(/\s+/g, '_');
-  return `${nombre}.${ext}`;
 }
 
 function flash(req, type, message) {
@@ -91,7 +94,7 @@ function asArray(value) {
 }
 
 async function cargarCategoriasSeleccionadas(body) {
-  const categoriaIds = asArray(body.categoria_id);
+  const categoriaIds   = asArray(body.categoria_id);
   const subcategoriaIds = asArray(body.subcategoria_id);
   const categorias = [];
 
@@ -103,12 +106,12 @@ async function cargarCategoriasSeleccionadas(body) {
     if (!categoria) continue;
 
     const subcategoriaId = subcategoriaIds[index];
-    const subcategoria = categoria.subcategorias.id(subcategoriaId);
+    const subcategoria   = categoria.subcategorias.id(subcategoriaId);
 
     categorias.push({
-      categoria_id: categoria._id,
-      categoria_nombre: categoria.nombre,
-      subcategoria_id: subcategoria?._id,
+      categoria_id:       categoria._id,
+      categoria_nombre:   categoria.nombre,
+      subcategoria_id:    subcategoria?._id,
       subcategoria_nombre: subcategoria?.nombre
     });
   }
@@ -119,31 +122,31 @@ async function cargarCategoriasSeleccionadas(body) {
 function buildDigital(body) {
   if (!['Digital', 'Mixto'].includes(body.tipo_naturaleza)) return undefined;
 
-  const archivos = [];
-  const archivoUrl = String(body.archivo_url || '').trim();
+  const archivos    = [];
+  const archivoUrl  = String(body.archivo_url  || '').trim();
   const archivoTipo = String(body.archivo_tipo || '').trim();
-  const audioUrl = String(body.audio_url || '').trim();
+  const audioUrl    = String(body.audio_url    || '').trim();
 
   if (archivoUrl && archivoTipo) {
     archivos.push({
-      tipo: archivoTipo,
-      url: archivoUrl,
-      public_id: '',
+      tipo:         archivoTipo,
+      url:          archivoUrl,
+      public_id:    '',
       es_principal: true,
       tamano_bytes: 0,
-      subido_en: new Date()
+      subido_en:    new Date()
     });
   }
 
   if (audioUrl) {
     archivos.push({
-      tipo: 'mp3',
-      url: audioUrl,
-      public_id: '',
-      es_principal: false,
+      tipo:              'mp3',
+      url:               audioUrl,
+      public_id:         '',
+      es_principal:      false,
       duracion_segundos: Number(body.duracion_segundos || 0),
-      tamano_bytes: 0,
-      subido_en: new Date()
+      tamano_bytes:      0,
+      subido_en:         new Date()
     });
   }
 
@@ -154,109 +157,115 @@ function buildDigital(body) {
     archivos,
     licencia: tipoLicencia === 'Restringida'
       ? {
-          usuarios_simultaneos: Number(body.usuarios_simultaneos || 1),
-          duracion_prestamo: Number(body.duracion_prestamo || 7),
-          unidad_duracion: body.unidad_duracion || 'dias',
-          max_prestamos_por_usuario: Number(body.max_prestamos_por_usuario || 1),
-          renovaciones_permitidas: 0,
-          cola_reservas_habilitada: body.cola_reservas_habilitada === 'true',
+          usuarios_simultaneos:       Number(body.usuarios_simultaneos || 1),
+          duracion_prestamo:          Number(body.duracion_prestamo || 7),
+          unidad_duracion:            body.unidad_duracion || 'dias',
+          max_prestamos_por_usuario:  Number(body.max_prestamos_por_usuario || 1),
+          renovaciones_permitidas:    0,
+          cola_reservas_habilitada:   body.cola_reservas_habilitada === 'true',
           tiempo_max_espera_cola_dias: Number(body.tiempo_max_espera_cola_dias || 30),
-          fecha_vencimiento_licencia: body.fecha_vencimiento_licencia ? new Date(body.fecha_vencimiento_licencia) : undefined,
+          fecha_vencimiento_licencia: body.fecha_vencimiento_licencia
+            ? new Date(body.fecha_vencimiento_licencia) : undefined,
           licencia_activa: true
         }
       : undefined,
-    licencias_en_uso: 0,
+    licencias_en_uso:     0,
     estado_disponibilidad: tipoLicencia === 'Libre' ? 'Acceso libre' : 'Disponible'
   };
 }
 
 function buildFisico(body) {
   if (!['Físico', 'Mixto'].includes(body.tipo_naturaleza)) return undefined;
-
   const total = Number(body.total_ejemplares || 0);
   return {
-    total_ejemplares: total,
+    total_ejemplares:      total,
     ejemplares_disponibles: total,
-    url_externa: String(body.url_externa || '').trim() || null
+    url_externa:           String(body.url_externa || '').trim() || null
   };
 }
 
 async function buildRecursoPayload(req) {
   const categorias = await cargarCategoriasSeleccionadas(req.body);
-  const publicado = req.body.publicado === 'true';
-  const titulo = String(req.body.titulo || '').trim();
+  const publicado  = req.body.publicado === 'true';
+  const titulo     = String(req.body.titulo || '').trim();
 
-  // ── PORTADA ──────────────────────────────────────────────────────────────
+  // ── PORTADA ───────────────────────────────────────────────────────────────
   let imagen = { url: '/img/placeholder.png', public_id: '', es_default: true };
 
   const imagenFile = req.files?.imagen?.[0];
   if (imagenFile) {
-    // Subir imagen de portada a Cloudinary
-    const ext = imagenFile.originalname.split('.').pop().toLowerCase();
     const publicId = generarPublicId(titulo, 'portadas');
-    const result = await subirBuffer(imagenFile.buffer, {
+    const result   = await subirBuffer(imagenFile.buffer, {
       resource_type: 'image',
-      public_id: publicId,
-      folder: 'biblioteca/portadas'
+      public_id:     publicId
     });
     imagen = { url: result.secure_url, public_id: result.public_id, es_default: false };
   } else if (String(req.body.imagen_url || '').trim()) {
-    // Si el admin pegó una URL externa de imagen
     imagen = { url: req.body.imagen_url.trim(), public_id: '', es_default: false };
   }
 
-  // ── ARCHIVO PRINCIPAL (PDF, ePub, MP3, MP4) ───────────────────────────────
+  // ── ARCHIVO PRINCIPAL ─────────────────────────────────────────────────────
   let digitalPayload = buildDigital(req.body);
 
   const archivoFile = req.files?.archivo?.[0];
   if (archivoFile && ['Digital', 'Mixto'].includes(req.body.tipo_naturaleza)) {
-    const ext = archivoFile.originalname.split('.').pop().toLowerCase();
-    const subido = await subirArchivoCloudinary(archivoFile.buffer, archivoFile.originalname, titulo);
+    const subido = await subirArchivoCloudinary(
+      archivoFile.buffer,
+      archivoFile.originalname,
+      archivoFile.mimetype,
+      titulo
+    );
 
     const nuevoArchivo = {
-      tipo: ext,
-      url: subido.url,
-      public_id: subido.public_id,
+      tipo:         subido.ext,
+      url:          subido.url,
+      public_id:    subido.public_id,
       es_principal: true,
       tamano_bytes: subido.tamano_bytes,
-      subido_en: new Date()
+      subido_en:    new Date()
     };
 
     if (!digitalPayload) {
       digitalPayload = {
-        tipo_licencia: req.body.tipo_licencia || 'Libre',
-        archivos: [nuevoArchivo],
-        licencias_en_uso: 0,
+        tipo_licencia:         req.body.tipo_licencia || 'Libre',
+        archivos:              [nuevoArchivo],
+        licencias_en_uso:      0,
         estado_disponibilidad: 'Disponible'
       };
     } else {
-      // Reemplaza el primer archivo principal si ya existía uno pegado como URL
       const sinPrincipal = (digitalPayload.archivos || []).filter((a) => !a.es_principal);
       digitalPayload.archivos = [nuevoArchivo, ...sinPrincipal];
     }
   }
 
   const payload = {
-    tipo_naturaleza: req.body.tipo_naturaleza,
-    tipo_contenido: req.body.tipo_contenido,
-    tipo_material: req.body.tipo_material,
+    tipo_naturaleza:  req.body.tipo_naturaleza,
+    tipo_contenido:   req.body.tipo_contenido,
+    tipo_material:    req.body.tipo_material,
     titulo,
-    autor: String(req.body.autor || '').trim(),
-    descripcion: String(req.body.descripcion || '').trim(),
-    idioma: String(req.body.idioma || '').trim(),
-    fecha_publicacion: req.body.fecha_publicacion ? new Date(req.body.fecha_publicacion) : undefined,
-    editorial: String(req.body.editorial || '').trim(),
-    isbn: String(req.body.isbn || '').trim(),
-    cantidad_paginas: req.body.cantidad_paginas ? Number(req.body.cantidad_paginas) : undefined,
-    duracion_segundos: req.body.duracion_segundos ? Number(req.body.duracion_segundos) : undefined,
+    autor:            String(req.body.autor        || '').trim(),
+    narrador:         String(req.body.narrador      || '').trim() || undefined,
+    director:         String(req.body.director      || '').trim() || undefined,
+    productora:       String(req.body.productora    || '').trim() || undefined,
+    resolucion:       String(req.body.resolucion     || '').trim() || undefined,
+    descripcion:      String(req.body.descripcion   || '').trim(),
+    idioma:           String(req.body.idioma         || '').trim(),
+    fecha_publicacion: req.body.fecha_publicacion
+      ? new Date(req.body.fecha_publicacion) : undefined,
+    editorial:        String(req.body.editorial     || '').trim(),
+    isbn:             String(req.body.isbn           || '').trim(),
+    cantidad_paginas: req.body.cantidad_paginas
+      ? Number(req.body.cantidad_paginas) : undefined,
+    duracion_segundos: req.body.duracion_segundos
+      ? Number(req.body.duracion_segundos) : undefined,
     imagen,
     categorias,
     estado: req.body.estado || (publicado ? 'Activo' : 'Pendiente de configuración'),
-    digital: digitalPayload,
-    fisico: buildFisico(req.body),
+    digital:          digitalPayload,
+    fisico:           buildFisico(req.body),
     publicado,
-    publicado_en: publicado ? new Date() : undefined,
-    actualizado_en: new Date()
+    publicado_en:     publicado ? new Date() : undefined,
+    actualizado_en:   new Date()
   };
 
   if (mongoose.isValidObjectId(req.session?.adminId)) {
@@ -270,20 +279,22 @@ async function crearEjemplaresParaRecurso(recurso, cantidad) {
   if (!cantidad || cantidad < 1) return;
 
   const categoriaNombre = recurso.categorias[0]?.categoria_nombre || 'Recurso';
-  const prefix = prefixFromCategoria(categoriaNombre);
-  const existentes = await Ejemplar.countDocuments({ codigo_inventario: new RegExp(`^${prefix}-`) });
+  const prefix          = prefixFromCategoria(categoriaNombre);
+  const existentes      = await Ejemplar.countDocuments({
+    codigo_inventario: new RegExp(`^${prefix}-`)
+  });
   const docs = [];
 
   for (let i = 1; i <= cantidad; i += 1) {
     const numero = String(existentes + i).padStart(4, '0');
     docs.push({
-      recurso_id: recurso._id,
-      recurso_titulo: recurso.titulo,
+      recurso_id:        recurso._id,
+      recurso_titulo:    recurso.titulo,
       codigo_inventario: `${prefix}-${numero}`,
-      estado: 'Disponible',
+      estado:            'Disponible',
       historial_estados: [],
-      creado_en: new Date(),
-      actualizado_en: new Date()
+      creado_en:         new Date(),
+      actualizado_en:    new Date()
     });
   }
 
@@ -292,23 +303,23 @@ async function crearEjemplaresParaRecurso(recurso, cantidad) {
 
 exports.index = async (req, res, next) => {
   try {
-    const q = String(req.query.q || '').trim();
+    const q             = String(req.query.q             || '').trim();
     const tipoContenido = String(req.query.tipo_contenido || '').trim();
-    const categoriaId = String(req.query.categoria_id || '').trim();
-    const estado = String(req.query.estado || '').trim();
+    const categoriaId   = String(req.query.categoria_id  || '').trim();
+    const estado        = String(req.query.estado         || '').trim();
 
     const filtro = {};
     if (q) {
       filtro.$or = [
-        { titulo: new RegExp(q, 'i') },
-        { autor: new RegExp(q, 'i') },
-        { isbn: new RegExp(q, 'i') },
-        { 'categorias.categoria_nombre': new RegExp(q, 'i') },
+        { titulo:                           new RegExp(q, 'i') },
+        { autor:                            new RegExp(q, 'i') },
+        { isbn:                             new RegExp(q, 'i') },
+        { 'categorias.categoria_nombre':    new RegExp(q, 'i') },
         { 'categorias.subcategoria_nombre': new RegExp(q, 'i') }
       ];
     }
     if (tipoContenido) filtro.tipo_contenido = tipoContenido;
-    if (estado) filtro.estado = estado;
+    if (estado)        filtro.estado         = estado;
     if (mongoose.isValidObjectId(categoriaId)) filtro['categorias.categoria_id'] = categoriaId;
 
     const [recursos, categorias] = await Promise.all([
@@ -347,8 +358,14 @@ function extension(filename) {
 }
 
 function tipoArchivoFromExt(ext) {
-  const map = { pdf: 'pdf', epub: 'epub', mp3: 'mp3', mp4: 'mp4' };
-  return map[ext];
+  // Mapea extensión al tipo almacenado en la BD
+  const audioExts = ['mp3', 'wav', 'm4b', 'm4a', 'ogg', 'aac', 'flac'];
+  const videoExts = ['mp4', 'webm', 'avi', 'mov', 'mkv'];
+  if (audioExts.includes(ext)) return ext;
+  if (videoExts.includes(ext)) return ext;
+  if (ext === 'pdf')  return 'pdf';
+  if (ext === 'epub') return 'epub';
+  return ext;
 }
 
 function materialFromContenido(tipoContenido) {
@@ -358,8 +375,8 @@ function materialFromContenido(tipoContenido) {
 }
 
 function allowedMainExtensions(tipoContenido) {
-  if (tipoContenido === 'Audio') return ['mp3'];
-  if (tipoContenido === 'Video') return ['mp4'];
+  if (tipoContenido === 'Audio') return ['mp3', 'wav', 'm4b', 'm4a', 'ogg', 'aac', 'flac', 'wma'];
+  if (tipoContenido === 'Video') return ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'];
   return ['pdf', 'epub'];
 }
 
@@ -398,7 +415,7 @@ exports.editar = async (req, res, next) => {
     }
 
     return res.render('admin/recursos/nuevo', {
-      title: 'Editar recurso',
+      title:    'Editar recurso',
       recurso,
       categorias
     });
@@ -415,10 +432,10 @@ exports.crear = async (req, res, next) => {
       return res.redirect('/admin/recursos/nuevo');
     }
 
-    const payload = await buildRecursoPayload(req);
+    const payload   = await buildRecursoPayload(req);
     payload.creado_en = new Date();
-    const recurso = await Recurso.create(payload);
-    const cantidad = payload.fisico?.total_ejemplares || 0;
+    const recurso   = await Recurso.create(payload);
+    const cantidad  = payload.fisico?.total_ejemplares || 0;
     await crearEjemplaresParaRecurso(recurso, cantidad);
 
     flash(req, 'success', 'Recurso creado correctamente.');
@@ -436,10 +453,10 @@ exports.procesarMasivo = async (req, res, next) => {
     }
 
     const tipoContenido = req.body.tipo_contenido || 'Lectura';
-    const allowed = allowedMainExtensions(tipoContenido);
-    const zip = new AdmZip(req.file.buffer);
-    const entries = zip.getEntries().filter((entry) => !entry.isDirectory);
-    const folders = new Map();
+    const allowed       = allowedMainExtensions(tipoContenido);
+    const zip           = new AdmZip(req.file.buffer);
+    const entries       = zip.getEntries().filter((entry) => !entry.isDirectory);
+    const folders       = new Map();
 
     for (const entry of entries) {
       const parts = entry.entryName.split('/').filter(Boolean);
@@ -459,50 +476,47 @@ exports.procesarMasivo = async (req, res, next) => {
         continue;
       }
 
-      const image = files.find((file) => ['jpg', 'jpeg', 'png', 'webp'].includes(extension(file)));
+      const image   = files.find((file) => ['jpg', 'jpeg', 'png', 'webp'].includes(extension(file)));
       const mainExt = extension(main);
 
       await Recurso.create({
         tipo_naturaleza: 'Digital',
-        tipo_contenido: tipoContenido,
-        tipo_material: materialFromContenido(tipoContenido),
-        titulo: folder,
-        autor: 'Pendiente de completar',
-        descripcion: 'Recurso cargado masivamente. Pendiente de completar metadatos, licencia y publicación.',
-        idioma: '',
-        imagen: {
-          url: image ? `/img/placeholder.png` : '/img/placeholder.png',
-          public_id: '',
-          es_default: true
-        },
-        categorias: [],
-        estado: 'Pendiente de configuración',
+        tipo_contenido:  tipoContenido,
+        tipo_material:   materialFromContenido(tipoContenido),
+        titulo:          folder,
+        autor:           'Pendiente de completar',
+        descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
+        idioma:          '',
+        imagen:          { url: '/img/placeholder.png', public_id: '', es_default: true },
+        categorias:      [],
+        estado:          'Pendiente de configuración',
         digital: {
-          tipo_licencia: 'Libre',
+          tipo_licencia:         'Libre',
           archivos: [{
-            tipo: tipoArchivoFromExt(mainExt),
-            url: `zip://${folder}/${main}`,
-            public_id: '',
+            tipo:         tipoArchivoFromExt(mainExt),
+            url:          `zip://${folder}/${main}`,
+            public_id:    '',
             es_principal: true,
             tamano_bytes: 0,
-            subido_en: new Date()
+            subido_en:    new Date()
           }],
-          licencias_en_uso: 0,
+          licencias_en_uso:      0,
           estado_disponibilidad: 'Acceso libre'
         },
-        fisico: undefined,
-        publicado: false,
+        fisico:          undefined,
+        publicado:       false,
         total_prestamos: 0,
-        total_reservas: 0,
-        creado_en: new Date(),
-        actualizado_en: new Date()
+        total_reservas:  0,
+        creado_en:       new Date(),
+        actualizado_en:  new Date()
       });
 
       creados += 1;
     }
 
     const detalleErrores = errores.length ? ` Errores: ${errores.join(' ')}` : '';
-    flash(req, errores.length ? 'error' : 'success', `Carga procesada. Recursos creados: ${creados}.${detalleErrores}`);
+    flash(req, errores.length ? 'error' : 'success',
+      `Carga procesada. Recursos creados: ${creados}.${detalleErrores}`);
     return res.redirect('/admin/recursos');
   } catch (error) {
     next(error);
@@ -511,7 +525,7 @@ exports.procesarMasivo = async (req, res, next) => {
 
 exports.actualizar = async (req, res, next) => {
   try {
-    const payload = await buildRecursoPayload(req);
+    const payload        = await buildRecursoPayload(req);
     const recursoAnterior = await Recurso.findById(req.params.id);
     if (!recursoAnterior) {
       flash(req, 'error', 'El recurso no existe.');
@@ -520,10 +534,13 @@ exports.actualizar = async (req, res, next) => {
 
     await Recurso.findByIdAndUpdate(req.params.id, payload, { runValidators: true });
 
-    const nuevaCantidad = payload.fisico?.total_ejemplares || 0;
+    const nuevaCantidad     = payload.fisico?.total_ejemplares || 0;
     const ejemplaresActuales = await Ejemplar.countDocuments({ recurso_id: req.params.id });
     if (nuevaCantidad > ejemplaresActuales) {
-      await crearEjemplaresParaRecurso({ ...recursoAnterior.toObject(), ...payload, _id: recursoAnterior._id }, nuevaCantidad - ejemplaresActuales);
+      await crearEjemplaresParaRecurso(
+        { ...recursoAnterior.toObject(), ...payload, _id: recursoAnterior._id },
+        nuevaCantidad - ejemplaresActuales
+      );
     }
 
     flash(req, 'success', 'Recurso actualizado correctamente.');
