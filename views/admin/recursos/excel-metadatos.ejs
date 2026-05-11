@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | Biblioteca Digital</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/components/forms.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <style>
+    .badge-ok      { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#d1fae5; color:#065f46; }
+    .badge-warn    { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#fef3c7; color:#92400e; }
+    .badge-error   { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#fee2e2; color:#991b1b; }
+    .resultado-tabla { width:100%; border-collapse:collapse; margin-top:1rem; }
+    .resultado-tabla th { text-align:left; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted,#6b7280); border-bottom:2px solid var(--border,#e5e7eb); padding:.5rem .75rem; }
+    .resultado-tabla td { padding:.65rem .75rem; border-bottom:1px solid var(--border,#e5e7eb); font-size:.9rem; vertical-align:middle; }
+    .errores-lista { margin-top:1rem; background:#fff7ed; border-left:4px solid #f97316; padding:.75rem 1rem; border-radius:.25rem; }
+    .errores-lista li { font-size:.88rem; color:#c2410c; margin:.3rem 0; }
+    .summary-bar { display:flex; gap:1.5rem; margin:.75rem 0 1.25rem; flex-wrap:wrap; }
+    .summary-stat { font-size:.9rem; }
+    .summary-stat strong { font-size:1.25rem; display:block; }
+    .btn-spinner { display:none; }
+    form.submitting .btn-spinner { display:inline-block; }
+    form.submitting .btn-label   { display:none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-icon { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+  </style>
+</head>
+<body class="admin-shell">
+  <%- include('../../partials/adminSidebar') %>
+
+  <main class="admin-main">
+    <%- include('../../partials/alertas') %>
+
+    <section class="panel page-header">
+      <div>
+        <p class="eyebrow">Actualización por lotes</p>
+        <h1>Importar metadatos desde Excel</h1>
+      </div>
+      <a class="secondary-link" href="/admin/recursos">Volver</a>
+    </section>
+
+    <% if (typeof resultados === 'undefined' || !resultados) { %>
+    <section class="panel">
+      <h2>Subir archivo Excel</h2>
+      <p class="form-hint" style="margin-bottom:1rem">
+        Cargue un archivo <code>.xlsx</code> o <code>.csv</code> con los metadatos de sus recursos.<br>
+        <strong>Columna clave:</strong> "Nombre del Archivo" (sin extensión, ej: libro1, video1).<br>
+        <strong>Campos actualizables:</strong> Autor, Descripción, ISBN, Clasificación, Editorial, Fecha Publicación, Duración, etc.
+      </p>
+
+      <form
+        class="form-stack"
+        method="post"
+        action="/admin/recursos/excel-metadatos/procesar"
+        enctype="multipart/form-data"
+        onsubmit="this.classList.add('submitting')"
+      >
+        <label>
+          Archivo Excel <small>(máx. 10 MB)</small>
+          <input type="file" name="excel" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" required>
+        </label>
+
+        <label>
+          <input type="checkbox" name="auto_publicar" value="true">
+          Publicar automáticamente recursos completados (cuando tengan título y clasificación)
+        </label>
+
+        <div class="panel-note">
+          El sistema buscará cada "Nombre del Archivo" en la base de datos y actualizará solo los campos presentes en el Excel. 
+          Si un recurso no existe, se reportará como error pero no se creará uno nuevo.
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">
+            <span class="btn-label">Procesar Excel →</span>
+            <span class="btn-spinner"><span class="spinner-icon"></span> Procesando…</span>
+          </button>
+          <a class="secondary-link" href="/admin/recursos">Cancelar</a>
+        </div>
+      </form>
+    </section>
+
+    <% } else { %>
+    <section class="panel">
+      <h2>Resultados de la importación</h2>
+
+      <!-- Resumen -->
+      <div class="summary-bar">
+        <div class="summary-stat">
+          <strong><%= resultados.procesados %></strong>
+          Procesados
+        </div>
+        <div class="summary-stat">
+          <strong style="color:#065f46"><%= resultados.exitosos %></strong>
+          Actualizados
+        </div>
+        <div class="summary-stat">
+          <strong style="color:#991b1b"><%= resultados.errores.length %></strong>
+          Con errores
+        </div>
+        <% if (resultados.publicados) { %>
+        <div class="summary-stat">
+          <strong style="color:#0369a1"><%= resultados.publicados %></strong>
+          Publicados
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Errores detallados -->
+      <% if (resultados.errores.length > 0) { %>
+      <div class="errores-lista">
+        <strong style="font-size:.9rem">Problemas detectados:</strong>
+        <ul style="margin:.5rem 0 0; padding-left:1.2rem">
+          <% resultados.errores.forEach(e => { %>
+          <li><%= e %></li>
+          <% }) %>
+        </ul>
+      </div>
+      <% } %>
+
+      <!-- Detalles actualizados -->
+      <% if (resultados.detalles && resultados.detalles.length > 0) { %>
+      <div style="margin-top:1.5rem; overflow-x:auto">
+        <h3 style="font-size:1rem; margin-bottom:.75rem">Recursos actualizados</h3>
+        <table class="resultado-tabla">
+          <thead>
+            <tr>
+              <th>Archivo</th>
+              <th>Título</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% resultados.detalles.forEach(d => { %>
+            <tr>
+              <td><small style="color:var(--text-muted,#6b7280)"><%= d.nombreArchivo %></small></td>
+              <td><strong><%= d.titulo %></strong></td>
+              <td>
+                <span class="badge-ok">Actualizado</span>
+                <% if (d.publicado) { %>
+                  <span class="badge-ok" style="margin-left:.25rem">Publicado</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+      <div class="form-actions" style="margin-top:1.5rem">
+        <a class="secondary-link" href="/admin/recursos/excel-metadatos">Cargar otro Excel</a>
+        <a class="secondary-link" href="/admin/recursos">Ver recursos</a>
+      </div>
+    </section>
+    <% } %>
+
+  </main>
+</body>
+</html>

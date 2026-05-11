@@ -2,7 +2,7 @@ const router = require('express').Router();
 const controller = require('../../controllers/admin/recursoController');
 const isAdminAuth = require('../../middlewares/isAdminAuth');
 const validarRecurso = require('../../middlewares/validarRecurso');
-const { uploadRecurso } = require('../../middlewares/uploadMiddleware');
+const { uploadRecurso, uploadZip } = require('../../middlewares/uploadMiddleware');
 
 router.use(isAdminAuth);
 
@@ -18,8 +18,14 @@ router.post(
   controller.subirArchivo
 );
 
-router.post('/',       uploadRecurso.fields([{ name: 'imagen' }, { name: 'archivo' }]), validarRecurso, controller.crear);
-router.post('/masivo', uploadRecurso.single('zip'), controller.procesarMasivo);
+// ── Carga individual
+router.post('/', uploadRecurso.fields([{ name: 'imagen' }, { name: 'archivo' }]), validarRecurso, controller.crear);
+
+// ── HU-08 PASO 1: el admin sube el ZIP → el sistema lo analiza y muestra vista previa (CA4)
+router.post('/masivo/previsualizar', uploadZip.single('zip'), controller.previsualizarMasivo);
+
+// ── HU-08 PASO 2: el admin confirma (CA5) o cancela (CA6)
+router.post('/masivo/confirmar', controller.confirmarMasivo);
 
 router.get('/:id',        controller.detalle);
 router.get('/:id/editar', controller.editar);

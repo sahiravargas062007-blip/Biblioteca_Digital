@@ -7,6 +7,29 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/admin.css">
   <link rel="stylesheet" href="/css/components/forms.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
+  <style>
+    /* ── Estilos específicos para la carga masiva ─────────────────── */
+    .badge-ok      { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#d1fae5; color:#065f46; }
+    .badge-warn    { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#fef3c7; color:#92400e; }
+    .badge-error   { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#fee2e2; color:#991b1b; }
+    .preview-table { width:100%; border-collapse:collapse; margin-top:1rem; }
+    .preview-table th { text-align:left; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted,#6b7280); border-bottom:2px solid var(--border,#e5e7eb); padding:.5rem .75rem; }
+    .preview-table td { padding:.65rem .75rem; border-bottom:1px solid var(--border,#e5e7eb); font-size:.9rem; vertical-align:middle; }
+    .preview-table tr:last-child td { border-bottom:none; }
+    .errores-lista { margin-top:1rem; background:#fff7ed; border-left:4px solid #f97316; padding:.75rem 1rem; border-radius:.25rem; }
+    .errores-lista li { font-size:.88rem; color:#c2410c; margin:.3rem 0; }
+    .summary-bar { display:flex; gap:1.5rem; margin:.75rem 0 1.25rem; flex-wrap:wrap; }
+    .summary-stat { font-size:.9rem; }
+    .summary-stat strong { font-size:1.25rem; display:block; }
+    .progress-msg { font-size:.85rem; color:var(--text-muted,#6b7280); margin-top:.4rem; }
+    /* Spinner para cuando el formulario se está enviando */
+    .btn-spinner { display:none; }
+    form.submitting .btn-spinner { display:inline-block; }
+    form.submitting .btn-label   { display:none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-icon { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+  </style>
 </head>
 <body class="admin-shell">
   <%- include('../../partials/adminSidebar') %>
@@ -22,32 +45,185 @@
       <a class="secondary-link" href="/admin/recursos">Volver</a>
     </section>
 
+    <% if (typeof previsualizar === 'undefined' || !previsualizar) { %>
+    <%
+      /*
+       * ─────────────────────────────────────────────────────────────────────
+       * PASO 1 — Formulario inicial: el admin selecciona el ZIP
+       * ─────────────────────────────────────────────────────────────────────
+       */
+    %>
     <section class="panel">
-      <form class="form-stack" method="post" action="/admin/recursos/masivo" enctype="multipart/form-data">
+      <h2>Subir archivo ZIP</h2>
+      <p class="form-hint" style="margin-bottom:1rem">
+        El sistema aceptará las siguientes estructuras internas:<br>
+        <strong>Estructura plana</strong> — archivos sueltos asociados por nombre (ej: <code>libro1.pdf</code> y <code>libro1.jpg</code>).<br>
+        <strong>Estructura por carpetas</strong> — cada subcarpeta = 1 recurso; el nombre de la carpeta se usa como título provisional.
+      </p>
+
+      <form
+        class="form-stack"
+        method="post"
+        action="/admin/recursos/masivo/previsualizar"
+        enctype="multipart/form-data"
+        onsubmit="this.classList.add('submitting')"
+      >
         <label>
           Tipo de contenido del ZIP
           <select name="tipo_contenido" required>
-            <option value="Lectura">Lectura: PDF o ePub</option>
-            <option value="Audio">Audio: MP3</option>
-            <option value="Video">Video: MP4</option>
+            <option value="Lectura">Lectura — Principal: PDF / ePub, Portada: imagen, Complemento: MP3</option>
+            <option value="Audio">Audio — Principal: MP3, Portada: imagen</option>
+            <option value="Video">Video — Principal: MP4, Portada: imagen</option>
           </select>
         </label>
 
         <label>
-          Archivo ZIP
-          <input type="file" name="zip" accept=".zip" required>
+          Archivo ZIP <small>(máx. 500 MB)</small>
+          <input type="file" name="zip" accept=".zip,application/zip,application/x-zip-compressed" required>
         </label>
 
         <div class="panel-note">
-          Cada carpeta dentro del ZIP será registrada como un recurso pendiente de configuración. Luego debe completar metadatos, categorías, licencia y publicación desde la edición individual.
+          Los recursos se crearán con estado <strong>Pendiente de configuración</strong> y no serán visibles al público hasta que complete sus metadatos individualmente.
         </div>
 
         <div class="form-actions">
-          <button type="submit">Procesar ZIP</button>
+          <button type="submit">
+            <span class="btn-label">Analizar ZIP →</span>
+            <span class="btn-spinner"><span class="spinner-icon"></span> Analizando…</span>
+          </button>
           <a class="secondary-link" href="/admin/recursos">Cancelar</a>
         </div>
       </form>
     </section>
+
+    <% } else { %>
+    <%
+      /*
+       * ─────────────────────────────────────────────────────────────────────
+       * PASO 2 — Vista previa: el admin revisa y confirma o cancela (CA4)
+       * ─────────────────────────────────────────────────────────────────────
+       */
+      const validos   = recursos.filter(r => r.tieneMain);
+      const invalidos = recursos.filter(r => !r.tieneMain);
+    %>
+    <section class="panel">
+      <h2>Vista previa de la carga</h2>
+      <p class="form-hint">
+        Revise los recursos detectados antes de confirmar. <strong>Se guardarán todos</strong> — inclusive los sin archivo digital (completar luego).
+      </p>
+
+      <!-- Resumen estadístico -->
+      <div class="summary-bar">
+        <div class="summary-stat">
+          <strong><%= recursos.length %></strong>
+          Total detectados
+        </div>
+        <div class="summary-stat">
+          <strong style="color:#065f46"><%= recursos.length %></strong>
+          Se crearán
+        </div>
+        <div class="summary-stat">
+          <strong style="color:#991b1b"><%= invalidos.length %></strong>
+          Sin archivo
+        </div>
+        <div class="summary-stat">
+          <strong><%= tipoContenido %></strong>
+          Tipo de contenido
+        </div>
+      </div>
+
+      <!-- Tabla de recursos detectados -->
+      <% if (recursos.length > 0) { %>
+      <div style="overflow-x:auto">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Título provisional</th>
+              <th>Estado</th>
+              <th>Portada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recursos.forEach((r, i) => { %>
+            <tr>
+              <td style="color:var(--text-muted,#6b7280);font-size:.8rem"><%= i + 1 %></td>
+              <td><strong><%= r.titulo %></strong></td>
+              <td>
+                <% if (r.tieneMain) { %>
+                  <span class="badge-ok">Listo</span>
+                <% } else { %>
+                  <span class="badge-error">Sin archivo principal</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (r.tienePortada) { %>
+                  <span class="badge-ok">Incluida</span>
+                <% } else { %>
+                  <span class="badge-warn">Usará placeholder</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+      <!-- Errores de detección (CA4) -->
+      <% if (errores && errores.length > 0) { %>
+      <div class="errores-lista">
+        <strong style="font-size:.9rem">Problemas detectados:</strong>
+        <ul style="margin:.5rem 0 0; padding-left:1.2rem">
+          <% errores.forEach(e => { %>
+          <li><%= e %></li>
+          <% }) %>
+        </ul>
+      </div>
+      <% } %>
+
+      <!-- Formulario de confirmación / cancelación (CA5 y CA6) -->
+      <form
+        class="form-stack"
+        method="post"
+        action="/admin/recursos/masivo/confirmar"
+        style="margin-top:1.5rem"
+        onsubmit="if(this.accion && this.accion.value!=='cancelar') this.classList.add('submitting')"
+      >
+        <!-- El ZIP temporal se identifica por nombre de archivo para no reenviar el contenido completo -->
+        <input type="hidden" name="tipo_contenido" value="<%= tipoContenido %>">
+        <input type="hidden" name="zip_temp_name" value="<%= zipTempName %>">
+
+        <% if (validos.length > 0) { %>
+        <div class="panel-note">
+          Se subirán <strong><%= recursos.length %> recurso(s)</strong> a Cloudinary y se registrarán en la base de datos con estado <em>Pendiente de configuración</em>.
+          Los que carecen de archivo digital podrán completarse después. Este proceso puede tardar varios minutos dependiendo del tamaño de los archivos.
+        </div>
+        <% } else { %>
+        <div class="panel-note">
+          Se registrarán <strong><%= recursos.length %> recurso(s)</strong> con estado <em>Pendiente de configuración</em>.
+          Completar archivos y metadatos después.
+        </div>
+        <% } %>
+
+        <div class="form-actions">
+          <button type="submit" name="accion" value="confirmar">
+            <span class="btn-label">Confirmar y guardar (<%= recursos.length %>)</span>
+            <span class="btn-spinner"><span class="spinner-icon"></span> Subiendo archivos…</span>
+          </button>
+          <!-- CA6: cancelar limpia sin guardar nada -->
+          <button
+            type="submit"
+            name="accion"
+            value="cancelar"
+            class="secondary-link"
+            style="background:none;border:none;cursor:pointer;padding:0"
+          >Cancelar y descartar</button>
+        </div>
+      </form>
+    </section>
+    <% } %>
+
   </main>
 </body>
 </html>

@@ -1,95 +1,224 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %> | Biblioteca Digital</title>
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/admin.css">
-  <link rel="stylesheet" href="/css/components/cards.css">
-  <link rel="stylesheet" href="/css/components/badges.css">
-</head>
-<body class="admin-shell">
-  <%- include('../../partials/adminSidebar') %>
+<%- include('../../partials/adminPageStart') %>
 
-  <main class="admin-main">
-    <%- include('../../partials/alertas') %>
+<link rel="stylesheet" href="/css/components/tables.css">
+<link rel="stylesheet" href="/css/components/badges.css">
 
-    <section class="panel page-header">
-      <div>
-        <p class="eyebrow">Catálogo administrativo</p>
-        <h1>Materiales</h1>
+<style>
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  .reporte-header { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; }
+  .summary-row    { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:2rem; }
+  .summary-card   { background:var(--color-surface,#fff); border:1px solid var(--color-border,#e2e8f0); border-radius:10px; padding:1.25rem 1.5rem; }
+  .summary-card .label  { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--color-muted,#667085); margin:0 0 .35rem; }
+  .summary-card .value  { font-size:2rem; font-weight:800; color:var(--color-primary,#146c5f); margin:0 0 .2rem; line-height:1; }
+  .summary-card .sub    { font-size:.78rem; color:var(--color-muted,#667085); margin:0; }
+
+  /* ── Sección ──────────────────────────────────────────────────────────── */
+  .reporte-seccion          { background:var(--color-surface,#fff); border:1px solid var(--color-border,#e2e8f0); border-radius:12px; padding:1.5rem; margin-bottom:2rem; }
+  .seccion-header           { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1.25rem; }
+  .seccion-header h2        { margin:0; font-size:1.1rem; }
+  .seccion-actions          { display:flex; gap:.5rem; flex-wrap:wrap; }
+  .seccion-actions a        { font-size:.82rem; padding:.35rem .9rem; border-radius:6px; border:1px solid var(--color-border,#e2e8f0); text-decoration:none; color:var(--color-text,#17202a); background:#fff; }
+  .seccion-actions a:hover  { background:var(--color-bg,#f6f7f9); }
+
+  /* ── Filtros ──────────────────────────────────────────────────────────── */
+  .filtros-row              { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:flex-end; }
+  .filtros-row label        { font-size:.82rem; font-weight:600; color:var(--color-muted,#667085); display:flex; flex-direction:column; gap:.25rem; }
+  .filtros-row input,
+  .filtros-row select       { font-size:.85rem; padding:.35rem .7rem; border:1px solid var(--color-border,#e2e8f0); border-radius:6px; }
+  .filtros-row button       { font-size:.85rem; padding:.38rem 1rem; border-radius:6px; border:none; background:var(--color-primary,#146c5f); color:#fff; cursor:pointer; }
+  .filtros-row button:hover { opacity:.88; }
+
+  /* ── Gráfico ──────────────────────────────────────────────────────────── */
+  .chart-wrap               { max-height:240px; margin-bottom:1.25rem; }
+
+  /* ── Tabla ────────────────────────────────────────────────────────────── */
+  .loading-msg              { text-align:center; color:var(--color-muted,#667085); padding:1.5rem!important; }
+  .badge-digital            { background:#e0f2fe; color:#0369a1; border-radius:999px; padding:2px 10px; font-size:.78rem; font-weight:700; }
+  .badge-fisico             { background:#dcfce7; color:#166534; border-radius:999px; padding:2px 10px; font-size:.78rem; font-weight:700; }
+</style>
+
+<div style="padding:1.5rem 2rem;">
+
+  <!-- Encabezado -->
+  <div class="reporte-header">
+    <div>
+      <p style="margin:0;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-muted,#667085);">Panel de control</p>
+      <h1 style="margin:0;font-size:1.6rem;">Reportes</h1>
+    </div>
+    <p style="margin:0;font-size:.85rem;color:var(--color-muted,#667085);">
+      <%= new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) %>
+    </p>
+  </div>
+
+  <!-- Tarjetas resumen -->
+  <div class="summary-row">
+    <div class="summary-card">
+      <p class="label">Total de recursos</p>
+      <p class="value"><%= resumen.totalRecursos %></p>
+      <p class="sub">Recursos activos en catálogo</p>
+    </div>
+    <div class="summary-card">
+      <p class="label">Préstamos activos</p>
+      <p class="value"><%= resumen.prestamosActivos %></p>
+      <p class="sub">Activos, parciales y vencidos</p>
+    </div>
+    <div class="summary-card">
+      <p class="label">Usuarios sancionados</p>
+      <p class="value" style="color:#c0392b;"><%= resumen.usuariosSancionados %></p>
+      <p class="sub">Con sanciones activas</p>
+    </div>
+    <div class="summary-card">
+      <p class="label">Recurso más solicitado</p>
+      <p class="value" style="font-size:1rem;line-height:1.3;padding-top:.25rem;">
+        <%= resumen.recursoMasSolicitado ? resumen.recursoMasSolicitado.titulo : '—' %>
+      </p>
+      <p class="sub">
+        <%= resumen.recursoMasSolicitado ? resumen.recursoMasSolicitado.total_prestamos + ' préstamos' : 'Sin datos aún' %>
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN 1: Materiales más consultados                                 -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="reporte-seccion">
+    <div class="seccion-header">
+      <h2>📚 Materiales más consultados</h2>
+      <div class="seccion-actions">
+        <a id="pdf-materiales"   href="/admin/reportes/exportar/pdf?seccion=materiales">⬇ PDF</a>
+        <a id="excel-materiales" href="/admin/reportes/exportar/excel?seccion=materiales">⬇ Excel</a>
       </div>
-      <div class="actions">
-        <a class="secondary-link" href="/admin/recursos/masivo">Carga masiva</a>
-        <a class="button-link" href="/admin/recursos/nuevo">Nuevo recurso</a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros-row">
+      <label>
+        Desde
+        <input type="date" id="mat-desde">
+      </label>
+      <label>
+        Hasta
+        <input type="date" id="mat-hasta">
+      </label>
+      <label>
+        Tipo
+        <select id="mat-tipo">
+          <option value="">Todos</option>
+          <option value="Digital">Digital</option>
+          <option value="Físico">Físico</option>
+          <option value="Mixto">Mixto</option>
+        </select>
+      </label>
+      <button onclick="cargarMateriales()">Aplicar filtros</button>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="chart-wrap">
+      <canvas id="chartMateriales"></canvas>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <table class="table" id="tabla-materiales">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Título</th>
+            <th>Autor</th>
+            <th>Categoría</th>
+            <th>Tipo</th>
+            <th>Préstamos</th>
+            <th>Reservas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="7" class="loading-msg">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN 2: Préstamos activos                                          -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="reporte-seccion">
+    <div class="seccion-header">
+      <h2>📋 Préstamos activos</h2>
+      <div class="seccion-actions">
+        <a id="pdf-prestamos"   href="/admin/reportes/exportar/pdf?seccion=prestamos">⬇ PDF</a>
+        <a id="excel-prestamos" href="/admin/reportes/exportar/excel?seccion=prestamos">⬇ Excel</a>
       </div>
-    </section>
+    </div>
 
-    <section class="panel">
-      <form class="resource-filters" method="get" action="/admin/recursos">
-        <label>
-          Buscar
-          <input type="search" name="q" value="<%= filtros.q %>" placeholder="Título, autor, ISBN o categoría">
-        </label>
-        <label>
-          Tipo
-          <select name="tipo_contenido">
-            <option value="">Todos</option>
-            <% ['Lectura', 'Audio', 'Video'].forEach((tipo) => { %>
-              <option value="<%= tipo %>" <%= filtros.tipo_contenido === tipo ? 'selected' : '' %>><%= tipo %></option>
-            <% }) %>
-          </select>
-        </label>
-        <label>
-          Categoría
-          <select name="categoria_id">
-            <option value="">Todas</option>
-            <% categorias.forEach((categoria) => { %>
-              <option value="<%= categoria._id %>" <%= filtros.categoria_id === String(categoria._id) ? 'selected' : '' %>><%= categoria.nombre %></option>
-            <% }) %>
-          </select>
-        </label>
-        <label>
-          Estado
-          <select name="estado">
-            <option value="">Todos</option>
-            <% ['Activo', 'Inactivo', 'Pendiente de configuración', 'Bloqueado'].forEach((estado) => { %>
-              <option value="<%= estado %>" <%= filtros.estado === estado ? 'selected' : '' %>><%= estado %></option>
-            <% }) %>
-          </select>
-        </label>
-        <button type="submit">Filtrar</button>
-      </form>
-    </section>
+    <!-- Gráfico dona -->
+    <div style="display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.25rem;">
+      <div style="width:220px;flex-shrink:0;">
+        <canvas id="chartPrestamos"></canvas>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:.85rem;color:var(--color-muted,#667085);margin:0 0 .5rem;">
+          Distribución de préstamos activos entre modalidades física y digital.
+        </p>
+      </div>
+    </div>
 
-    <section class="resource-grid">
-      <% if (!recursos.length) { %>
-        <div class="panel"><p>No hay recursos registrados.</p></div>
-      <% } %>
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <table class="table" id="tabla-prestamos">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Documento</th>
+            <th>Recurso</th>
+            <th>Inicio</th>
+            <th>Límite</th>
+            <th>Estado</th>
+            <th>Días rest.</th>
+            <th>Modalidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="8" class="loading-msg">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-      <% recursos.forEach((recurso) => { %>
-        <article class="resource-card">
-          <a href="/admin/recursos/<%= recurso._id %>">
-            <img src="<%= recurso.imagen?.url || '/img/placeholder.png' %>" alt="">
-          </a>
-          <div class="resource-card-body">
-            <div class="resource-card-meta">
-              <span class="badge badge-no-disponible"><%= recurso.tipo_contenido %></span>
-              <span class="badge <%= recurso.estado === 'Activo' ? 'badge-disponible' : 'badge-no-disponible' %>"><%= recurso.estado %></span>
-            </div>
-            <h2><a href="/admin/recursos/<%= recurso._id %>"><%= recurso.titulo %></a></h2>
-            <p><%= recurso.autor %></p>
-            <p class="muted"><%= recurso.tipo_naturaleza %> · <%= recurso.tipo_material %></p>
-            <div class="tag-list">
-              <% recurso.categorias.forEach((categoria) => { %>
-                <span class="tag"><%= categoria.subcategoria_nombre || categoria.categoria_nombre %></span>
-              <% }) %>
-            </div>
-          </div>
-        </article>
-      <% }) %>
-    </section>
-  </main>
-</body>
-</html>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECCIÓN 3: Usuarios morosos                                           -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="reporte-seccion">
+    <div class="seccion-header">
+      <h2>⚠️ Usuarios con sanciones activas</h2>
+      <div class="seccion-actions">
+        <a id="pdf-morosos"   href="/admin/reportes/exportar/pdf?seccion=morosos">⬇ PDF</a>
+        <a id="excel-morosos" href="/admin/reportes/exportar/excel?seccion=morosos">⬇ Excel</a>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table" id="tabla-morosos">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Documento</th>
+            <th>Recurso</th>
+            <th>Incidencia</th>
+            <th>Sanción</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" class="loading-msg">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/admin/reportes.js"></script>
+
+<%- include('../../partials/adminPageEnd') %>

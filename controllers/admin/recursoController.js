@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 const AdmZip = require('adm-zip');
+const fs = require('fs').promises;
+const os = require('os');
+const path = require('path');
+const { randomUUID } = require('crypto');
 const { validationResult } = require('express-validator');
 const Categoria = require('../../models/Categoria');
 const Ejemplar  = require('../../models/Ejemplar');
@@ -15,6 +19,12 @@ const UMBRAL_CHUNKED = 90 * 1024 * 1024;
 
 // ── Tipos de archivo que necesitan chunked upload (videos generalmente) ────────
 const VIDEO_EXTS = new Set(['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv']);
+
+// ── Extensiones válidas de imagen / portada ───────────────────────────────────
+const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif']);
+
+// ── Upload Preset de Cloudinary (RN5) ─────────────────────────────────────────
+const UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || 'Biblioteca_name';
 
 // ── Resource type correcto para Cloudinary según extensión ────────────────────
 function cloudinaryResourceType(ext) {
@@ -62,7 +72,11 @@ async function subirArchivoCloudinary(fileBuffer, originalname, mimetype, titulo
 
   const resourceType = cloudinaryResourceType(ext);
   const publicId     = generarPublicId(titulo, ext);
-  const options      = { resource_type: resourceType, public_id: publicId };
+  const options      = {
+    resource_type: resourceType,
+    public_id:     publicId,
+    upload_preset: UPLOAD_PRESET,   // RN5: preset en todas las subidas
+  };
 
   // Archivos de video grandes → chunked upload para evitar timeout
   const usarChunked =
@@ -199,6 +213,7 @@ async function buildRecursoPayload(req) {
     const result   = await subirBuffer(imagenFile.buffer, {
       resource_type: 'image',
       public_id:     publicId,
+      upload_preset: UPLOAD_PRESET,
     });
     imagen = { url: result.secure_url, public_id: result.public_id, es_default: false };
   } else if (String(req.body.imagen_url || '').trim()) {
@@ -328,13 +343,14 @@ exports.index = async (req, res, next) => {
     if (estado)        filtro.estado         = estado;
     if (mongoose.isValidObjectId(categoriaId)) filtro['categorias.categoria_id'] = categoriaId;
 
-    const [recursos, categorias] = await Promise.all([
+    const [recursos, categorias, resumen] = await Promise.all([
       Recurso.find(filtro).sort({ creado_en: -1 }).lean(),
       Categoria.find({ activa: true }).sort({ nombre: 1 }).lean(),
+      require('../../services/reporteService').resumen()
     ]);
 
     res.render('admin/recursos/index', {
-      title: 'Materiales', recursos, categorias,
+      title: 'Materiales', recursos, categorias, resumen,
       filtros: { q, tipo_contenido: tipoContenido, categoria_id: categoriaId, estado },
     });
   } catch (error) {
@@ -353,6 +369,122 @@ exports.nuevo = async (req, res, next) => {
 
 exports.masivo = (req, res) =>
   res.render('admin/recursos/masivo', { title: 'Carga masiva' });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HU-09: Importación de metadatos desde Excel
+// ─────────────────────────────────────────────────────────────────────────────
+exports.excelMetadatos = (req, res) =>
+  res.render('admin/recursos/excel-metadatos', { title: 'Importar metadatos' });
+
+exports.procesarExcelMetadatos = async (req, res, next) => {
+  const { parsearExcel } = require('../../services/excelService');
+
+  try {
+    if (!req.file) {
+      flash(req, 'error', 'Debe seleccionar un archivo Excel.');
+      return res.redirect('/admin/recursos/excel-metadatos');
+    }
+
+    // Parsear Excel
+    const { filas, errores: erroresParsingExcel } = parsearExcel(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    if (filas.length === 0) {
+      const todoErrores = erroresParsingExcel.length
+        ? erroresParsingExcel.join(' | ')
+        : 'No se pudieron procesar filas.';
+      flash(req, 'error', `Error al leer Excel: ${todoErrores}`);
+      return res.redirect('/admin/recursos/excel-metadatos');
+    }
+
+    let exitosos = 0;
+    let publicados = 0;
+    const detalles = [];
+    const errores = [...erroresParsingExcel];
+
+    // CA-03: Actualizar registros existentes
+    for (const registro of filas) {
+      try {
+        // Buscar recurso por nombreArchivoOriginal en archivos digitales
+        const recursoBuscado = await Recurso.findOne({
+          'digital.archivos': {
+            $elemMatch: { public_id: { $regex: registro.nombreArchivoOriginal, $options: 'i' } },
+          },
+        });
+
+        if (!recursoBuscado) {
+          errores.push(
+            `No se encontró recurso para archivo: "${registro.nombreArchivoOriginal}"`
+          );
+          continue;
+        }
+
+        // RN-02: Validar campos obligatorios antes de cambiar estado
+        const datosMerged = { ...recursoBuscado.toObject(), ...registro.datosProcesados };
+        const tieneObligatorios = datosMerged.titulo && datosMerged.clasificacion;
+
+        // Determinar nuevo estado
+        let nuevoEstado = recursoBuscado.estado;
+        if (req.body.auto_publicar === 'true' && tieneObligatorios) {
+          nuevoEstado = 'Activo';
+        }
+
+        // CA-03: Actualizar con findOneAndUpdate
+        const actualizado = await Recurso.findByIdAndUpdate(
+          recursoBuscado._id,
+          {
+            ...registro.datosProcesados,
+            estado: nuevoEstado,
+            publicado: req.body.auto_publicar === 'true' && tieneObligatorios,
+            actualizado_en: new Date(),
+          },
+          { new: true }
+        );
+
+        if (actualizado) {
+          exitosos += 1;
+          if (actualizado.publicado) publicados += 1;
+
+          detalles.push({
+            nombreArchivo: registro.nombreArchivoOriginal,
+            titulo: actualizado.titulo || 'Sin título',
+            publicado: actualizado.publicado,
+          });
+        }
+      } catch (errActualizar) {
+        console.error(
+          `[ExcelMetadatos] Error procesando "${registro.nombreArchivoOriginal}":`,
+          errActualizar
+        );
+        errores.push(
+          `"${registro.nombreArchivoOriginal}": ${errActualizar.message}`
+        );
+      }
+    }
+
+    // CA-04: Reporte de resultados
+    const resultados = {
+      procesados: filas.length,
+      exitosos,
+      publicados: req.body.auto_publicar === 'true' ? publicados : 0,
+      errores,
+      detalles,
+    };
+
+    return res.render('admin/recursos/excel-metadatos', {
+      title: 'Importar metadatos — Resultados',
+      resultados,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS PARA CARGA MASIVA (HU-08)
+// ─────────────────────────────────────────────────────────────────────────────
 
 function extension(filename) {
   return filename.split('.').pop().toLowerCase();
@@ -379,6 +511,322 @@ function allowedMainExtensions(tipoContenido) {
   if (tipoContenido === 'Video') return ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'];
   return ['pdf', 'epub'];
 }
+
+// ── Normaliza el nombre base (sin extensión) para asociar archivos planos ─────
+function nombreBase(filename) {
+  const partes = filename.split('.');
+  if (partes.length > 1) partes.pop();
+  return partes.join('.').toLowerCase();
+}
+
+/**
+ * Si el ZIP tiene un folder raíz único que envuelve todo, lo quitamos.
+ * Ejemplo: Ejemplo/Libro1/archivo.pdf -> Libro1/archivo.pdf
+ */
+function stripCommonRoot(entries) {
+  const paths = entries.map((e) => e.entryName.split('/').filter(Boolean));
+  if (paths.length === 0) return entries.map((entry) => ({ entry, normalizedEntryName: entry.entryName }));
+
+  const root = paths[0][0];
+  const commonRoot = paths.every((parts) => parts[0] === root);
+  const hasDeepEntry = paths.some((parts) => parts.length > 1);
+
+  if (!commonRoot || !hasDeepEntry) {
+    return entries.map((entry) => ({ entry, normalizedEntryName: entry.entryName }));
+  }
+
+  return entries.map((entry) => {
+    const parts = entry.entryName.split('/').filter(Boolean);
+    return {
+      entry,
+      normalizedEntryName: parts.slice(1).join('/'),
+    };
+  });
+}
+
+/**
+ * CA1 + CA2: Analiza las entradas del ZIP y devuelve recursos detectados.
+ * - Estructura plana  → asociación por nombre base compartido.
+ * - Estructura carpetas → cada carpeta = 1 recurso.
+ */
+function analizarZip(zip, tipoContenido) {
+  const allowedMain = allowedMainExtensions(tipoContenido);
+  const allEntries = zip.getEntries().filter((e) => e.entryName && e.entryName !== '');
+  const entries = stripCommonRoot(allEntries);
+  const fileEntries = entries.filter(({ entry }) => !entry.isDirectory && !entry.entryName.endsWith('/'));
+
+  // ¿Hay entradas dentro de subcarpetas? → estructura por carpetas
+  const haySubcarpetas = entries.some(({ normalizedEntryName }) => {
+    const parts = normalizedEntryName.split('/').filter(Boolean);
+    return parts.length >= 2;
+  });
+
+  const recursos = [];
+  const errores  = [];
+
+  if (haySubcarpetas) {
+    // ── CA2: Estructura por carpetas ─────────────────────────────────────────
+    const folderNames = new Set();
+
+    for (const { normalizedEntryName } of entries) {
+      const parts = normalizedEntryName.split('/').filter(Boolean);
+      if (parts.length >= 2) folderNames.add(parts[0]);
+    }
+
+    for (const folder of folderNames) {
+      const folderEntries = fileEntries.filter(({ normalizedEntryName }) => {
+        const parts = normalizedEntryName.split('/').filter(Boolean);
+        return parts[0] === folder;
+      }).map(({ entry }) => entry);
+
+      const mainEntry        = folderEntries.find((e) => allowedMain.includes(extension(e.name)));
+      const portadaEntry     = folderEntries.find((e) => IMAGE_EXTS.has(extension(e.name)));
+      const complementoEntry = tipoContenido === 'Lectura'
+        ? folderEntries.find((e) => ['mp3', 'wav', 'm4a'].includes(extension(e.name)) && e !== mainEntry)
+        : null;
+
+      if (!mainEntry) {
+        errores.push(`Carpeta "${folder}" no tiene archivo principal válido para "${tipoContenido}".`);
+        recursos.push({ titulo: folder, tieneMain: false, tienePortada: !!portadaEntry });
+        continue;
+      }
+
+      recursos.push({
+        titulo:           folder,
+        tieneMain:        true,
+        tienePortada:     !!portadaEntry,
+        mainEntry,
+        portadaEntry:     portadaEntry     || null,
+        complementoEntry: complementoEntry || null,
+      });
+    }
+  } else {
+    // ── CA1: Estructura plana — asociación por nombre base ───────────────────
+    // Solo procesar archivos que tengan extensión
+    const entriesConExtension = entries.filter(({ entry }) => entry.name.includes('.'));
+
+    const grupos = new Map();
+
+    for (const { entry } of entriesConExtension) {
+      const ext  = extension(entry.name);
+      const base = nombreBase(entry.name);
+
+      if (!grupos.has(base)) grupos.set(base, { main: null, portada: null, complemento: null });
+      const grupo = grupos.get(base);
+
+      if (allowedMain.includes(ext))                                               grupo.main = entry;
+      else if (IMAGE_EXTS.has(ext))                                                grupo.portada = entry;
+      else if (tipoContenido === 'Lectura' && ['mp3','wav','m4a'].includes(ext))   grupo.complemento = entry;
+    }
+
+    for (const [base, grupo] of grupos.entries()) {
+      if (!grupo.main && !grupo.portada && !grupo.complemento) continue;
+
+      if (!grupo.main) {
+        errores.push(`Archivo "${base}" no tiene archivo principal válido para "${tipoContenido}".`);
+        recursos.push({ titulo: base, tieneMain: false, tienePortada: !!grupo.portada });
+        continue;
+      }
+
+      recursos.push({
+        titulo:           base.replace(/_/g, ' ').replace(/-/g, ' '),
+        tieneMain:        true,
+        tienePortada:     !!grupo.portada,
+        mainEntry:        grupo.main,
+        portadaEntry:     grupo.portada     || null,
+        complementoEntry: grupo.complemento || null,
+      });
+    }
+  }
+
+  return { recursos, errores };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PASO 1 — POST /admin/recursos/masivo/previsualizar
+// CA4: analizar el ZIP y mostrar previsualización sin guardar nada
+// ─────────────────────────────────────────────────────────────────────────────
+exports.previsualizarMasivo = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      flash(req, 'error', 'Debe seleccionar un archivo ZIP.');
+      return res.redirect('/admin/recursos/masivo');
+    }
+
+    const tipoContenido = req.body.tipo_contenido || 'Lectura';
+    const zip = new AdmZip(req.file.buffer);
+    const { recursos, errores } = analizarZip(zip, tipoContenido);
+
+    const zipTempName = `recursos-masivo-${randomUUID()}.zip`;
+    const zipTempPath = path.join(os.tmpdir(), zipTempName);
+    await fs.writeFile(zipTempPath, req.file.buffer);
+
+    return res.render('admin/recursos/masivo', {
+      title:         'Carga masiva — Vista previa',
+      previsualizar: true,
+      tipoContenido,
+      recursos,
+      errores,
+      zipTempName,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PASO 2 — POST /admin/recursos/masivo/confirmar
+// CA5: subir a Cloudinary y guardar en MongoDB
+// CA6: si cancela, no guarda nada
+// ─────────────────────────────────────────────────────────────────────────────
+exports.confirmarMasivo = async (req, res, next) => {
+  const zipTempName = req.body.zip_temp_name;
+  const zipTempPath = zipTempName ? path.join(os.tmpdir(), zipTempName) : null;
+  const tipoContenido = req.body.tipo_contenido || 'Lectura';
+
+  try {
+    // CA6: cancelar sin guardar nada
+    if (req.body.accion === 'cancelar') {
+      if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
+      flash(req, 'info', 'Carga masiva cancelada. No se guardaron cambios.');
+      return res.redirect('/admin/recursos');
+    }
+
+    if (!zipTempPath) {
+      flash(req, 'error', 'No se encontró el archivo ZIP temporal. Vuelva a intentarlo.');
+      return res.redirect('/admin/recursos/masivo');
+    }
+
+    const zipBuffer = await fs.readFile(zipTempPath);
+    const zip = new AdmZip(zipBuffer);
+    const { recursos, errores: erroresDeteccion } = analizarZip(zip, tipoContenido);
+
+    // Permitir guardar todos los recursos (con o sin archivo digital)
+    const recursosAGuardar = recursos;
+
+    if (recursosAGuardar.length === 0) {
+      flash(req, 'error', 'No se detectaron carpetas en el ZIP.');
+      return res.redirect('/admin/recursos/masivo');
+    }
+
+    let creados = 0;
+    const erroresSubida = [];
+
+    for (const recurso of recursosAGuardar) {
+      try {
+        const archivos = [];
+
+        // ── Subir archivo principal a Cloudinary solo si existe (RN5) ────────
+        if (recurso.mainEntry) {
+          const mainBuffer = recurso.mainEntry.getData();
+          const mainSubido = await subirArchivoCloudinary(
+            mainBuffer,
+            recurso.mainEntry.name,
+            '',
+            recurso.titulo
+          );
+
+          archivos.push({
+            tipo:         tipoArchivoFromExt(mainSubido.ext),
+            url:          mainSubido.url,
+            public_id:    mainSubido.public_id,
+            es_principal: true,
+            tamano_bytes: mainSubido.tamano_bytes,
+            subido_en:    new Date(),
+          });
+        }
+
+        // ── Complemento de audio (solo Lectura y si hay main) ───────────────
+        if (recurso.complementoEntry && recurso.mainEntry) {
+          const compBuffer = recurso.complementoEntry.getData();
+          const compSubido = await subirArchivoCloudinary(
+            compBuffer,
+            recurso.complementoEntry.name,
+            '',
+            `${recurso.titulo}_comp`
+          );
+          archivos.push({
+            tipo:         tipoArchivoFromExt(compSubido.ext),
+            url:          compSubido.url,
+            public_id:    compSubido.public_id,
+            es_principal: false,
+            tamano_bytes: compSubido.tamano_bytes,
+            subido_en:    new Date(),
+          });
+        }
+
+        // ── Portada: subir a Cloudinary o usar placeholder (CA3) ─────────────
+        let imagen = { url: '/img/placeholder.png', public_id: '', es_default: true };
+
+        if (recurso.portadaEntry) {
+          const portadaBuffer = recurso.portadaEntry.getData();
+          const portadaResult = await subirBuffer(portadaBuffer, {
+            resource_type: 'image',
+            public_id:     generarPublicId(recurso.titulo, 'portadas'),
+            upload_preset: UPLOAD_PRESET,
+          });
+          imagen = {
+            url:        portadaResult.secure_url,
+            public_id:  portadaResult.public_id,
+            es_default: false,
+          };
+        }
+
+        // ── RN4: guardar en MongoDB con estado "Pendiente de configuración" ──
+        await Recurso.create({
+          tipo_naturaleza: 'Digital',
+          tipo_contenido:  tipoContenido,
+          tipo_material:   materialFromContenido(tipoContenido),
+          titulo:          recurso.titulo,
+          autor:           'Pendiente de completar',
+          descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
+          idioma:          '',
+          imagen,
+          categorias:      [],
+          estado:          'Pendiente de configuración',
+          publicado:       false,
+          digital: {
+            tipo_licencia:         'Libre',
+            archivos,
+            licencias_en_uso:      0,
+            estado_disponibilidad: 'Acceso libre',
+          },
+          fisico:          undefined,
+          total_prestamos: 0,
+          total_reservas:  0,
+          creado_en:       new Date(),
+          actualizado_en:  new Date(),
+          ...(mongoose.isValidObjectId(req.session?.adminId)
+            ? { registrado_por: req.session.adminId }
+            : {}),
+        });
+
+        creados += 1;
+      } catch (errSubida) {
+        console.error(`[MasivoZIP] Error al procesar "${recurso.titulo}":`, errSubida);
+        erroresSubida.push(`"${recurso.titulo}": ${errSubida.message}`);
+      }
+    }
+
+    const totalErrores   = [...erroresDeteccion, ...erroresSubida];
+    const detalleErrores = totalErrores.length ? ` Problemas: ${totalErrores.join(' | ')}` : '';
+
+    flash(
+      req,
+      totalErrores.length ? 'error' : 'success',
+      `Carga completada. Recursos creados: ${creados}.${detalleErrores}`
+    );
+    return res.redirect('/admin/recursos');
+  } catch (error) {
+    next(error);
+  } finally {
+    if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESTO DE CONTROLLERS — idénticos a tu versión original
+// ─────────────────────────────────────────────────────────────────────────────
 
 exports.detalle = async (req, res, next) => {
   try {
@@ -441,86 +889,6 @@ exports.crear = async (req, res, next) => {
   }
 };
 
-exports.procesarMasivo = async (req, res, next) => {
-  try {
-    if (!req.file) {
-      flash(req, 'error', 'Debe seleccionar un archivo ZIP.');
-      return res.redirect('/admin/recursos/masivo');
-    }
-
-    const tipoContenido = req.body.tipo_contenido || 'Lectura';
-    const allowed       = allowedMainExtensions(tipoContenido);
-    const zip           = new AdmZip(req.file.buffer);
-    const entries       = zip.getEntries().filter((e) => !e.isDirectory);
-    const folders       = new Map();
-
-    for (const entry of entries) {
-      const parts = entry.entryName.split('/').filter(Boolean);
-      if (parts.length < 2) continue;
-      const folder = parts[0];
-      if (!folders.has(folder)) folders.set(folder, []);
-      folders.get(folder).push(parts.slice(1).join('/'));
-    }
-
-    let creados = 0;
-    const errores = [];
-
-    for (const [folder, files] of folders.entries()) {
-      const main = files.find((f) => allowed.includes(extension(f)));
-      if (!main) {
-        errores.push(`"${folder}" no contiene archivo principal válido para ${tipoContenido}.`);
-        continue;
-      }
-
-      const mainExt = extension(main);
-
-      await Recurso.create({
-        tipo_naturaleza: 'Digital',
-        tipo_contenido:  tipoContenido,
-        tipo_material:   materialFromContenido(tipoContenido),
-        titulo:          folder,
-        autor:           'Pendiente de completar',
-        descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
-        idioma:          '',
-        imagen:          { url: '/img/placeholder.png', public_id: '', es_default: true },
-        categorias:      [],
-        estado:          'Pendiente de configuración',
-        digital: {
-          tipo_licencia: 'Libre',
-          archivos: [{
-            tipo:         tipoArchivoFromExt(mainExt),
-            url:          `zip://${folder}/${main}`,
-            public_id:    '',
-            es_principal: true,
-            tamano_bytes: 0,
-            subido_en:    new Date(),
-          }],
-          licencias_en_uso:      0,
-          estado_disponibilidad: 'Acceso libre',
-        },
-        fisico:          undefined,
-        publicado:       false,
-        total_prestamos: 0,
-        total_reservas:  0,
-        creado_en:       new Date(),
-        actualizado_en:  new Date(),
-      });
-
-      creados += 1;
-    }
-
-    const detalleErrores = errores.length ? ` Errores: ${errores.join(' ')}` : '';
-    flash(
-      req,
-      errores.length ? 'error' : 'success',
-      `Carga procesada. Recursos creados: ${creados}.${detalleErrores}`
-    );
-    return res.redirect('/admin/recursos');
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.actualizar = async (req, res, next) => {
   try {
     const payload         = await buildRecursoPayload(req);
@@ -571,27 +939,6 @@ exports.buscarIsbn = async (req, res, next) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ENDPOINT DE PROGRESO — SUBIDA ASÍNCRONA (AJAX)
-// ─────────────────────────────────────────────────────────────────────────────
-// El frontend puede llamar a POST /admin/recursos/subir-archivo
-// y recibir { url, public_id, tamano_bytes, ext } sin bloquear el formulario.
-// Esto permite mostrar una barra de progreso real mientras el archivo se sube.
-//
-// Ejemplo de uso en la vista (fetch + FormData):
-//
-//   const fd = new FormData();
-//   fd.append('archivo', fileInput.files[0]);
-//   fd.append('titulo', tituloInput.value);
-//
-//   const res = await fetch('/admin/recursos/subir-archivo', {
-//     method: 'POST',
-//     body: fd
-//   });
-//   const data = await res.json();
-//   // data = { url, public_id, tamano_bytes, ext }
-//   // Guardar url y public_id en campos hidden del formulario principal
-//
 exports.subirArchivo = async (req, res, next) => {
   try {
     const archivoFile = req.files?.archivo?.[0] || req.file;
