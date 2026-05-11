@@ -36,6 +36,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Timeout extendido para subida de archivos grandes (videos) ────────────
+app.use('/admin/recursos', (req, res, next) => {
+  if (req.method === 'POST') {
+    res.setTimeout(10 * 60 * 1000); // 10 minutos
+  }
+  next();
+});
+
 app.use(routes);
 app.use(errorHandler);
 

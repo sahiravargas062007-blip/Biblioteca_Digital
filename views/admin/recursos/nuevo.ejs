@@ -7,6 +7,29 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/admin.css">
   <link rel="stylesheet" href="/css/components/forms.css">
+  <style>
+    .upload-widget-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .upload-widget-btn:hover { background: #1d4ed8; }
+    .upload-widget-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    .upload-status { margin-top: 8px; font-size: 13px; padding: 8px 12px; border-radius: 6px; display: none; }
+    .upload-status.loading { background: #eff6ff; color: #1d4ed8; display: block; }
+    .upload-status.success { background: #f0fdf4; color: #166534; display: block; }
+    .upload-status.error   { background: #fef2f2; color: #991b1b; display: block; }
+    .upload-preview { margin-top: 8px; font-size: 13px; color: #166534; }
+    .upload-preview a { color: inherit; font-weight: 600; }
+  </style>
 </head>
 <body class="admin-shell">
   <%- include('../../partials/adminSidebar') %>
@@ -67,7 +90,7 @@
           </label>
         </div>
 
-        <!-- ── ISBN (solo Lectura y Audiolibro comercial) ────────────────── -->
+        <!-- ── ISBN ──────────────────────────────────────────────────────── -->
         <div class="isbn-row" id="isbn-row">
           <label>
             ISBN
@@ -83,7 +106,6 @@
             Título
             <input name="titulo" id="titulo" required value="<%= recurso?.titulo || '' %>">
           </label>
-          <!-- Autor/Creador (todos los tipos) -->
           <label>
             <span id="label-autor">Autor / Creador</span>
             <input name="autor" id="autor" required value="<%= recurso?.autor || '' %>">
@@ -140,12 +162,10 @@
             <input type="date" name="fecha_publicacion"
                    value="<%= recurso?.fecha_publicacion ? new Date(recurso.fecha_publicacion).toISOString().slice(0,10) : '' %>">
           </label>
-          <!-- Páginas solo para Lectura -->
           <label id="paginas-wrap">
             Páginas
             <input type="number" min="0" name="cantidad_paginas" value="<%= recurso?.cantidad_paginas || '' %>">
           </label>
-          <!-- Duración para Audio y Video -->
           <label id="duracion-wrap">
             Duración (HH:MM:SS)
             <input name="duracion_hhmmss" id="duracion-hhmmss" placeholder="00:00:00"
@@ -165,7 +185,7 @@
           <label>
             <span id="label-imagen">Imagen de portada / carátula</span>
             <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
-            <small>JPG, PNG o WEBP. Si no subes imagen se usará la imagen por defecto.</small>
+            <small>JPG, PNG o WEBP.</small>
             <% if (recurso && !recurso.imagen?.es_default) { %>
               <p class="muted">Imagen actual: <a href="<%= recurso.imagen.url %>" target="_blank">Ver</a></p>
             <% } %>
@@ -206,7 +226,7 @@
         <section class="embedded-section" id="digital-section">
           <div class="subheading-row"><h2>Configuración digital</h2></div>
 
-          <!-- Archivo para Lectura (PDF / ePub) -->
+          <!-- ── Lectura (PDF / ePub) ───────────────────────────────────────── -->
           <div id="archivo-lectura-block">
             <div class="field-row">
               <label>
@@ -228,7 +248,6 @@
                 <small>Si subes archivo, no es necesario URL.</small>
               </label>
             </div>
-            <!-- Audiolibro complementario solo para Lectura -->
             <div class="field-row">
               <label>
                 Audiolibro MP3 complementario (opcional)
@@ -237,38 +256,46 @@
             </div>
           </div>
 
-          <!-- Archivo para Audio -->
+          <!-- ── Audio — sube directo a Cloudinary ─────────────────────────── -->
           <div id="archivo-audio-block" style="display:none;">
+            <%# Campos hidden — reciben datos tras subida con el widget %>
+            <input type="hidden" name="archivo_url"       id="audio-cloudinary-url"   value="<%= recurso?.tipo_contenido === 'Audio' ? (principal?.url || '') : '' %>">
+            <input type="hidden" name="archivo_tipo"      id="audio-cloudinary-tipo"  value="<%= principal?.tipo || 'mp3' %>">
+            <input type="hidden" name="archivo_public_id" id="audio-cloudinary-pubid" value="<%= principal?.public_id || '' %>">
+
             <div class="field-row">
-              <label>
-                Subir archivo de audio
-                <input type="file" name="archivo" id="archivo-file-audio"
-                       accept="audio/*,.mp3,.wav,.m4b,.aac,.ogg,.flac,.wma">
-                <small>MP3, WAV, M4B, AAC, OGG, FLAC u otros formatos de audio.</small>
-                <% if (principal?.url && recurso?.tipo_contenido === 'Audio') { %>
-                  <p class="muted"><a href="<%= principal.url %>" target="_blank">Archivo actual</a></p>
-                <% } %>
-              </label>
+              <div>
+                <label>Subir archivo de audio</label>
+                <button type="button" class="upload-widget-btn" id="audio-upload-btn">☁ Seleccionar audio</button>
+                <div class="upload-status" id="audio-upload-status"></div>
+                <div class="upload-preview" id="audio-upload-preview">
+                  <% if (principal?.url && recurso?.tipo_contenido === 'Audio') { %>
+                    ✓ Audio actual: <a href="<%= principal.url %>" target="_blank">Escuchar</a>
+                  <% } %>
+                </div>
+                <small>MP3, WAV, M4B, AAC, OGG, FLAC. Se sube directo a la nube.</small>
+              </div>
               <label>
                 O URL del audio
-                <input name="archivo_url" id="audio-url-input"
-                       value="<%= recurso?.tipo_contenido === 'Audio' ? (principal?.url || '') : '' %>"
-                       placeholder="https://...">
+                <input placeholder="https://..."
+                       oninput="document.getElementById('audio-cloudinary-url').value=this.value;document.getElementById('audio-cloudinary-tipo').value='mp3';">
               </label>
             </div>
           </div>
 
-          <!-- Archivo para Video -->
+          <!-- ── Video — sube directo a Cloudinary ─────────────────────────── -->
           <div id="archivo-video-block" style="display:none;">
             <div class="field-row">
               <label>
                 Origen del video
                 <select id="video-origen-select" name="video_origen">
-                  <option value="url" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? 'selected' : '' %>>URL externa (YouTube, etc.)</option>
-                  <option value="archivo" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? 'selected' : '' %>>Subir archivo</option>
+                  <option value="url"     <%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? 'selected' : '' %>>URL externa (YouTube, Vimeo…)</option>
+                  <option value="archivo" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? 'selected' : '' %>>Subir archivo de video</option>
                 </select>
               </label>
             </div>
+
+            <!-- URL externa -->
             <div id="video-url-block">
               <label>
                 URL del video
@@ -276,18 +303,27 @@
                        value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? (principal?.url || '') : '' %>"
                        placeholder="https://youtube.com/watch?v=...">
               </label>
-              <input type="hidden" name="archivo_tipo" value="url">
+              <input type="hidden" name="archivo_tipo" id="video-tipo-url" value="url">
             </div>
+
+            <!-- Subir archivo — widget sube directo al browser → Cloudinary -->
             <div id="video-archivo-block" style="display:none;">
-              <label>
-                Subir archivo de video
-                <input type="file" name="archivo" id="archivo-file-video"
-                       accept="video/*,.mp4,.webm,.avi,.mov,.mkv">
-                <small>MP4, WebM, AVI, MOV, MKV u otros formatos de video.</small>
-                <% if (principal?.url && recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url') { %>
-                  <p class="muted"><a href="<%= principal.url %>" target="_blank">Archivo actual</a></p>
-                <% } %>
-              </label>
+              <%# Campos hidden — reciben URL y public_id tras subida exitosa con el widget %>
+              <input type="hidden" name="archivo_url"       id="video-cloudinary-url"   value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? (principal?.url || '') : '' %>">
+              <input type="hidden" name="archivo_tipo"      id="video-cloudinary-tipo"  value="<%= principal?.tipo || 'mp4' %>">
+              <input type="hidden" name="archivo_public_id" id="video-cloudinary-pubid" value="<%= principal?.public_id || '' %>">
+
+              <div>
+                <label>Archivo de video</label>
+                <button type="button" class="upload-widget-btn" id="video-upload-btn">☁ Seleccionar video</button>
+                <div class="upload-status" id="video-upload-status"></div>
+                <div class="upload-preview" id="video-upload-preview">
+                  <% if (principal?.url && recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url') { %>
+                    ✓ Video actual: <a href="<%= principal.url %>" target="_blank">Ver</a>
+                  <% } %>
+                </div>
+                <small>MP4, WebM, AVI, MOV, MKV. <strong>Sube directo a la nube</strong> — el formulario no espera.</small>
+              </div>
             </div>
           </div>
 
@@ -305,45 +341,34 @@
 
           <div id="licencia-restringida-block" style="display:none;">
             <div class="field-row">
-              <label>
-                Usuarios simultáneos
-                <input type="number" min="1" name="usuarios_simultaneos"
-                       value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>">
+              <label>Usuarios simultáneos
+                <input type="number" min="1" name="usuarios_simultaneos" value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>">
               </label>
-              <label>
-                Duración préstamo
-                <input type="number" min="1" name="duracion_prestamo"
-                       value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>">
+              <label>Duración préstamo
+                <input type="number" min="1" name="duracion_prestamo" value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>">
               </label>
-              <label>
-                Unidad
+              <label>Unidad
                 <select name="unidad_duracion">
                   <% ['horas', 'dias', 'semanas'].forEach(function(u) { %>
                     <option value="<%= u %>" <%= (recurso?.digital?.licencia?.unidad_duracion || 'dias') === u ? 'selected' : '' %>><%= u %></option>
                   <% }); %>
                 </select>
               </label>
-              <label>
-                Máx. préstamos por usuario
-                <input type="number" min="1" name="max_prestamos_por_usuario"
-                       value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>">
+              <label>Máx. préstamos por usuario
+                <input type="number" min="1" name="max_prestamos_por_usuario" value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>">
               </label>
             </div>
             <div class="field-row">
-              <label>
-                Reservas digitales
+              <label>Reservas digitales
                 <select name="cola_reservas_habilitada">
-                  <option value="true"  <%= recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>Sí</option>
+                  <option value="true"  <%= recurso?.digital?.licencia?.cola_reservas_habilitada  ? 'selected' : '' %>>Sí</option>
                   <option value="false" <%= !recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>No</option>
                 </select>
               </label>
-              <label>
-                Espera cola (días)
-                <input type="number" min="1" name="tiempo_max_espera_cola_dias"
-                       value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>">
+              <label>Espera cola (días)
+                <input type="number" min="1" name="tiempo_max_espera_cola_dias" value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>">
               </label>
-              <label>
-                Vencimiento licencia
+              <label>Vencimiento licencia
                 <input type="date" name="fecha_vencimiento_licencia"
                        value="<%= recurso?.digital?.licencia?.fecha_vencimiento_licencia ? new Date(recurso.digital.licencia.fecha_vencimiento_licencia).toISOString().slice(0,10) : '' %>">
               </label>
@@ -359,8 +384,7 @@
           <div class="field-row">
             <label>
               Cantidad de ejemplares
-              <input type="number" min="0" name="total_ejemplares"
-                     value="<%= recurso?.fisico?.total_ejemplares || 0 %>">
+              <input type="number" min="0" name="total_ejemplares" value="<%= recurso?.fisico?.total_ejemplares || 0 %>">
             </label>
           </div>
         </section>
@@ -371,7 +395,7 @@
         </label>
 
         <div class="form-actions">
-          <button type="submit"><%= isEdit ? 'Guardar cambios' : 'Crear recurso' %></button>
+          <button type="submit" id="btn-guardar"><%= isEdit ? 'Guardar cambios' : 'Crear recurso' %></button>
           <a class="secondary-link" href="/admin/recursos">Cancelar</a>
         </div>
       </form>
@@ -381,7 +405,11 @@
   <script>
     window.BIBLIOTECA_CATEGORIAS          = <%- JSON.stringify(categorias) %>;
     window.BIBLIOTECA_SUBCATEGORIA_ACTUAL = "<%= firstCategoria?.subcategoria_id || '' %>";
+    window.CLOUDINARY_CLOUD_NAME          = "<%= process.env.CLOUDINARY_CLOUD_NAME %>";
+    window.CLOUDINARY_UPLOAD_PRESET      = "<%= process.env.CLOUDINARY_UPLOAD_PRESET || '' %>";
   </script>
+  <!-- Widget oficial de Cloudinary — sube directo desde el browser, sin pasar por tu servidor -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
   <script src="/js/admin/recursos.js"></script>
 </body>
 </html>

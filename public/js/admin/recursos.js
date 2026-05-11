@@ -63,17 +63,17 @@ function syncForm() {
   // Label del autor
   var labelAutor = document.getElementById('label-autor');
   if (labelAutor) {
-    if (audio)   labelAutor.textContent = 'Autor / Creador del libro original';
-    else if (video) labelAutor.textContent = 'Director / Creador';
-    else         labelAutor.textContent = 'Autor / Creador';
+    if (audio)        labelAutor.textContent = 'Autor / Creador del libro original';
+    else if (video)   labelAutor.textContent = 'Director / Creador';
+    else              labelAutor.textContent = 'Autor / Creador';
   }
 
   // Label imagen
   var labelImagen = document.getElementById('label-imagen');
   if (labelImagen) {
-    if (audio)  labelImagen.textContent = 'Carátula del audiolibro';
-    else if (video) labelImagen.textContent = 'Thumbnail / miniatura';
-    else        labelImagen.textContent = 'Imagen de portada';
+    if (audio)        labelImagen.textContent = 'Carátula del audiolibro';
+    else if (video)   labelImagen.textContent = 'Thumbnail / miniatura';
+    else              labelImagen.textContent = 'Imagen de portada';
   }
 
   // Editorial solo para Lectura y Audio
@@ -172,6 +172,117 @@ async function handleIsbnSearch() {
   }
 }
 
+function initCloudinaryUploadWidget(buttonId, statusId, previewId, urlFieldId, tipoFieldId, publicIdFieldId, allowedFormats, label) {
+  var button = document.getElementById(buttonId);
+  var status = document.getElementById(statusId);
+  var preview = document.getElementById(previewId);
+  if (!button) return;
+
+  if (!window.cloudinary || typeof window.cloudinary.createUploadWidget !== 'function') {
+    button.disabled = true;
+    if (status) status.textContent = 'Cloudinary no está disponible en este momento.';
+    return;
+  }
+
+  if (!window.CLOUDINARY_CLOUD_NAME) {
+    button.disabled = true;
+    if (status) status.textContent = 'Cloudinary cloud name no configurado. Defina CLOUDINARY_CLOUD_NAME en .env.';
+    return;
+  }
+
+  if (!window.CLOUDINARY_UPLOAD_PRESET) {
+    button.disabled = true;
+    if (status) status.textContent = 'Upload preset no configurado. Defina CLOUDINARY_UPLOAD_PRESET en .env.';
+    return;
+  }
+
+  var widget = window.cloudinary.createUploadWidget({
+    cloudName: window.CLOUDINARY_CLOUD_NAME,
+    uploadPreset: window.CLOUDINARY_UPLOAD_PRESET,
+    multiple: false,
+    maxFiles: 1,
+    resourceType: 'auto',
+    clientAllowedFormats: allowedFormats,
+    sources: ['local', 'url', 'camera', 'image_search', 'google_drive', 'dropbox'],
+    showCompletedButton: true
+  }, function(error, result) {
+    if (error) {
+      if (status) status.textContent = 'Error de Cloudinary: ' + (error.message || 'falló la carga');
+      return;
+    }
+
+    if (result.event === 'success') {
+      var info = result.info || {};
+      if (urlFieldId) document.getElementById(urlFieldId).value = info.secure_url || info.url || '';
+      if (tipoFieldId) document.getElementById(tipoFieldId).value = info.format || '';
+      if (publicIdFieldId) document.getElementById(publicIdFieldId).value = info.public_id || '';
+      if (status) status.textContent = 'Archivo cargado correctamente.';
+      if (preview) preview.innerHTML = '✓ ' + label + ' cargado: <a href="' + (info.secure_url || info.url || '#') + '" target="_blank">' + (info.original_filename || info.public_id || 'Ver archivo') + '</a>';
+    }
+  });
+
+  button.addEventListener('click', function() {
+    widget.open();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FIX: Deshabilitar campos de secciones OCULTAS antes de enviar el formulario
+// ─────────────────────────────────────────────────────────────────────────
+// El bug era: display:none NO evita que el navegador incluya los campos en el
+// POST. Cuando se seleccionaba Video+URL, llegaban DOS valores para
+// "archivo_tipo" (el del select de Lectura + el hidden de video-url-block),
+// y Express los concatenaba como "pdf,url", que Mongoose rechazaba.
+//
+// Solución: antes del submit, deshabilitamos todos los campos dentro de
+// secciones no visibles. El atributo `disabled` sí impide que se envíen.
+// ─────────────────────────────────────────────────────────────────────────
+
+function deshabilitarCamposOcultos() {
+  // Primero habilitamos TODO para partir de estado limpio
+  document.querySelectorAll('input, select, textarea').forEach(function(el) {
+    el.disabled = false;
+  });
+
+  var contenido  = val('tipo_contenido');
+  var naturaleza = val('tipo_naturaleza');
+
+  // Bloques que NO corresponden al tipo de contenido activo
+  var bloquesInactivos = [];
+
+  if (contenido !== 'Lectura') bloquesInactivos.push('archivo-lectura-block');
+  if (contenido !== 'Audio')   bloquesInactivos.push('archivo-audio-block');
+  if (contenido !== 'Video')   bloquesInactivos.push('archivo-video-block');
+
+  // Dentro del bloque de video, solo uno de los dos sub-bloques está activo
+  if (contenido === 'Video') {
+    var origenSel = document.getElementById('video-origen-select');
+    if (origenSel) {
+      if (origenSel.value === 'url') {
+        bloquesInactivos.push('video-archivo-block');
+      } else {
+        bloquesInactivos.push('video-url-block');
+      }
+    }
+  }
+
+  // Sección digital completa si no aplica
+  if (naturaleza === 'Físico') bloquesInactivos.push('digital-section');
+  // Sección física completa si no aplica
+  if (naturaleza === 'Digital') bloquesInactivos.push('physical-section');
+  // Licencia restringida si está oculta
+  var licSel = document.getElementById('licencia-select');
+  if (licSel && licSel.value !== 'Restringida') bloquesInactivos.push('licencia-restringida-block');
+
+  bloquesInactivos.forEach(function(id) {
+    var bloque = document.getElementById(id);
+    if (!bloque) return;
+    bloque.querySelectorAll('input, select, textarea').forEach(function(el) {
+      el.disabled = true;
+    });
+  });
+}
+
 // ── Inicialización ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   syncMaterialOptions();
@@ -179,6 +290,28 @@ document.addEventListener('DOMContentLoaded', function() {
   syncLicencia();
   syncSubcategories();
   syncVideoOrigen();
+
+  initCloudinaryUploadWidget(
+    'audio-upload-btn',
+    'audio-upload-status',
+    'audio-upload-preview',
+    'audio-cloudinary-url',
+    'audio-cloudinary-tipo',
+    'audio-cloudinary-pubid',
+    ['mp3', 'wav', 'm4b', 'aac', 'ogg', 'flac'],
+    'Audio'
+  );
+
+  initCloudinaryUploadWidget(
+    'video-upload-btn',
+    'video-upload-status',
+    'video-upload-preview',
+    'video-cloudinary-url',
+    'video-cloudinary-tipo',
+    'video-cloudinary-pubid',
+    ['mp4', 'webm', 'avi', 'mov', 'mkv'],
+    'Video'
+  );
 });
 
 // ── Eventos ───────────────────────────────────────────────────────────────
@@ -201,11 +334,15 @@ document.addEventListener('click', function(event) {
   if (event.target.id === 'isbn-search-btn') handleIsbnSearch();
 });
 
-// Al enviar el formulario, asegurar que duracion_segundos esté calculado
-document.addEventListener('submit', function(event) {
+// Al enviar el formulario:
+// 1. Calcular duracion_segundos desde HH:MM:SS
+// 2. Deshabilitar campos ocultos para evitar envío de valores duplicados (FIX)
+document.addEventListener('submit', function() {
   var hhmmss = document.getElementById('duracion-hhmmss');
   var seg    = document.getElementById('duracion-segundos');
   if (hhmmss && seg && hhmmss.value) {
     seg.value = hhmmssToSegundos(hhmmss.value);
   }
+
+  deshabilitarCamposOcultos(); // ← FIX principal: evita "pdf,url" y valores duplicados
 });
