@@ -3,6 +3,7 @@ const Administrador = require('../../models/Administrador');
 const Usuario = require('../../models/Usuario');
 const Prestamo = require('../../models/Prestamo');
 const Sancion = require('../../models/Sancion');
+const reporteService = require('../../services/reporteService');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
@@ -43,15 +44,11 @@ exports.login = async (req, res, next) => {
 
 exports.dashboard = async (req, res, next) => {
   try {
-    const [usuariosPendientes, prestamosActivos, sancionesActivas] = await Promise.all([
-      Usuario.countDocuments({ estado: 'Pendiente de aprobación' }),
-      Prestamo.countDocuments({ estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] } }),
-      Sancion.countDocuments({ estado: 'Activa' })
-    ]);
+    const resumenReportes = await reporteService.resumen();
 
     res.render('admin/dashboard', {
       title: 'Panel administrador',
-      resumen: { usuariosPendientes, prestamosActivos, sancionesActivas }
+      resumen: resumenReportes
     });
   } catch (error) {
     next(error);

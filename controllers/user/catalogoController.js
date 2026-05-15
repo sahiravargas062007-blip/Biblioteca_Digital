@@ -85,6 +85,54 @@ exports.index = async (req, res, next) => {
   }
 };
 
+// ── API JSON (AJAX filtering) ─────────────────────────────────────────────
+exports.api = async (req, res, next) => {
+  try {
+    const q              = String(req.query.q || '').trim();
+    const tiposMaterial  = req.query.tipo_material ? String(req.query.tipo_material).split(',').filter(Boolean) : [];
+    const categoriasIds  = req.query.categorias    ? String(req.query.categorias).split(',').filter(Boolean) : [];
+    const subcatsIds     = req.query.subcategorias  ? String(req.query.subcategorias).split(',').filter(Boolean) : [];
+
+    const filtro = { estado: 'Activo', publicado: true };
+
+    if (q) {
+      filtro.$or = [
+        { titulo:                           new RegExp(q, 'i') },
+        { autor:                            new RegExp(q, 'i') },
+        { isbn:                             new RegExp(q, 'i') },
+        { 'categorias.categoria_nombre':    new RegExp(q, 'i') },
+        { 'categorias.subcategoria_nombre': new RegExp(q, 'i') }
+      ];
+    }
+    if (tiposMaterial.length) filtro.tipo_material = { $in: tiposMaterial };
+    if (categoriasIds.length) {
+      const validIds = categoriasIds.filter((id) => mongoose.isValidObjectId(id));
+      if (validIds.length) filtro['categorias.categoria_id'] = { $in: validIds };
+    }
+    if (subcatsIds.length) {
+      const validIds = subcatsIds.filter((id) => mongoose.isValidObjectId(id));
+      if (validIds.length) filtro['categorias.subcategoria_id'] = { $in: validIds };
+    }
+
+    const recursos = await Recurso.find(filtro).sort({ publicado_en: -1, creado_en: -1 }).lean();
+
+    return res.json(recursos.map((r) => ({
+      _id: r._id,
+      titulo: r.titulo,
+      autor: r.autor,
+      tipo_contenido: r.tipo_contenido,
+      tipo_material: r.tipo_material,
+      tipo_naturaleza: r.tipo_naturaleza,
+      descripcion: r.descripcion,
+      imagen: r.imagen,
+      categorias: r.categorias,
+      disponibilidad: disponibilidadGeneral(r)
+    })));
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ── DETALLE ───────────────────────────────────────────────────────────────
 exports.detalle = async (req, res, next) => {
   try {

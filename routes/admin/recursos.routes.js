@@ -2,13 +2,15 @@ const router = require('express').Router();
 const controller = require('../../controllers/admin/recursoController');
 const isAdminAuth = require('../../middlewares/isAdminAuth');
 const validarRecurso = require('../../middlewares/validarRecurso');
-const { uploadRecurso, uploadZip } = require('../../middlewares/uploadMiddleware');
+const { uploadRecurso, uploadZip, uploadExcel } = require('../../middlewares/uploadMiddleware');
 
 router.use(isAdminAuth);
 
 router.get('/',              controller.index);
 router.get('/nuevo',         controller.nuevo);
 router.get('/masivo',        controller.masivo);
+router.get('/excel-metadatos', controller.excelMetadatos);
+router.post('/excel-metadatos/procesar', uploadExcel.single('excel'), controller.procesarExcelMetadatos);
 router.get('/isbn/:isbn',    controller.buscarIsbn);
 
 // ── Subida anticipada con barra de progreso (AJAX desde upload-progress.js)

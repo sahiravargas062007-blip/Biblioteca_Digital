@@ -4,32 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title %> | Biblioteca Digital</title>
+  <!-- CSS Base -->
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/admin.css">
+  <!-- Componentes -->
   <link rel="stylesheet" href="/css/components/forms.css">
-  <style>
-    .upload-widget-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      background: #2563eb;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-top: 6px;
-    }
-    .upload-widget-btn:hover { background: #1d4ed8; }
-    .upload-widget-btn:disabled { background: #93c5fd; cursor: not-allowed; }
-    .upload-status { margin-top: 8px; font-size: 13px; padding: 8px 12px; border-radius: 6px; display: none; }
-    .upload-status.loading { background: #eff6ff; color: #1d4ed8; display: block; }
-    .upload-status.success { background: #f0fdf4; color: #166534; display: block; }
-    .upload-status.error   { background: #fef2f2; color: #991b1b; display: block; }
-    .upload-preview { margin-top: 8px; font-size: 13px; color: #166534; }
-    .upload-preview a { color: inherit; font-weight: 600; }
-  </style>
+  <!-- Estilos de Admin -->
+  <link rel="stylesheet" href="/css/admin.css">
+  <!-- Página específica -->
+  <link rel="stylesheet" href="/css/pages/admin-recursos.css">
 </head>
 <body class="admin-shell">
   <%- include('../../partials/adminSidebar') %>

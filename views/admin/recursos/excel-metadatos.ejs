@@ -4,28 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title %> | Biblioteca Digital</title>
+  <!-- CSS Base -->
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/admin.css">
+  <!-- Componentes -->
   <link rel="stylesheet" href="/css/components/forms.css">
   <link rel="stylesheet" href="/css/components/tables.css">
-  <style>
-    .badge-ok      { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#d1fae5; color:#065f46; }
-    .badge-warn    { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#fef3c7; color:#92400e; }
-    .badge-error   { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; background:#fee2e2; color:#991b1b; }
-    .resultado-tabla { width:100%; border-collapse:collapse; margin-top:1rem; }
-    .resultado-tabla th { text-align:left; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted,#6b7280); border-bottom:2px solid var(--border,#e5e7eb); padding:.5rem .75rem; }
-    .resultado-tabla td { padding:.65rem .75rem; border-bottom:1px solid var(--border,#e5e7eb); font-size:.9rem; vertical-align:middle; }
-    .errores-lista { margin-top:1rem; background:#fff7ed; border-left:4px solid #f97316; padding:.75rem 1rem; border-radius:.25rem; }
-    .errores-lista li { font-size:.88rem; color:#c2410c; margin:.3rem 0; }
-    .summary-bar { display:flex; gap:1.5rem; margin:.75rem 0 1.25rem; flex-wrap:wrap; }
-    .summary-stat { font-size:.9rem; }
-    .summary-stat strong { font-size:1.25rem; display:block; }
-    .btn-spinner { display:none; }
-    form.submitting .btn-spinner { display:inline-block; }
-    form.submitting .btn-label   { display:none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner-icon { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
-  </style>
+  <!-- Estilos de Admin -->
+  <link rel="stylesheet" href="/css/admin.css">
+  <!-- Página específica -->
+  <link rel="stylesheet" href="/css/pages/admin-recursos.css">
 </head>
 <body class="admin-shell">
   <%- include('../../partials/adminSidebar') %>
@@ -47,7 +34,8 @@
       <p class="form-hint" style="margin-bottom:1rem">
         Cargue un archivo <code>.xlsx</code> o <code>.csv</code> con los metadatos de sus recursos.<br>
         <strong>Columna clave:</strong> "Nombre del Archivo" (sin extensión, ej: libro1, video1).<br>
-        <strong>Campos actualizables:</strong> Autor, Descripción, ISBN, Clasificación, Editorial, Fecha Publicación, Duración, etc.
+        <strong>Campos actualizables:</strong> Título, Autor, Descripción, ISBN, Clasificación, Editorial, Fecha Publicación, Duración, Idioma, Páginas, Narrador (para audio), Director (para video), Productora (para video), URL de imagen.<br>
+        <strong>Tipos de contenido:</strong> El sistema detecta automáticamente si es Lectura, Audio o Video basado en los campos presentes (Narrador = Audio, Director = Video).
       </p>
 
       <form
@@ -68,6 +56,12 @@
         </label>
 
         <div class="panel-note">
+          <strong>Formato del Excel:</strong><br>
+          - Primera fila: encabezados (ej: "Nombre del Archivo", "Título", "Autor", etc.)<br>
+          - Columnas opcionales: use los nombres exactos o similares para que el sistema los reconozca.<br>
+          - Para audio: incluya "Narrador", "Duración" (HH:MM:SS)<br>
+          - Para video: incluya "Director", "Productora", "Duración"<br>
+          - Imagen: use "URL de imagen" o "Imagen URL"<br>
           El sistema buscará cada "Nombre del Archivo" en la base de datos y actualizará solo los campos presentes en el Excel. 
           Si un recurso no existe, se reportará como error pero no se creará uno nuevo.
         </div>

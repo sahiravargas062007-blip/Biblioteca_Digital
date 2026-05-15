@@ -19,7 +19,7 @@ function parsearExcel(buffer, filename) {
     }
 
     // Leer el archivo
-    const workbook = XLSX.read(buffer);
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     if (!sheetName) throw new Error('El archivo Excel está vacío.');
 
@@ -50,7 +50,7 @@ function parsearExcel(buffer, filename) {
       }
 
       // RN-01: Nombre exacto sin extensión
-      const nombreLimpio = nombreArchivo.split('.')[0].toLowerCase();
+      const nombreLimpio = nombreArchivo.replace(/\.[^/.]+$/, '').trim();
 
       // Mapear campos disponibles
       const registro = {
@@ -65,12 +65,17 @@ function parsearExcel(buffer, filename) {
         'Editorial': 'editorial',
         'Descripción': 'descripcion',
         'ISBN': 'isbn',
-        'Clasificación': 'clasificacion',
+        'Clasificación': 'tipo_material',
         'Fecha Publicación': 'fecha_publicacion',
         'Páginas': 'cantidad_paginas',
         'Idioma': 'idioma',
         'Duración': 'duracion_segundos',
         'Año': 'fecha_publicacion',
+        'Narrador': 'narrador',
+        'Director': 'director',
+        'Productora': 'productora',
+        'URL de imagen': 'imagen_url',
+        'Imagen URL': 'imagen_url',
       };
 
       let tieneAlgunCampo = false;
@@ -86,10 +91,22 @@ function parsearExcel(buffer, filename) {
 
           // Conversiones básicas
           if (mongoField === 'cantidad_paginas' || mongoField === 'duracion_segundos') {
-            valor = parseInt(valor) || null;
+            if (mongoField === 'duracion_segundos' && typeof valor === 'string' && valor.includes(':')) {
+              // Convertir HH:MM:SS a segundos
+              const partes = valor.split(':').map(Number);
+              if (partes.length === 3) {
+                valor = partes[0] * 3600 + partes[1] * 60 + partes[2];
+              } else if (partes.length === 2) {
+                valor = partes[0] * 60 + partes[1];
+              } else {
+                valor = parseInt(valor) || null;
+              }
+            } else {
+              valor = parseInt(valor) || null;
+            }
             if (valor === null) {
               errores.push(
-                `Fila ${indice + 2} ("${nombreArchivo}"): "${mongoField}" debe ser numérico.`
+                `Fila ${indice + 2} ("${nombreArchivo}"): "${mongoField}" debe ser numérico o en formato HH:MM:SS.`
               );
               return;
             }

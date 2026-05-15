@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a BiblioNet - Conecta con el conocimiento</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --turquesa-oscuro: #0C7C86;
+      --turquesa-medio: #2CB9C7;
+      --turquesa-claro: #B9F1F5;
+      --beige-calido: #F4EFE6;
+      --arena: #DDD2BE;
+      --cafe-suave: #A67C52;
+      --negro-suave: #1E1E1E;
+      --gris-elegante: #5E5E5E;
+      --cafe-extra-1: #623307;
+      --cafe-extra-2: #6d3c11;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at center, var(--turquesa-oscuro) 0%, #064045 100%);
+      color: var(--beige-calido);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1200px; /* Essential for 3D */
+    }
+
+    /* 3D Scene Container */
+    #scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+    }
+
+    /* Overlay for Text to sit on top of books */
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 40px;
+      background: rgba(12, 124, 134, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 24px;
+      border: 1px solid rgba(185, 241, 245, 0.2);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      max-width: 800px;
+      animation: fadeIn 1.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-content h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: clamp(3rem, 6vw, 5rem);
+      line-height: 1.1;
+      color: var(--beige-calido);
+      text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      margin: 0;
+      letter-spacing: -1px;
+    }
+
+    .hero-content h1 span {
+      background: linear-gradient(to right, var(--turquesa-claro), var(--turquesa-medio));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-content p {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.2rem, 2.5vw, 2rem);
+      color: var(--arena);
+      margin-bottom: 20px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .btn-acceder {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 36px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--negro-suave);
+      background: var(--turquesa-claro);
+      border: none;
+      border-radius: 50px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 4px 15px rgba(44, 185, 199, 0.4);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .btn-acceder::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+      transform: translateX(-100%);
+      transition: 0.6s;
+    }
+
+    .btn-acceder:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 25px rgba(44, 185, 199, 0.6);
+      background: white;
+    }
+
+    .btn-acceder:hover::before {
+      transform: translateX(100%);
+    }
+
+    .btn-acceder:active {
+      transform: translateY(0);
+    }
+
+    /* CSS 3D Book Structures */
+    .book-wrapper {
+      position: absolute;
+      transform-style: preserve-3d;
+      /* Animation injected via JS to randomize */
+    }
+
+    .book-3d {
+      position: relative;
+      transform-style: preserve-3d;
+      /* Dimensions set dynamically via JS */
+      width: 120px; 
+      height: 160px;
+    }
+
+    .cover-back, .cover-front, .spine, .page {
+      position: absolute;
+      transform-style: preserve-3d;
+      transform-origin: left center; /* Bind to left edge */
+    }
+
+    .cover-back, .cover-front {
+      width: 100%;
+      height: 100%;
+      border-radius: 2px 8px 8px 2px;
+      box-shadow: inset 4px 0 10px rgba(0,0,0,0.2);
+    }
+
+    /* Back cover stays relatively still at Z=0 */
+    .cover-back {
+      transform: translateZ(-10px);
+    }
+
+    /* Spine */
+    .spine {
+      width: 20px;
+      height: 100%;
+      transform: rotateY(-90deg) translateX(-10px) translateZ(10px);
+      transform-origin: center center;
+    }
+
+    /* Front cover opens and closes */
+    .cover-front {
+      transform: translateZ(10px) rotateY(-160deg);
+      animation: flapFront 3s infinite alternate ease-in-out;
+    }
+
+    /* Pages */
+    .page {
+      width: 95%;
+      height: 96%;
+      top: 2%;
+      left: 2px; /* Slight inset */
+      background: var(--beige-calido);
+      border-radius: 2px 6px 6px 2px;
+      border: 1px solid var(--arena);
+    }
+
+    /* We will generate pages via JS and apply random delays */
+
+    @keyframes flapFront {
+      0% { transform: translateZ(10px) rotateY(-10deg); }
+      100% { transform: translateZ(10px) rotateY(-160deg); }
+    }
+
+    @keyframes pageFlip {
+      0% { transform: translateZ(var(--tz)) rotateY(-5deg); }
+      100% { transform: translateZ(var(--tz)) rotateY(-150deg); }
+    }
+
+    @keyframes fallRotate {
+      0% {
+        top: -30vh;
+        transform: rotateX(var(--rx-start)) rotateY(var(--ry-start)) rotateZ(var(--rz-start));
+      }
+      100% {
+        top: 120vh;
+        transform: rotateX(var(--rx-end)) rotateY(var(--ry-end)) rotateZ(var(--rz-end));
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div id="scene"></div>
+
+  <div class="hero-content">
+    <h1>Bienvenido a <span>BiblioNet</span></h1>
+    <p>Conecta con el conocimiento</p>
+    <a href="/catalogo" class="btn-acceder">Acceder y ver los materiales</a>
+  </div>
+
+  <script>
+    const scene = document.getElementById('scene');
+    
+    // The requested palette mapped to array for book covers
+    const bookColors = [
+      '#0C7C86', // Turquesa oscuro
+      '#2CB9C7', // Turquesa medio
+      '#A67C52', // Café suave
+      '#623307', // Café extra 1
+      '#6d3c11', // Café extra 2
+      '#1E1E1E', // Negro suave
+      '#5E5E5E'  // Gris elegante
+    ];
+
+    const BOOK_COUNT = 25;
+
+    for (let i = 0; i < BOOK_COUNT; i++) {
+      createBook();
+    }
+
+    function createBook() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'book-wrapper';
+
+      const color = bookColors[Math.floor(Math.random() * bookColors.length)];
+      const sizeMultiplier = 0.5 + Math.random() * 0.8; // Random scale
+      const duration = 10 + Math.random() * 15; // Fall duration
+      const delay = Math.random() * -20; // Negative delay so they are already falling
+      const leftPos = Math.random() * 100; // Position X (0 - 100vw)
+      const zPos = -1500 + Math.random() * 2000; // Deep 3D position
+
+      // Random rotations
+      const rxStart = Math.random() * 360;
+      const ryStart = Math.random() * 360;
+      const rzStart = Math.random() * 360;
+      const rxEnd = rxStart + (Math.random() * 720 - 360);
+      const ryEnd = ryStart + (Math.random() * 720 - 360);
+      const rzEnd = rzStart + (Math.random() * 720 - 360);
+
+      // Wrapper inline variables
+      wrapper.style.left = `${leftPos}vw`;
+      wrapper.style.transform = `translateZ(${zPos}px) scale(${sizeMultiplier})`;
+      
+      // Inline custom properties for animation
+      wrapper.style.setProperty('--rx-start', `${rxStart}deg`);
+      wrapper.style.setProperty('--ry-start', `${ryStart}deg`);
+      wrapper.style.setProperty('--rz-start', `${rzStart}deg`);
+      wrapper.style.setProperty('--rx-end', `${rxEnd}deg`);
+      wrapper.style.setProperty('--ry-end', `${ryEnd}deg`);
+      wrapper.style.setProperty('--rz-end', `${rzEnd}deg`);
+
+      wrapper.style.animation = `fallRotate ${duration}s linear ${delay}s infinite`;
+
+      // Build Book HTML
+      const book3d = document.createElement('div');
+      book3d.className = 'book-3d';
+
+      // Spine thickness
+      const thickness = 15;
+
+      const coverBack = document.createElement('div');
+      coverBack.className = 'cover-back';
+      coverBack.style.backgroundColor = color;
+      coverBack.style.transform = `translateZ(${-thickness/2}px)`;
+
+      const spine = document.createElement('div');
+      spine.className = 'spine';
+      spine.style.backgroundColor = color;
+      spine.style.width = `${thickness}px`;
+      spine.style.transform = `rotateY(-90deg) translateX(${-thickness/2}px) translateZ(${thickness/2}px)`;
+
+      const coverFront = document.createElement('div');
+      coverFront.className = 'cover-front';
+      coverFront.style.backgroundColor = color;
+      coverFront.style.transform = `translateZ(${thickness/2}px) rotateY(-160deg)`;
+      const flapDuration = 1 + Math.random() * 3;
+      coverFront.style.animation = `flapFront ${flapDuration}s infinite alternate ease-in-out ${Math.random()}s`;
+
+      book3d.appendChild(coverBack);
+      book3d.appendChild(spine);
+      
+      // Pages
+      const numPages = 4 + Math.floor(Math.random() * 4);
+      for(let p = 0; p < numPages; p++) {
+        const page = document.createElement('div');
+        page.className = 'page';
+        
+        // Distribute pages inside the thickness
+        const tz = (-thickness/2 + 2) + (p * (thickness-4) / numPages);
+        page.style.setProperty('--tz', `${tz}px`);
+        
+        page.style.animation = `pageFlip ${flapDuration}s infinite alternate ease-in-out ${Math.random()}s`;
+        book3d.appendChild(page);
+      }
+
+      book3d.appendChild(coverFront);
+      wrapper.appendChild(book3d);
+      scene.appendChild(wrapper);
+    }
+  </script>
+</body>
+</html>

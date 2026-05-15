@@ -1,79 +1,224 @@
 <%- include('../../partials/userPageStart', { pageClass: 'catalog-page' }) %>
 
-    <section class="catalog-hero">
+<link rel="stylesheet" href="/css/pages/catalogo-hero.css">
+<link rel="stylesheet" href="/css/pages/catalogo-browse.css">
+
+<!-- ═══════ HERO SECTION ═══════ -->
+<section class="biblionet-hero">
+  <div class="biblionet-hero__bg"></div>
+  <div class="biblionet-hero__overlay"></div>
+  <div class="biblionet-hero__vignette"></div>
+  <canvas class="biblionet-hero__particles" id="hero-particles"></canvas>
+  <div class="biblionet-hero__books" id="hero-books"></div>
+  <div class="biblionet-hero__content">
+    <p class="hero-welcome">Bienvenido a</p>
+    <h1 class="hero-title" id="hero-biblionet">BiblioNet</h1>
+    <hr class="hero-line">
+    <p class="hero-subtitle">Conecta con el conocimiento</p>
+    <button class="hero-cta" onclick="document.getElementById('catalog-content').scrollIntoView({behavior:'smooth'})">
+      Explorar Biblioteca
+      <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/>
+      </svg>
+    </button>
+  </div>
+</section>
+<script src="/js/user/catalogo-hero.js"></script>
+
+<!-- ═══════ CATALOG BROWSE SECTION ═══════ -->
+<div id="catalog-content"></div>
+
+<!-- ── Sidebar Navigation (starts collapsed) ── -->
+<aside class="cat-sidebar is-collapsed" id="cat-sidebar">
+  <div class="cat-sidebar__header">
+    <a class="cat-sidebar__brand" href="/catalogo">
+      BiblioNet
+      <small>Conecta con el conocimiento</small>
+    </a>
+  </div>
+  <nav class="cat-sidebar__nav">
+    <a class="cat-sidebar__link is-active" href="/catalogo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Explorar
+    </a>
+    <a class="cat-sidebar__link" href="/prestamos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Préstamos
+    </a>
+    <a class="cat-sidebar__link" href="/reservas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </a>
+    <a class="cat-sidebar__link" href="/historial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 6 12 12 16 14"/><circle cx="12" cy="12" r="10"/></svg>
+      Historial
+    </a>
+    <a class="cat-sidebar__link" href="/sanciones">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Sanciones
+    </a>
+  </nav>
+  <div class="cat-sidebar__footer">
+    <a class="cat-sidebar__link" href="/perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Mi perfil
+    </a>
+  </div>
+</aside>
+
+<div class="cat-sidebar-overlay" id="cat-overlay"></div>
+
+<!-- ── Top Bar (transparent over hero → white on scroll) ── -->
+<header class="cat-topbar" id="cat-topbar">
+  <div class="cat-topbar__left">
+    <a class="cat-topbar__brand" href="/catalogo">
+      <img src="/img/biblionet-logo.png" alt="BiblioNet" class="cat-topbar__logo">
+      <div class="cat-topbar__brand-text">
+        <span class="cat-topbar__brand-name">BiblioNet</span>
+        <span class="cat-topbar__brand-slogan">— Conecta con el conocimiento —</span>
+      </div>
+    </a>
+    <button class="cat-topbar__toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <nav class="cat-topbar__links">
+    <a href="/catalogo" class="is-active">Explorar</a>
+    <a href="#">Categorías</a>
+    <a href="#">Novedades</a>
+    <a href="#">Más leídos</a>
+  </nav>
+</header>
+
+<!-- ── Main Content: Filters + Results ── -->
+<div class="cat-main">
+  <!-- Filter Panel -->
+  <aside class="cat-filters">
+    <div class="cat-filters__header">
+      <h2>Filtros</h2>
+      <button class="cat-filters__clear" id="cat-clear">Limpiar</button>
+    </div>
+
+    <!-- Search -->
+    <div class="cat-filters__search">
+      <input type="search" id="cat-search" placeholder="Buscar por título, autor, palabra clave...">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+
+    <!-- Categories Tree -->
+    <div class="cat-filters__section">
+      <p class="cat-filters__section-title">Categorías</p>
+      <div class="cat-tree">
+        <% categorias.forEach(function(cat) { %>
+          <div class="cat-tree__item">
+            <div class="cat-tree__header">
+              <% if (cat.subcategorias && cat.subcategorias.length) { %>
+                <span class="cat-tree__toggle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              <% } else { %>
+                <span class="cat-tree__toggle" style="visibility:hidden">
+                  <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+              <% } %>
+              <input type="checkbox" class="cat-tree__checkbox" data-cat-parent="<%= cat._id %>">
+              <span class="cat-tree__label"><%= cat.nombre %></span>
+            </div>
+            <% if (cat.subcategorias && cat.subcategorias.length) { %>
+              <div class="cat-tree__children">
+                <% cat.subcategorias.forEach(function(sub) { %>
+                  <div class="cat-tree__sub">
+                    <input type="checkbox" class="cat-tree__checkbox" data-cat-child="<%= cat._id %>" value="<%= sub._id %>">
+                    <label><%= sub.nombre %></label>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Tipo de recurso -->
+    <div class="cat-filters__section">
+      <p class="cat-filters__section-title">Tipo de recurso</p>
+      <div class="cat-filters__chips">
+        <button class="cat-chip is-active" data-type-all>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Todos
+        </button>
+        <button class="cat-chip" data-type-chip="Libro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Libro
+        </button>
+        <button class="cat-chip" data-type-chip="Artículo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Artículo
+        </button>
+        <button class="cat-chip" data-type-chip="Tesis">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 4 3 6 3s6-1 6-3v-5"/></svg>
+          Tesis
+        </button>
+        <button class="cat-chip" data-type-chip="Revista">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+          Revista
+        </button>
+        <button class="cat-chip" data-type-chip="Audiolibro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3v5zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5z"/></svg>
+          Audiolibro
+        </button>
+      </div>
+    </div>
+
+    <button class="cat-filters__apply" onclick="window.catalogFetchFiltered && window.catalogFetchFiltered()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar resultados
+    </button>
+  </aside>
+
+  <!-- Results -->
+  <section class="cat-results">
+    <div class="cat-results__header">
       <div>
-        <p class="eyebrow">Biblioteca SENA</p>
-        <h1>Catalogo de recursos</h1>
-        <p>Busca materiales digitales y fisicos por titulo, autor, ISBN, tipo o categoria.</p>
+        <h2 class="cat-results__title">Explora nuestra colección</h2>
+        <p class="cat-results__subtitle">Descubre recursos académicos, literarios y más</p>
       </div>
-      <div class="hero-stat">
-        <strong><%= recursos.length %></strong>
-        <span>recursos disponibles</span>
-      </div>
-    </section>
+      <span class="cat-results__count" id="cat-count"><%= recursos.length %> recursos disponibles</span>
+    </div>
 
-    <section class="panel">
-      <form class="catalog-filters" method="get" action="/catalogo">
-        <label>
-          Buscar
-          <input data-catalog-search type="search" name="q" value="<%= filtros.q %>" placeholder="Titulo, autor, ISBN o categoria">
-        </label>
-        <label>
-          Tipo
-          <select name="tipo_contenido">
-            <option value="">Todos</option>
-            <% ['Lectura', 'Audio', 'Video'].forEach((tipo) => { %>
-              <option value="<%= tipo %>" <%= filtros.tipo_contenido === tipo ? 'selected' : '' %>><%= tipo %></option>
-            <% }) %>
-          </select>
-        </label>
-        <label>
-          Categoria
-          <select name="categoria_id">
-            <option value="">Todas</option>
-            <% categorias.forEach((categoria) => { %>
-              <option value="<%= categoria._id %>" <%= filtros.categoria_id === String(categoria._id) ? 'selected' : '' %>><%= categoria.nombre %></option>
-            <% }) %>
-          </select>
-        </label>
-        <button type="submit">Filtrar</button>
-        <% if (filtros.q || filtros.tipo_contenido || filtros.categoria_id) { %>
-          <a class="secondary-link" href="/catalogo">Limpiar</a>
-        <% } %>
-      </form>
-    </section>
-
-    <section class="catalog-grid" aria-label="Recursos del catalogo">
+    <div class="cat-grid" id="cat-grid">
       <% if (!recursos.length) { %>
-        <div class="empty-state">
+        <div class="cat-empty">
           <h2>No hay recursos para mostrar</h2>
-          <p>Cuando el administrador publique materiales activos, apareceran aqui. Ajusta los filtros si estabas buscando algo especifico.</p>
+          <p>Cuando el administrador publique materiales activos, aparecerán aquí.</p>
         </div>
       <% } %>
 
-      <% recursos.forEach((recurso) => { %>
-        <article class="catalog-card">
-          <a class="catalog-cover-link" href="/catalogo/<%= recurso._id %>">
-            <img src="<%= recurso.imagen?.url || '/img/placeholder.png' %>" alt="">
+      <% recursos.forEach(function(recurso) { %>
+        <article class="cat-card">
+          <a class="cat-card__cover" href="/catalogo/<%= recurso._id %>">
+            <img src="<%= recurso.imagen?.url || '/img/placeholder.png' %>" alt="" loading="lazy">
           </a>
-          <div class="catalog-card-body">
-            <div class="resource-card-meta">
-              <span class="badge badge-no-disponible"><%= recurso.tipo_contenido %></span>
-              <span class="badge <%= recurso.disponibilidad === 'No disponible' ? 'badge-no-disponible' : 'badge-disponible' %>"><%= recurso.disponibilidad %></span>
-            </div>
-            <h2><a href="/catalogo/<%= recurso._id %>"><%= recurso.titulo %></a></h2>
-            <p class="author"><%= recurso.autor %></p>
-            <p class="muted"><%= recurso.tipo_naturaleza %> / <%= recurso.tipo_material %></p>
-            <p><%= String(recurso.descripcion || '').slice(0, 140) %><%= String(recurso.descripcion || '').length > 140 ? '...' : '' %></p>
-            <div class="tag-list">
-              <% (recurso.categorias || []).slice(0, 3).forEach((categoria) => { %>
-                <span class="tag"><%= categoria.subcategoria_nombre || categoria.categoria_nombre %></span>
+          <div class="cat-card__body">
+            <h3 class="cat-card__title"><a href="/catalogo/<%= recurso._id %>"><%= recurso.titulo %></a></h3>
+            <p class="cat-card__author"><%= recurso.autor %></p>
+            <div class="cat-card__tags">
+              <% (recurso.categorias || []).slice(0, 2).forEach(function(c) { %>
+                <span class="cat-card__tag"><%= c.subcategoria_nombre || c.categoria_nombre %></span>
               <% }) %>
             </div>
-            <a class="button-link" href="/catalogo/<%= recurso._id %>">Ver detalle</a>
+            <div class="cat-card__footer">
+              <span class="cat-card__type">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <%= recurso.tipo_material %>
+              </span>
+            </div>
           </div>
         </article>
       <% }) %>
-    </section>
-  <script src="/js/user/catalogo.js"></script>
+    </div>
+  </section>
+</div>
+
+<script src="/js/user/catalogo.js"></script>
 <%- include('../../partials/userPageEnd') %>

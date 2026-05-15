@@ -4,9 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title || 'Biblioteca Digital' %> | Biblioteca Digital</title>
+  <!-- CSS Base -->
   <link rel="stylesheet" href="/css/main.css">
+  <!-- Componentes reutilizables -->
+  <link rel="stylesheet" href="/css/components/forms.css">
+  <link rel="stylesheet" href="/css/components/tables.css">
   <link rel="stylesheet" href="/css/components/badges.css">
+  <link rel="stylesheet" href="/css/components/cards.css">
+  <link rel="stylesheet" href="/css/components/modals.css">
+  <!-- Estilos de Usuario -->
   <link rel="stylesheet" href="/css/user.css">
+  <!-- CSS específicos de página (si aplica) -->
+  <% if (typeof pageStylesheet !== 'undefined' && pageStylesheet) { %>
+    <link rel="stylesheet" href="/css/pages/<%= pageStylesheet %>">
+  <% } %>
 </head>
 <body>
   <%- include('./userNavbar') %>

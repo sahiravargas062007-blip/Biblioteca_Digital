@@ -1,0 +1,402 @@
+/* ═══════════════════════════════════════════════════════════════
+   BiblioNet — Catalog Hero Premium Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@300;400;600&display=swap');
+
+:root {
+  --bn-turquoise-dark: #0C7C86;
+  --bn-turquoise-mid: #2CB9C7;
+  --bn-turquoise-glow: rgba(44, 185, 199, 0.35);
+  --bn-beige: #F4EFE6;
+  --bn-sand: #DDD2BE;
+  --bn-white: #FFFFFF;
+  --bn-text-dark: #1E1E1E;
+}
+
+/* ── Hide default navbar — cat-topbar is the sole navigation ── */
+body.catalog-page .navbar {
+  display: none !important;
+}
+
+/* Full-width page reset — override main.css centering */
+main.page.catalog-page,
+body.catalog-page .page,
+.page.catalog-page {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Override grid gap from user.css .catalog-page */
+.catalog-page {
+  gap: 0 !important;
+  display: block !important;
+}
+
+/* ── Hero Section ─────────────────────────────────────────────── */
+.biblionet-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 700px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.biblionet-hero__bg {
+  position: absolute;
+  inset: 0;
+  background: url('/img/hero-library.png') center/cover no-repeat;
+  z-index: 1;
+  filter: brightness(0.7) saturate(0.85);
+}
+
+.biblionet-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.35) 40%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  z-index: 2;
+}
+
+/* Vignette */
+.biblionet-hero__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: 3;
+}
+
+/* ── Particles Canvas ─────────────────────────────────────────── */
+.biblionet-hero__particles {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* ── Floating Books Container ─────────────────────────────────── */
+.biblionet-hero__books {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  perspective: 900px;
+  perspective-origin: center center;
+}
+
+/* ── Content ──────────────────────────────────────────────────── */
+.biblionet-hero__content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  max-width: 800px;
+}
+
+/* Welcome text */
+.hero-welcome {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.4rem, 3vw, 2.8rem);
+  color: var(--bn-white);
+  margin: 0;
+  opacity: 0;
+  transform: translateY(-20px);
+  animation: heroFadeDown 1s ease-out 0.3s forwards;
+}
+
+/* BiblioNet title */
+.hero-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: clamp(3.5rem, 8vw, 5.6rem);
+  color: var(--bn-white);
+  margin: 0;
+  line-height: 1.05;
+  text-shadow: 0 0 60px var(--bn-turquoise-glow), 0 0 120px rgba(44, 185, 199, 0.15);
+  letter-spacing: -1px;
+}
+
+.hero-title .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: charReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes charReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtitle */
+.hero-subtitle {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 300;
+  font-size: clamp(1rem, 2vw, 1.75rem);
+  color: var(--bn-beige);
+  margin: 0;
+  letter-spacing: 1.5px;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: heroFadeUp 1s ease-out 2.2s forwards;
+}
+
+/* Decorative line */
+.hero-line {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--bn-turquoise-mid), transparent);
+  border: none;
+  margin: 4px 0;
+  opacity: 0;
+  animation: heroFadeUp 1s ease-out 2s forwards;
+}
+
+/* CTA Button */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 16px 40px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--bn-white);
+  background: var(--bn-turquoise-dark);
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 8px 32px rgba(12, 124, 134, 0.35), 0 2px 8px rgba(0,0,0,0.2);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  transform: translateY(20px);
+  animation: heroFadeUp 0.8s ease-out 2.6s forwards;
+}
+
+.hero-cta:hover {
+  background: var(--bn-turquoise-mid);
+  box-shadow: 0 12px 40px rgba(44, 185, 199, 0.45), 0 4px 12px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.hero-cta svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.hero-cta:hover svg {
+  transform: translateX(4px);
+}
+
+/* ── Animations ───────────────────────────────────────────────── */
+@keyframes heroFadeDown {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroFadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 3D Floating Books (6-face box model) ─────────────────────── */
+.fl-book {
+  position: absolute;
+  transform-style: preserve-3d;
+  will-change: transform;
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6));
+}
+
+/* Every face shares these base properties */
+.fl-book__face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+}
+
+/* ── Front & Back Covers ── */
+.fl-book__front,
+.fl-book__back {
+  border-radius: 2px 6px 6px 2px;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  box-shadow: inset 4px 0 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Leather texture overlay on front cover */
+.fl-book__front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%),
+    linear-gradient(to right, rgba(255,255,255,0.05) 0%, transparent 8%, transparent 92%, rgba(0,0,0,0.15) 100%);
+  pointer-events: none;
+}
+
+/* Cover embossed detail (title lines + border) */
+.cover-detail {
+  position: absolute;
+  top: 18%;
+  left: 14%;
+  right: 14%;
+  bottom: 40%;
+  border: 1px solid;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0.5;
+}
+
+.cover-title-line {
+  width: 60%;
+  height: 3px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.cover-title-line.short {
+  width: 40%;
+  height: 2px;
+}
+
+/* Back cover is slightly darker */
+.fl-book__back::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+/* ── Spine ── */
+.fl-book__spine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border-left: 1px solid rgba(0,0,0,0.4);
+  border-right: 1px solid rgba(0,0,0,0.4);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Gold accent lines on spine */
+.spine-line {
+  width: 60%;
+  height: 2px;
+  border-radius: 1px;
+  opacity: 0.5;
+}
+
+.spine-line:first-child {
+  position: absolute;
+  top: 15%;
+}
+
+.spine-line:last-child {
+  position: absolute;
+  bottom: 15%;
+}
+
+/* ── Page Edges (cream paper visible on 3 sides) ── */
+.fl-book__page-edge,
+.fl-book__page-bottom,
+.fl-book__page-top {
+  background: linear-gradient(to right, #e8e0d0, #f5f0e4, #ede6d8);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Horizontal page lines on the right edge */
+.fl-book__page-edge {
+  top: 4px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      #f2ece0 0px,
+      #e5ddd0 1px,
+      #f2ece0 2px
+    );
+  border-top: 1px solid #d5ccb8;
+  border-bottom: 1px solid #d5ccb8;
+}
+
+/* Vertical page lines on top/bottom edges */
+.fl-book__page-bottom,
+.fl-book__page-top {
+  left: 3px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      #f2ece0 0px,
+      #e5ddd0 1px,
+      #f2ece0 2px
+    );
+  border-left: 1px solid #d5ccb8;
+  border-right: 1px solid #d5ccb8;
+}
+
+/* ── Catalog Content Section ──────────────────────────────────── */
+#catalog-content {
+  scroll-margin-top: 80px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  body:has(.biblionet-hero) .navbar {
+    padding: 0 20px;
+    height: 64px;
+  }
+
+  .biblionet-hero {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .hero-title {
+    font-size: clamp(2.8rem, 12vw, 4rem);
+  }
+
+  .hero-welcome {
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+  }
+
+  .hero-cta {
+    padding: 14px 32px;
+    font-size: 0.95rem;
+  }
+
+  .fl-book {
+    opacity: 0.5;
+  }
+}
+

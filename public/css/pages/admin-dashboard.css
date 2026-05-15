@@ -1,0 +1,157 @@
+/* Estilos para el dashboard del administrador */
+
+.reporte-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}
+
+.summary-card .label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted, #667085);
+  margin: 0 0 0.35rem;
+}
+
+.summary-card .value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-primary, #146c5f);
+  margin: 0 0 0.2rem;
+  line-height: 1;
+}
+
+.summary-card .sub {
+  font-size: 0.78rem;
+  color: var(--color-muted, #667085);
+  margin: 0;
+}
+
+.reporte-seccion {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.seccion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.seccion-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.seccion-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.seccion-actions a {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  text-decoration: none;
+  color: var(--color-text, #17202a);
+  background: #fff;
+}
+
+.seccion-actions a:hover {
+  background: var(--color-bg, #f6f7f9);
+}
+
+.filtros-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  align-items: flex-end;
+}
+
+.filtros-row label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-muted, #667085);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filtros-row input,
+.filtros-row select {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 6px;
+}
+
+.filtros-row button {
+  font-size: 0.85rem;
+  padding: 0.38rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--color-primary, #146c5f);
+  color: #fff;
+  cursor: pointer;
+}
+
+.filtros-row button:hover {
+  opacity: 0.88;
+}
+
+.chart-wrap {
+  max-height: 240px;
+  margin-bottom: 1.25rem;
+}
+
+.loading-msg {
+  text-align: center;
+  color: var(--color-muted, #667085);
+  padding: 1.5rem !important;
+}
+
+.badge-digital {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badge-fisico {
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
