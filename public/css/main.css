@@ -1,101 +1,28 @@
-:root {
-  --color-bg: #f6f7f9;
-  --color-surface: #ffffff;
-  --color-text: #17202a;
-  --color-muted: #667085;
-  --color-border: #d9dee7;
-  --color-primary: #146c5f;
-  --color-primary-contrast: #ffffff;
-  --color-warning: #f4c542;
-  --color-success: #268a4a;
-  --color-danger: #c24132;
-  --radius: 8px;
-}
+/* ═══════════════════════════════════════════════════════════════
+   BiblioNet — main.css
+   Punto de entrada único. Todos los archivos CSS del sistema
+   se importan desde aquí. Las vistas sólo necesitan este archivo.
+   ═══════════════════════════════════════════════════════════════ */
 
-* {
-  box-sizing: border-box;
-}
+/* ── BASE ──────────────────────────────────────────────────────── */
+@import url('./base/variables.css');
+@import url('./base/reset.css');
+@import url('./base/tipografia.css');
 
-body {
-  margin: 0;
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.5;
-}
+/* ── COMPONENTES ───────────────────────────────────────────────── */
+@import url('./components/botones.css');
+@import url('./components/cards.css');
+@import url('./components/tables.css');
+@import url('./components/forms.css');
+@import url('./components/badges.css');
+@import url('./components/modals.css');
 
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-}
+/* ── LAYOUTS ───────────────────────────────────────────────────── */
+@import url('./layouts/topbar.css');
+@import url('./layouts/sidebar.css');
+@import url('./layouts/grid-principal.css');
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  cursor: pointer;
-  padding: 0.65rem 1rem;
-}
-
-.page {
-  width: min(1180px, calc(100% - 32px));
-  margin: 24px auto;
-}
-
-.panel,
-.auth-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 24px;
-}
-
-.auth-card {
-  width: min(420px, calc(100% - 32px));
-  margin: 64px auto;
-}
-
-.auth-card form,
-.form-grid {
-  display: grid;
-  gap: 16px;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  color: var(--color-muted);
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.65rem 0.75rem;
-}
-
-.alert {
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-  padding: 12px 14px;
-}
-
-.alert-error {
-  background: #fdecea;
-  color: var(--color-danger);
-}
-
-.alert-success {
-  background: #e9f7ef;
-  color: var(--color-success);
-}
+/* ── PAGES ─────────────────────────────────────────────────────── */
+@import url('./pages/catalogo-hero.css');
+@import url('./pages/catalogo-browse.css');
+@import url('./pages/visor.css');

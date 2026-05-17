@@ -78,7 +78,9 @@ exports.index = async (req, res, next) => {
       title: 'Catálogo',
       recursos: recursos.map((r) => ({ ...r, disponibilidad: disponibilidadGeneral(r) })),
       categorias,
-      filtros: { q, tipo_contenido: tipoContenido, categoria_id: categoriaId }
+      filtros: { q, tipo_contenido: tipoContenido, categoria_id: categoriaId },
+      topbarHero: true,
+      pageClass: 'catalog-page'
     });
   } catch (error) {
     next(error);

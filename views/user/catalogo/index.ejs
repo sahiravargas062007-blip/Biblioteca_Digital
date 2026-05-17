@@ -1,8 +1,3 @@
-<%- include('../../partials/userPageStart', { pageClass: 'catalog-page' }) %>
-
-<link rel="stylesheet" href="/css/pages/catalogo-hero.css">
-<link rel="stylesheet" href="/css/pages/catalogo-browse.css">
-
 <!-- ═══════ HERO SECTION ═══════ -->
 <section class="biblionet-hero">
   <div class="biblionet-hero__bg"></div>
@@ -28,67 +23,7 @@
 <!-- ═══════ CATALOG BROWSE SECTION ═══════ -->
 <div id="catalog-content"></div>
 
-<!-- ── Sidebar Navigation (starts collapsed) ── -->
-<aside class="cat-sidebar is-collapsed" id="cat-sidebar">
-  <div class="cat-sidebar__header">
-    <a class="cat-sidebar__brand" href="/catalogo">
-      BiblioNet
-      <small>Conecta con el conocimiento</small>
-    </a>
-  </div>
-  <nav class="cat-sidebar__nav">
-    <a class="cat-sidebar__link is-active" href="/catalogo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Explorar
-    </a>
-    <a class="cat-sidebar__link" href="/prestamos">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Préstamos
-    </a>
-    <a class="cat-sidebar__link" href="/reservas">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Reservas
-    </a>
-    <a class="cat-sidebar__link" href="/historial">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 6 12 12 16 14"/><circle cx="12" cy="12" r="10"/></svg>
-      Historial
-    </a>
-    <a class="cat-sidebar__link" href="/sanciones">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Sanciones
-    </a>
-  </nav>
-  <div class="cat-sidebar__footer">
-    <a class="cat-sidebar__link" href="/perfil">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Mi perfil
-    </a>
-  </div>
-</aside>
 
-<div class="cat-sidebar-overlay" id="cat-overlay"></div>
-
-<!-- ── Top Bar (transparent over hero → white on scroll) ── -->
-<header class="cat-topbar" id="cat-topbar">
-  <div class="cat-topbar__left">
-    <a class="cat-topbar__brand" href="/catalogo">
-      <img src="/img/biblionet-logo.png" alt="BiblioNet" class="cat-topbar__logo">
-      <div class="cat-topbar__brand-text">
-        <span class="cat-topbar__brand-name">BiblioNet</span>
-        <span class="cat-topbar__brand-slogan">— Conecta con el conocimiento —</span>
-      </div>
-    </a>
-    <button class="cat-topbar__toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
-  <nav class="cat-topbar__links">
-    <a href="/catalogo" class="is-active">Explorar</a>
-    <a href="#">Categorías</a>
-    <a href="#">Novedades</a>
-    <a href="#">Más leídos</a>
-  </nav>
-</header>
 
 <!-- ── Main Content: Filters + Results ── -->
 <div class="cat-main">
@@ -220,5 +155,5 @@
   </section>
 </div>
 
+
 <script src="/js/user/catalogo.js"></script>
-<%- include('../../partials/userPageEnd') %>

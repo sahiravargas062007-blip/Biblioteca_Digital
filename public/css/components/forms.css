@@ -1,5 +1,32 @@
-.field-row {
+/* ── Form Layouts ────────────────────────────────────────────── */
+.auth-card form,
+.form-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-muted);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.75rem;
+}
+
+/* Base specific styles from original forms.css */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
 }

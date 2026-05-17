@@ -17,11 +17,17 @@ const PORT = process.env.PORT || 3000;
 
 connectDB();
 
+const expressLayouts = require('express-ejs-layouts');
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layouts/userLayout'); // Default layout
+app.set('layout extractScripts', true);
+app.set('layout extractStyles', true);
 
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 3000 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));

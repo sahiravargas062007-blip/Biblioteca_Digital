@@ -8,7 +8,7 @@ function flash(req, type, message) {
   req.session.flash = { type, message };
 }
 
-exports.loginForm = (req, res) => res.render('auth/loginUsuario', { title: 'Ingreso usuarios' });
+exports.loginForm = (req, res) => res.render('auth/loginUsuario', { title: 'Ingreso usuarios', layout: false });
 
 exports.login = async (req, res, next) => {
   try {

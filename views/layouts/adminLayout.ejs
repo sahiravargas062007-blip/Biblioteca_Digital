@@ -4,22 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title || 'Administrador' %> | Biblioteca Digital</title>
-  <!-- CSS Base -->
+  <!-- CSS Único -->
   <link rel="stylesheet" href="/css/main.css">
-  <!-- Componentes reutilizables -->
-  <link rel="stylesheet" href="/css/components/forms.css">
-  <link rel="stylesheet" href="/css/components/tables.css">
-  <link rel="stylesheet" href="/css/components/badges.css">
-  <link rel="stylesheet" href="/css/components/cards.css">
-  <link rel="stylesheet" href="/css/components/modals.css">
   <!-- Estilos de Admin -->
   <link rel="stylesheet" href="/css/admin.css">
+  <%- style %>
 </head>
-<body class="admin-shell">
-  <%- include('../partials/adminSidebar') %>
-  <main class="admin-main">
+<body class="admin-shell <%= typeof pageClass !== 'undefined' ? pageClass : '' %>">
+  <%- include('../partials/topbar') %>
+  <main class="admin-main page <%= typeof pageClass !== 'undefined' ? pageClass : '' %>">
     <%- include('../partials/alertas') %>
     <%- body %>
   </main>
+  <%- script %>
 </body>
 </html>

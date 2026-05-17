@@ -1,0 +1,38 @@
+/* ── Main Content Area Padding for global pages ────────────────── */
+.page {
+  padding-top: 24px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 24px auto;
+}
+.cat-sidebar:not(.is-collapsed) ~ .page {
+  margin-left: 250px;
+}
+.cat-topbar ~ .page {
+  margin-top: 72px; /* to push content below fixed topbar */
+}
+.cat-sidebar:not(.is-collapsed) ~ .admin-main {
+  margin-left: 250px;
+}
+.cat-topbar ~ .admin-main {
+  margin-top: 72px;
+}
+
+/* Specific to catalog main area */
+.cat-main {
+  margin-left: 0;
+  min-height: calc(100vh - 64px);
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 0;
+}
+
+.cat-sidebar:not(.is-collapsed) ~ .cat-topbar ~ .cat-main {
+  margin-left: 250px;
+}
+
+@media (max-width: 768px) {
+  .cat-main, .page, .admin-main {
+    margin-left: 0 !important;
+  }
+}

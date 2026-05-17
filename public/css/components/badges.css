@@ -28,3 +28,20 @@
   background: #eef0f3;
   color: var(--color-muted);
 }
+
+/* ── Alerts ─────────────────────────────────────────────────── */
+.alert {
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  padding: 12px 14px;
+}
+
+.alert-error {
+  background: #fdecea;
+  color: var(--color-danger);
+}
+
+.alert-success {
+  background: #e9f7ef;
+  color: var(--color-success);
+}

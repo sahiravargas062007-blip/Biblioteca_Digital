@@ -1,3 +1,7 @@
+/* ── ADMIN SPECIFIC IMPORTS ── */
+@import url('./pages/admin-dashboard.css');
+@import url('./pages/admin-recursos.css');
+
 .admin-shell {
   display: grid;
   grid-template-columns: 260px 1fr;

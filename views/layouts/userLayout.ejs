@@ -4,22 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title || 'Biblioteca Digital' %></title>
-  <!-- CSS Base -->
+  <!-- CSS Único -->
   <link rel="stylesheet" href="/css/main.css">
-  <!-- Componentes reutilizables -->
-  <link rel="stylesheet" href="/css/components/forms.css">
-  <link rel="stylesheet" href="/css/components/tables.css">
-  <link rel="stylesheet" href="/css/components/badges.css">
-  <link rel="stylesheet" href="/css/components/cards.css">
-  <link rel="stylesheet" href="/css/components/modals.css">
-  <!-- Estilos de Usuario -->
+  <!-- Estilos Específicos de Usuario -->
   <link rel="stylesheet" href="/css/user.css">
+  <%- style %>
 </head>
-<body>
-  <%- include('../partials/userNavbar') %>
-  <main class="page">
+<body class="<%= typeof pageClass !== 'undefined' ? pageClass : '' %>">
+  <%- include('../partials/topbar') %>
+  <main class="page <%= typeof pageClass !== 'undefined' ? pageClass : '' %>">
     <%- include('../partials/alertas') %>
     <%- body %>
   </main>
+  <%- script %>
 </body>
 </html>

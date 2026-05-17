@@ -9,7 +9,7 @@ function flash(req, type, message) {
   req.session.flash = { type, message };
 }
 
-exports.loginForm = (req, res) => res.render('auth/loginAdmin', { title: 'Ingreso administrador' });
+exports.loginForm = (req, res) => res.render('auth/loginAdmin', { title: 'Ingreso administrativo', layout: false });
 
 exports.login = async (req, res, next) => {
   try {

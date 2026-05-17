@@ -2,6 +2,12 @@ const router = require('express').Router();
 
 router.get('/', (req, res) => res.redirect('/catalogo'));
 
+// Admin layout middleware
+router.use('/admin', (req, res, next) => {
+  res.locals.layout = 'layouts/adminLayout';
+  next();
+});
+
 router.use('/admin', require('./admin/auth.routes'));
 router.use('/admin/recursos', require('./admin/recursos.routes'));
 router.use('/admin/categorias', require('./admin/categorias.routes'));
