@@ -20,13 +20,13 @@ const UMBRAL_CHUNKED = 90 * 1024 * 1024;
 // â”€â”€ Tipos de archivo que necesitan chunked upload (videos generalmente) â”€â”€â”€â”€â”€â”€â”€â”€
 const VIDEO_EXTS = new Set(['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv']);
 
-// â”€â”€ Extensiones vÃ¡lidas de imagen / portada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Extensiones válidas de imagen / portada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif']);
 
 // â”€â”€ Upload Preset de Cloudinary (RN5) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET || 'Biblioteca_name';
 
-// â”€â”€ Resource type correcto para Cloudinary segÃºn extensiÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Resource type correcto para Cloudinary según extensión â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function cloudinaryResourceType(ext) {
   if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) return 'image';
   if (['mp3', 'wav', 'm4b', 'm4a', 'ogg', 'aac', 'flac', 'wma'].includes(ext)) return 'video';
@@ -34,7 +34,7 @@ function cloudinaryResourceType(ext) {
   return 'raw';
 }
 
-// â”€â”€ ExtensiÃ³n desde mimetype â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Extensión desde mimetype â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function extFromMime(mime) {
   const map = {
     'application/pdf':      'pdf',
@@ -64,7 +64,7 @@ function generarPublicId(titulo, carpeta) {
   return `biblioteca/${carpeta}/${nombre}_${Date.now()}`;
 }
 
-// â”€â”€ Sube archivo a Cloudinary (automÃ¡ticamente elige normal o chunked) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Sube archivo a Cloudinary (automáticamente elige normal o chunked) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function subirArchivoCloudinary(fileBuffer, originalname, mimetype, titulo) {
   const ext = originalname.includes('.')
     ? originalname.split('.').pop().toLowerCase()
@@ -256,7 +256,7 @@ function buildDigital(body) {
 }
 
 function buildFisico(body) {
-  if (!['FÃ­sico', 'Mixto'].includes(body.tipo_naturaleza)) return undefined;
+  if (!['Físico', 'Mixto'].includes(body.tipo_naturaleza)) return undefined;
   const total = Number(body.total_ejemplares || 0);
   return {
     total_ejemplares:       total,
@@ -291,7 +291,7 @@ async function buildRecursoPayload(req) {
 
   const archivoFile = req.files?.archivo?.[0];
   if (archivoFile && ['Digital', 'Mixto'].includes(req.body.tipo_naturaleza)) {
-    // subirArchivoCloudinary elige automÃ¡ticamente normal vs chunked segÃºn tamaÃ±o
+    // subirArchivoCloudinary elige automáticamente normal vs chunked según tamaño
     const subido = await subirArchivoCloudinary(
       archivoFile.buffer,
       archivoFile.originalname,
@@ -343,7 +343,7 @@ async function buildRecursoPayload(req) {
       ? Number(req.body.duracion_segundos) : undefined,
     imagen,
     categorias,
-    estado: req.body.estado || (publicado ? 'Activo' : 'Pendiente de configuraciÃ³n'),
+    estado: req.body.estado || (publicado ? 'Activo' : 'Pendiente de configuración'),
     digital:           digitalPayload,
     fisico:            buildFisico(req.body),
     publicado,
@@ -437,7 +437,7 @@ exports.masivo = (req, res) =>
   res.render('admin/recursos/masivo', { title: 'Carga masiva' });
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// HU-09: ImportaciÃ³n de metadatos desde Excel
+// HU-09: Importación de metadatos desde Excel
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.excelMetadatos = (req, res) =>
   res.render('admin/recursos/excel-metadatos', { title: 'Importar metadatos' });
@@ -614,7 +614,7 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
 
           detalles.push({
             nombreArchivo: registro.nombreArchivoOriginal,
-            titulo: actualizado.titulo || 'Sin tÃ­tulo',
+            titulo: actualizado.titulo || 'Sin título',
             publicado: actualizado.publicado,
           });
         }
@@ -677,7 +677,7 @@ function allowedMainExtensions(tipoContenido) {
   return ['pdf', 'epub'];
 }
 
-// â”€â”€ Normaliza el nombre base (sin extensiÃ³n) para asociar archivos planos â”€â”€â”€â”€â”€
+// â”€â”€ Normaliza el nombre base (sin extensión) para asociar archivos planos â”€â”€â”€â”€â”€
 function nombreBase(filename) {
   const partes = filename.split('.');
   if (partes.length > 1) partes.pop();
@@ -685,7 +685,7 @@ function nombreBase(filename) {
 }
 
 /**
- * Si el ZIP tiene un folder raÃ­z Ãºnico que envuelve todo, lo quitamos.
+ * Si el ZIP tiene un folder raíz único que envuelve todo, lo quitamos.
  * Ejemplo: Ejemplo/Libro1/archivo.pdf -> Libro1/archivo.pdf
  */
 function stripCommonRoot(entries) {
@@ -711,7 +711,7 @@ function stripCommonRoot(entries) {
 
 /**
  * CA1 + CA2: Analiza las entradas del ZIP y devuelve recursos detectados.
- * - Estructura plana  â†’ asociaciÃ³n por nombre base compartido.
+ * - Estructura plana  â†’ asociación por nombre base compartido.
  * - Estructura carpetas â†’ cada carpeta = 1 recurso.
  */
 function analizarZip(zip, tipoContenido) {
@@ -751,7 +751,7 @@ function analizarZip(zip, tipoContenido) {
         : null;
 
       if (!mainEntry) {
-        errores.push(`Carpeta "${folder}" no tiene archivo principal vÃ¡lido para "${tipoContenido}".`);
+        errores.push(`Carpeta "${folder}" no tiene archivo principal válido para "${tipoContenido}".`);
         recursos.push({ titulo: folder, tieneMain: false, tienePortada: !!portadaEntry });
         continue;
       }
@@ -766,8 +766,8 @@ function analizarZip(zip, tipoContenido) {
       });
     }
   } else {
-    // â”€â”€ CA1: Estructura plana â€” asociaciÃ³n por nombre base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Solo procesar archivos que tengan extensiÃ³n
+    // â”€â”€ CA1: Estructura plana â€” asociación por nombre base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Solo procesar archivos que tengan extensión
     const entriesConExtension = entries.filter(({ entry }) => entry.name.includes('.'));
 
     const grupos = new Map();
@@ -788,7 +788,7 @@ function analizarZip(zip, tipoContenido) {
       if (!grupo.main && !grupo.portada && !grupo.complemento) continue;
 
       if (!grupo.main) {
-        errores.push(`Archivo "${base}" no tiene archivo principal vÃ¡lido para "${tipoContenido}".`);
+        errores.push(`Archivo "${base}" no tiene archivo principal válido para "${tipoContenido}".`);
         recursos.push({ titulo: base, tieneMain: false, tienePortada: !!grupo.portada });
         continue;
       }
@@ -809,7 +809,7 @@ function analizarZip(zip, tipoContenido) {
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PASO 1 â€” POST /admin/recursos/masivo/previsualizar
-// CA4: analizar el ZIP y mostrar previsualizaciÃ³n sin guardar nada
+// CA4: analizar el ZIP y mostrar previsualización sin guardar nada
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.previsualizarMasivo = async (req, res, next) => {
   try {
@@ -858,7 +858,7 @@ exports.confirmarMasivo = async (req, res, next) => {
     }
 
     if (!zipTempPath) {
-      flash(req, 'error', 'No se encontrÃ³ el archivo ZIP temporal. Vuelva a intentarlo.');
+      flash(req, 'error', 'No se encontró el archivo ZIP temporal. Vuelva a intentarlo.');
       return res.redirect('/admin/recursos/masivo');
     }
 
@@ -937,7 +937,7 @@ exports.confirmarMasivo = async (req, res, next) => {
           };
         }
 
-        // â”€â”€ RN4: guardar en MongoDB con estado "Pendiente de configuraciÃ³n" â”€â”€
+        // â”€â”€ RN4: guardar en MongoDB con estado "Pendiente de configuración" â”€â”€
         await Recurso.create({
           tipo_naturaleza: 'Digital',
           tipo_contenido:  tipoContenido,
@@ -948,7 +948,7 @@ exports.confirmarMasivo = async (req, res, next) => {
           idioma:          '',
           imagen,
           categorias:      [],
-          estado:          'Pendiente de configuraciÃ³n',
+          estado:          'Pendiente de configuración',
           publicado:       false,
           digital: {
             tipo_licencia:         'Libre',
@@ -990,7 +990,7 @@ exports.confirmarMasivo = async (req, res, next) => {
 };
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// RESTO DE CONTROLLERS â€” idÃ©nticos a tu versiÃ³n original
+// RESTO DE CONTROLLERS â€” idénticos a tu versión original
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 exports.detalle = async (req, res, next) => {
@@ -1108,7 +1108,7 @@ exports.subirArchivo = async (req, res, next) => {
   try {
     const archivoFile = req.files?.archivo?.[0] || req.file;
     if (!archivoFile) {
-      return res.status(400).json({ error: 'No se recibiÃ³ ningÃºn archivo.' });
+      return res.status(400).json({ error: 'No se recibió ningún archivo.' });
     }
 
     const titulo = String(req.body.titulo || 'recurso').trim();

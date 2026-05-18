@@ -19,6 +19,8 @@ const ldapUsuarioMockSchema = new mongoose.Schema({
     default: 'Activo'
   },
   password_hash: { type: String, required: true },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   creado_en: { type: Date, default: Date.now }
 }, {
   collection: 'ldap_mock',

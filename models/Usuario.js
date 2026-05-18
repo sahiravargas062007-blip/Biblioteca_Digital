@@ -7,6 +7,8 @@ const usuarioSchema = new mongoose.Schema({
   tipo_documento: { type: String, default: 'CC', trim: true },
   correo: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password_hash: String,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   programa_formacion: { type: String, trim: true },
   ficha: { type: String, trim: true },
   telefono: { type: String, trim: true },

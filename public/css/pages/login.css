@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════════════
+   BiblioNet — Unified Login Page
+   ═══════════════════════════════════════════════════════════════ */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── LEFT SIDE (HERO) ── */
+.login-hero {
+  position: relative;
+  background: url('/img/hero-library.png') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 60px;
+  color: #fff;
+}
+
+.login-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(8, 28, 21, 0.85) 0%, rgba(12, 124, 134, 0.6) 100%);
+  z-index: 1;
+}
+
+.login-hero__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+}
+
+.login-hero__logo-wrapper {
+  text-align: center;
+  margin-bottom: auto;
+  margin-top: auto;
+}
+
+.login-hero__icon {
+  width: 120px;
+  margin-bottom: 20px;
+  filter: brightness(0) invert(1);
+  opacity: 0.95;
+}
+
+.login-hero__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(3rem, 5vw, 5rem);
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -1px;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.login-hero__divider {
+  width: 80px;
+  height: 3px;
+  background: var(--bn-turquoise-medio, #2CB9C7);
+  border: none;
+  margin: 16px auto;
+  border-radius: 2px;
+}
+
+.login-hero__subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  font-weight: 400;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.login-hero__features {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.feature-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+}
+
+.feature-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-text strong {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.feature-text span {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 150px;
+  line-height: 1.3;
+}
+
+/* ── RIGHT SIDE (FORM) ── */
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f7f6;
+  padding: 40px;
+  position: relative;
+}
+
+/* Add a subtle abstract shape to the right panel */
+.login-panel::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(12, 124, 134, 0.05) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0,0,0,0.05);
+  position: relative;
+  z-index: 1;
+}
+
+.login-card__header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-card__icon {
+  width: 56px;
+  height: 56px;
+  background: #f0faf9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: #0C7C86;
+}
+
+.login-card__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.login-card__title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #17202a;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.login-card__desc {
+  font-size: 0.95rem;
+  color: #667085;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── FORM ELEMENTS ── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #344054;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: #98a2b3;
+  pointer-events: none;
+}
+
+.input-wrapper input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px 0 42px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #101828;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.input-wrapper input:focus {
+  outline: none;
+  border-color: #0C7C86;
+  box-shadow: 0 0 0 4px rgba(12, 124, 134, 0.1);
+}
+
+.input-wrapper input::placeholder {
+  color: #98a2b3;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #98a2b3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #475467;
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.forgot-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0C7C86;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.btn-submit {
+  height: 48px;
+  background: #0C7C86;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(12, 124, 134, 0.2);
+}
+
+.btn-submit:hover {
+  background: #096870;
+  box-shadow: 0 6px 16px rgba(12, 124, 134, 0.3);
+  transform: translateY(-2px);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 992px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .login-hero {
+    display: none;
+  }
+  
+  .login-panel {
+    padding: 24px;
+  }
+}

@@ -1,26 +1,8 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %> | Biblioteca Digital</title>
-  <!-- CSS Base -->
-  <link rel="stylesheet" href="/css/main.css">
-  <!-- Componentes -->
-  <link rel="stylesheet" href="/css/components/forms.css">
-  <link rel="stylesheet" href="/css/components/tables.css">
-  <!-- Estilos de Admin -->
-  <link rel="stylesheet" href="/css/admin.css">
-  <!-- Página específica -->
-  <link rel="stylesheet" href="/css/pages/admin-recursos.css">
-</head>
-<body class="admin-shell">
-  <%- include('../../partials/adminSidebar') %>
+<link rel="stylesheet" href="/css/components/forms.css">
+<link rel="stylesheet" href="/css/components/tables.css">
+<link rel="stylesheet" href="/css/pages/admin-recursos.css">
 
-  <main class="admin-main">
-    <%- include('../../partials/alertas') %>
-
-    <section class="panel page-header">
+<section class="panel page-header">
       <div>
         <p class="eyebrow">Registro por lotes</p>
         <h1>Carga masiva ZIP</h1>
@@ -206,7 +188,3 @@
       </form>
     </section>
     <% } %>
-
-  </main>
-</body>
-</html>

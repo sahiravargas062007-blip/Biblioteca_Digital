@@ -3,17 +3,12 @@
 @import url('./pages/admin-recursos.css');
 
 .admin-shell {
-  display: grid;
-  grid-template-columns: 260px 1fr;
   min-height: 100vh;
+  background: var(--color-background, #f8fafc);
 }
 
-.sidebar {
-  align-content: start;
-  background: #102c2a;
-  display: grid;
-  gap: 4px;
-  padding: 20px;
+.admin-main {
+  padding: 80px 24px 24px;
 }
 
 .sidebar a {

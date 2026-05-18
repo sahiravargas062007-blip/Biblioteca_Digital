@@ -1,110 +1,106 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %> | Biblioteca Digital</title>
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/admin.css">
-  <link rel="stylesheet" href="/css/components/tables.css">
-  <link rel="stylesheet" href="/css/components/forms.css">
-  <link rel="stylesheet" href="/css/components/badges.css">
-</head>
-<body class="admin-shell">
-  <%- include('../../partials/adminSidebar') %>
+<link rel="stylesheet" href="/css/components/tables.css">
+<link rel="stylesheet" href="/css/components/forms.css">
+<link rel="stylesheet" href="/css/components/badges.css">
 
-  <main class="admin-main">
-    <%- include('../../partials/alertas') %>
+<section class="panel page-header">
+          <div>
+            <p class="eyebrow">Sistema Decimal Dewey</p>
+            <h1>Categorías</h1>
+          </div>
+          <a class="button-link" href="/admin/categorias/nueva">Nueva categoría</a>
+        </section>
 
-    <section class="panel page-header">
-      <div>
-        <p class="eyebrow">Sistema Decimal Dewey</p>
-        <h1>Categorías</h1>
-      </div>
-      <a class="button-link" href="/admin/categorias/nueva">Nueva categoría</a>
-    </section>
+        <section class="panel">
+          <form class="toolbar" method="get" action="/admin/categorias">
+            <label>
+              Buscar
+              <input type="search" name="q" value="<%= q %>" placeholder="Nombre, subcategoría o código Dewey">
+            </label>
+            <button type="submit">Filtrar</button>
+            <% if (q) { %>
+              <a class="secondary-link" href="/admin/categorias">Limpiar</a>
+              <% } %>
+          </form>
 
-    <section class="panel">
-      <form class="toolbar" method="get" action="/admin/categorias">
-        <label>
-          Buscar
-          <input type="search" name="q" value="<%= q %>" placeholder="Nombre, subcategoría o código Dewey">
-        </label>
-        <button type="submit">Filtrar</button>
-        <% if (q) { %>
-          <a class="secondary-link" href="/admin/categorias">Limpiar</a>
-        <% } %>
-      </form>
+          <form class="import-form" method="post" action="/admin/categorias/importar" enctype="multipart/form-data">
+            <label>
+              Importar desde Excel
+              <input type="file" name="excel" accept=".xlsx,.xls" required>
+            </label>
+            <button type="submit">Importar</button>
+          </form>
+        </section>
 
-      <form class="import-form" method="post" action="/admin/categorias/importar" enctype="multipart/form-data">
-        <label>
-          Importar desde Excel
-          <input type="file" name="excel" accept=".xlsx,.xls" required>
-        </label>
-        <button type="submit">Importar</button>
-      </form>
-    </section>
-
-    <section class="panel">
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Código Dewey</th>
-              <th>Subcategorías</th>
-              <th>Recursos</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (!categorias.length) { %>
-              <tr>
-                <td colspan="6">No hay categorías registradas.</td>
-              </tr>
-            <% } %>
-
-            <% categorias.forEach((categoria) => { %>
-              <tr>
-                <td>
-                  <strong><%= categoria.nombre %></strong>
-                  <% if (categoria.descripcion) { %>
-                    <small><%= categoria.descripcion %></small>
+        <section class="panel">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Categoría</th>
+                  <th>Código Dewey</th>
+                  <th>Subcategorías</th>
+                  <th>Recursos</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!categorias.length) { %>
+                  <tr>
+                    <td colspan="6">No hay categorías registradas.</td>
+                  </tr>
                   <% } %>
-                </td>
-                <td><%= categoria.codigo_dewey || 'Sin código' %></td>
-                <td>
-                  <% if (categoria.subcategorias && categoria.subcategorias.length) { %>
-                    <div class="tag-list">
-                      <% categoria.subcategorias.forEach((subcategoria) => { %>
-                        <span class="tag"><%= subcategoria.nombre %><% if (subcategoria.codigo_dewey) { %> · <%= subcategoria.codigo_dewey %><% } %></span>
+
+                    <% categorias.forEach((categoria)=> { %>
+                      <tr>
+                        <td>
+                          <strong>
+                            <%= categoria.nombre %>
+                          </strong>
+                          <% if (categoria.descripcion) { %>
+                            <small>
+                              <%= categoria.descripcion %>
+                            </small>
+                            <% } %>
+                        </td>
+                        <td>
+                          <%= categoria.codigo_dewey || 'Sin código' %>
+                        </td>
+                        <td>
+                          <% if (categoria.subcategorias && categoria.subcategorias.length) { %>
+                            <div class="tag-list">
+                              <% categoria.subcategorias.forEach((subcategoria)=> { %>
+                                <span class="tag">
+                                  <%= subcategoria.nombre %>
+                                    <% if (subcategoria.codigo_dewey) { %> · <%= subcategoria.codigo_dewey %>
+                                        <% } %>
+                                </span>
+                                <% }) %>
+                            </div>
+                            <% } else { %>
+                              <span class="muted">Sin subcategorías</span>
+                              <% } %>
+                        </td>
+                        <td>
+                          <%= categoria.total_recursos || 0 %>
+                        </td>
+                        <td>
+                          <span class="badge <%= categoria.activa ? 'badge-disponible' : 'badge-no-disponible' %>">
+                            <%= categoria.activa ? 'Activa' : 'Inactiva' %>
+                          </span>
+                        </td>
+                        <td>
+                          <div class="actions">
+                            <a href="/admin/categorias/<%= categoria._id %>/editar">Editar</a>
+                            <form method="post" action="/admin/categorias/<%= categoria._id %>?_method=DELETE"
+                              onsubmit="return confirm('¿Eliminar esta categoría?');">
+                              <button class="danger-button" type="submit">Eliminar</button>
+                            </form>
+                          </div>
+                        </td>
+                      </tr>
                       <% }) %>
-                    </div>
-                  <% } else { %>
-                    <span class="muted">Sin subcategorías</span>
-                  <% } %>
-                </td>
-                <td><%= categoria.total_recursos || 0 %></td>
-                <td>
-                  <span class="badge <%= categoria.activa ? 'badge-disponible' : 'badge-no-disponible' %>">
-                    <%= categoria.activa ? 'Activa' : 'Inactiva' %>
-                  </span>
-                </td>
-                <td>
-                  <div class="actions">
-                    <a href="/admin/categorias/<%= categoria._id %>/editar">Editar</a>
-                    <form method="post" action="/admin/categorias/<%= categoria._id %>?_method=DELETE" onsubmit="return confirm('¿Eliminar esta categoría?');">
-                      <button class="danger-button" type="submit">Eliminar</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-</body>
-</html>
+              </tbody>
+            </table>
+          </div>
+        </section>

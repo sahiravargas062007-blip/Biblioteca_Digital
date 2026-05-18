@@ -1,10 +1,48 @@
 const fs = require('fs');
-let css = fs.readFileSync('c:/Biblioteca_Digital/public/css/pages/catalogo-browse.css', 'utf8');
+const path = require('path');
 
-// Remove sidebar, topbar and main content margin sections
-css = css.replace(/\/\* ── Sidebar Navigation ── \*\/\s*\.cat-sidebar[\s\S]*?\/\* ── Filter Panel ──/, '/* ── Filter Panel ──');
+function processFile(p) {
+  let content = fs.readFileSync(p, 'utf8');
+  if (!content.toLowerCase().includes('<html')) return;
 
-// Remove responsive
-css = css.replace(/\/\* ── Responsive ── \*\/\s*@media \([\s\S]*?\/\* Sidebar overlay on mobile \*\/\s*\.cat-sidebar-overlay[\s\S]*?\}\s*/, '');
+  let links = [];
+  const linkRegex = /<link rel="stylesheet" href="([^"]+)">/g;
+  let match;
+  while ((match = linkRegex.exec(content)) !== null) {
+    if (!match[1].includes('main.css') && !match[1].includes('/css/admin.css')) {
+      links.push(match[0]);
+    }
+  }
 
-fs.writeFileSync('c:/Biblioteca_Digital/public/css/pages/catalogo-browse.css', css);
+  let scripts = [];
+  const scriptRegex = /<script[^>]*>[\s\S]*?<\/script>/g;
+  while ((match = scriptRegex.exec(content)) !== null) {
+    scripts.push(match[0]);
+  }
+
+  let mainContent = '';
+  const mainRegex = /<main[^>]*>([\s\S]*?)<\/main>/i;
+  const mainMatch = mainRegex.exec(content);
+  if (mainMatch) {
+    mainContent = mainMatch[1];
+  } else {
+    console.log('NO MAIN in', p);
+    return;
+  }
+
+  mainContent = mainContent.replace(/<%- include\(['"](?:\.\.\/)+partials\/alertas['"]\) %>/, '').trim();
+
+  let newContent = links.join('\n') + (links.length > 0 ? '\n\n' : '') + mainContent + (scripts.length > 0 ? '\n\n' : '') + scripts.join('\n');
+  fs.writeFileSync(p, newContent.trim() + '\n');
+  console.log('Cleaned', p);
+}
+
+function walk(d) {
+  fs.readdirSync(d).forEach(f => {
+    const p = path.join(d, f);
+    if (fs.statSync(p).isDirectory()) walk(p);
+    else if (p.endsWith('.ejs')) processFile(p);
+  });
+}
+
+walk('c:/Biblioteca_Digital/views/admin');
