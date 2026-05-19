@@ -10,8 +10,11 @@
   <link rel="stylesheet" href="/css/pages/login.css">
   <!-- Import Poppins and Outfit for the design -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/layouts/topbar.css">
+  <link rel="stylesheet" href="/css/layouts/sidebar.css">
 </head>
 <body>
+  <%- include('../partials/topbar', { topbarHero: false }) %>
   <div class="login-layout">
     <!-- Left Side: Hero / Branding -->
     <div class="login-hero">

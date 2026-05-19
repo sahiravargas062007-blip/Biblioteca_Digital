@@ -7,6 +7,7 @@ const { uploadRecurso, uploadZip, uploadExcel } = require('../../middlewares/upl
 router.use(isAdminAuth);
 
 router.get('/',              controller.index);
+router.get('/api',           controller.api);
 router.get('/nuevo',         controller.nuevo);
 router.get('/masivo',        controller.masivo);
 router.get('/excel-metadatos', controller.excelMetadatos);

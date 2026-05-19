@@ -3,6 +3,7 @@ const https = require('https');
 const http = require('http');
 const Categoria = require('../../models/Categoria');
 const Configuracion = require('../../models/Configuracion');
+const Ejemplar = require('../../models/Ejemplar');
 const Prestamo = require('../../models/Prestamo');
 const Recurso = require('../../models/Recurso');
 const Reserva = require('../../models/Reserva');
@@ -13,6 +14,8 @@ const reservaService = require('../../services/reservaService');
 function flash(req, type, message) {
   req.session.flash = { type, message };
 }
+
+const TIPO_FISICO = 'F\u00edsico';
 
 // ── Nombre de descarga limpio ─────────────────────────────────────────────
 function nombreLimpio(titulo, ext) {
@@ -43,10 +46,91 @@ function disponibilidadGeneral(recurso) {
   return 'No disponible';
 }
 
+function tieneComponenteFisico(recurso) {
+  return ['Físico', 'Mixto'].includes(recurso.tipo_naturaleza);
+}
+
+async function aplicarConteoFisico(recursos) {
+  const lista = Array.isArray(recursos) ? recursos : [recursos];
+  const ids = lista
+    .filter((recurso) => recurso && tieneComponenteFisico(recurso))
+    .map((recurso) => recurso._id);
+
+  if (!ids.length) return recursos;
+
+  const [conteos, retenidos] = await Promise.all([
+    Ejemplar.aggregate([
+      { $match: { recurso_id: { $in: ids } } },
+      {
+        $group: {
+          _id: '$recurso_id',
+          total: { $sum: 1 },
+          disponibles: {
+            $sum: { $cond: [{ $eq: ['$estado', 'Disponible'] }, 1, 0] },
+          },
+        },
+      },
+    ]),
+    Reserva.aggregate([
+      {
+        $match: {
+          recurso_id: { $in: ids },
+          tipo: TIPO_FISICO,
+          estado: 'Disponible para reclamar'
+        }
+      },
+      { $group: { _id: '$recurso_id', total: { $sum: 1 } } }
+    ])
+  ]);
+
+  const porRecurso = new Map(conteos.map((item) => [String(item._id), item]));
+  const retenidosPorRecurso = new Map(retenidos.map((item) => [String(item._id), item.total]));
+  for (const recurso of lista) {
+    if (!recurso || !tieneComponenteFisico(recurso)) continue;
+    const conteo = porRecurso.get(String(recurso._id));
+    if (!conteo) continue;
+    const retenidos = retenidosPorRecurso.get(String(recurso._id)) || 0;
+    recurso.fisico = {
+      ...(recurso.fisico || {}),
+      total_ejemplares: conteo.total,
+      ejemplares_disponibles: Math.max(0, conteo.disponibles - retenidos),
+    };
+  }
+
+  return recursos;
+}
+
 function archivoPrincipal(recurso) {
   return recurso.digital?.archivos?.find((a) => a.es_principal)
     || recurso.digital?.archivos?.[0]
     || null;
+}
+
+async function contarPrestamosDigitalesActivos(recursoId) {
+  return Prestamo.countDocuments({
+    tipo: 'Digital',
+    estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+    items: {
+      $elemMatch: {
+        recurso_id: recursoId,
+        estado: { $in: ['Activo', 'Vencido'] }
+      }
+    }
+  });
+}
+
+async function prestamoActivoDelUsuario(usuarioId, recursoId) {
+  if (!usuarioId) return null;
+  return Prestamo.findOne({
+    usuario_id: usuarioId,
+    estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+    items: {
+      $elemMatch: {
+        recurso_id: recursoId,
+        estado: { $in: ['Activo', 'Vencido'] }
+      }
+    }
+  }).lean();
 }
 
 // ── CATÁLOGO ──────────────────────────────────────────────────────────────
@@ -73,6 +157,7 @@ exports.index = async (req, res, next) => {
       Recurso.find(filtro).sort({ publicado_en: -1, creado_en: -1 }).lean(),
       Categoria.find({ activa: true }).sort({ nombre: 1 }).lean()
     ]);
+    await aplicarConteoFisico(recursos);
 
     res.render('user/catalogo/index', {
       title: 'Catálogo',
@@ -117,6 +202,7 @@ exports.api = async (req, res, next) => {
     }
 
     const recursos = await Recurso.find(filtro).sort({ publicado_en: -1, creado_en: -1 }).lean();
+    await aplicarConteoFisico(recursos);
 
     return res.json(recursos.map((r) => ({
       _id: r._id,
@@ -148,35 +234,34 @@ exports.detalle = async (req, res, next) => {
         message: 'El recurso no está disponible.'
       });
     }
+    await aplicarConteoFisico(recurso);
 
-    const tieneReservaActiva = req.session.userId
-      ? Boolean(await Reserva.exists({
-          usuario_id: req.session.userId,
-          recurso_id: recurso._id,
-          estado: { $in: ['Pendiente', 'Disponible para reclamar'] }
-        }))
-      : false;
+    const [reservaActiva, prestamoActivo, licenciasEnUsoReal] = await Promise.all([
+      req.session.userId
+        ? Reserva.findOne({
+            usuario_id: req.session.userId,
+            recurso_id: recurso._id,
+            estado: { $in: ['Pendiente', 'Disponible para reclamar'] }
+          }).lean()
+        : null,
+      prestamoActivoDelUsuario(req.session.userId, recurso._id),
+      contarPrestamosDigitalesActivos(recurso._id)
+    ]);
+
+    if (recurso.digital) recurso.digital.licencias_en_uso = licenciasEnUsoReal;
 
     let prestamoActivoItem = null;
-    if (req.session.userId) {
-      const prestamo = await Prestamo.findOne({
-        usuario_id: req.session.userId,
-        tipo: 'Digital',
-        estado: { $in: ['Activo', 'Parcialmente devuelto'] },
-        'items.recurso_id': recurso._id,
-        'items.estado': 'Activo'
-      }).lean();
-      if (prestamo) {
-        const item = (prestamo.items || []).find(
-          (i) => String(i.recurso_id) === String(recurso._id) && i.estado === 'Activo'
-        );
-        if (item) {
-          prestamoActivoItem = {
-            prestamo_id:  prestamo._id,
-            item_id:      item._id,
-            fecha_limite: item.fecha_limite
-          };
-        }
+    if (prestamoActivo) {
+      const item = (prestamoActivo.items || []).find(
+        (i) => String(i.recurso_id) === String(recurso._id) && ['Activo', 'Vencido'].includes(i.estado)
+      );
+      if (item) {
+        prestamoActivoItem = {
+          prestamo_id:  prestamoActivo._id,
+          item_id:      item._id,
+          tipo:         prestamoActivo.tipo,
+          fecha_limite: item.fecha_limite
+        };
       }
     }
 
@@ -188,7 +273,8 @@ exports.detalle = async (req, res, next) => {
         disponibilidadDigital: disponibilidadDigital(recurso),
         disponibilidadFisica:  disponibilidadFisica(recurso),
         reservable:            reservaService.esRecursoReservable(recurso),
-        tieneReservaActiva,
+        tieneReservaActiva:    Boolean(reservaActiva),
+        reservaActiva,
         prestamoActivoItem,
         archivo:               archivoPrincipal(recurso)
       }
@@ -217,7 +303,7 @@ exports.prestar = async (req, res, next) => {
     }
 
     const licencia = recurso.digital.licencia;
-    const enUso    = recurso.digital.licencias_en_uso || 0;
+    const enUso    = await contarPrestamosDigitalesActivos(recurso._id);
     const maxSim   = licencia?.usuarios_simultaneos || 1;
     if (enUso >= maxSim) {
       flash(req, 'error', 'No hay licencias disponibles. Puedes reservarlo.');
@@ -235,10 +321,13 @@ exports.prestar = async (req, res, next) => {
 
     const yaLoTiene = await Prestamo.exists({
       usuario_id: usuario._id,
-      tipo: 'Digital',
-      estado: { $in: ['Activo', 'Parcialmente devuelto'] },
-      'items.recurso_id': recurso._id,
-      'items.estado': 'Activo'
+      estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+      items: {
+        $elemMatch: {
+          recurso_id: recurso._id,
+          estado: { $in: ['Activo', 'Vencido'] }
+        }
+      }
     });
     if (yaLoTiene) {
       flash(req, 'error', 'Ya tienes un préstamo activo de este recurso.');
@@ -283,7 +372,9 @@ exports.prestar = async (req, res, next) => {
     });
 
     await Recurso.findByIdAndUpdate(recurso._id, {
-      $inc: { 'digital.licencias_en_uso': 1, total_prestamos: 1 }
+      $set: { 'digital.licencias_en_uso': enUso + 1 },
+      $inc: { total_prestamos: 1 },
+      actualizado_en: new Date()
     });
     await Usuario.findByIdAndUpdate(usuario._id, {
       $inc: { prestamos_activos: 1 },

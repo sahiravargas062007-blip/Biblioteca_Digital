@@ -1,79 +1,11 @@
-<link rel="stylesheet" href="/css/components/cards.css">
-<link rel="stylesheet" href="/css/components/badges.css">
-
-<section class="panel page-header">
-      <div>
-        <p class="eyebrow">Catálogo administrativo</p>
-        <h1>Materiales</h1>
-      </div>
-      <div class="actions">
-        <a class="secondary-link" href="/admin/recursos/masivo">Carga masiva</a>
-        <a class="secondary-link" href="/admin/recursos/excel-metadatos">Importar Excel</a>
-        <a class="button-link" href="/admin/recursos/nuevo">Nuevo recurso</a>
-      </div>
-    </section>
-
-    <section class="panel">
-      <form class="resource-filters" method="get" action="/admin/recursos">
-        <label>
-          Buscar
-          <input type="search" name="q" value="<%= filtros.q %>" placeholder="Título, autor, ISBN o categoría">
-        </label>
-        <label>
-          Tipo
-          <select name="tipo_contenido">
-            <option value="">Todos</option>
-            <% ['Lectura', 'Audio', 'Video'].forEach((tipo) => { %>
-              <option value="<%= tipo %>" <%= filtros.tipo_contenido === tipo ? 'selected' : '' %>><%= tipo %></option>
-            <% }) %>
-          </select>
-        </label>
-        <label>
-          Categoría
-          <select name="categoria_id">
-            <option value="">Todas</option>
-            <% categorias.forEach((categoria) => { %>
-              <option value="<%= categoria._id %>" <%= filtros.categoria_id === String(categoria._id) ? 'selected' : '' %>><%= categoria.nombre %></option>
-            <% }) %>
-          </select>
-        </label>
-        <label>
-          Estado
-          <select name="estado">
-            <option value="">Todos</option>
-            <% ['Activo', 'Inactivo', 'Pendiente de configuración', 'Bloqueado'].forEach((estado) => { %>
-              <option value="<%= estado %>" <%= filtros.estado === estado ? 'selected' : '' %>><%= estado %></option>
-            <% }) %>
-          </select>
-        </label>
-        <button type="submit">Filtrar</button>
-      </form>
-    </section>
-
-    <section class="resource-grid">
-      <% if (!recursos.length) { %>
-        <div class="panel"><p>No hay recursos registrados.</p></div>
-      <% } %>
-
-      <% recursos.forEach((recurso) => { %>
-        <article class="resource-card">
-          <a href="/admin/recursos/<%= recurso._id %>">
-            <img src="<%= recurso.imagen?.url || '/img/placeholder.png' %>" alt="">
-          </a>
-          <div class="resource-card-body">
-            <div class="resource-card-meta">
-              <span class="badge badge-no-disponible"><%= recurso.tipo_contenido %></span>
-              <span class="badge <%= recurso.estado === 'Activo' ? 'badge-disponible' : 'badge-no-disponible' %>"><%= recurso.estado %></span>
-            </div>
-            <h2><a href="/admin/recursos/<%= recurso._id %>"><%= recurso.titulo %></a></h2>
-            <p><%= recurso.autor %></p>
-            <p class="muted"><%= recurso.tipo_naturaleza %> · <%= recurso.tipo_material %></p>
-            <div class="tag-list">
-              <% recurso.categorias.forEach((categoria) => { %>
-                <span class="tag"><%= categoria.subcategoria_nombre || categoria.categoria_nombre %></span>
-              <% }) %>
-            </div>
-          </div>
-        </article>
-      <% }) %>
-    </section>
+<%- include('../../partials/catalogoBrowser', {
+  catalogMode: 'admin',
+  catalogApiUrl: '/admin/recursos/api',
+  catalogDetailBaseUrl: '/admin/recursos',
+  catalogTitle: 'Materiales',
+  catalogSubtitle: 'Gestiona recursos fisicos, digitales y mixtos',
+  catalogCountText: 'materiales',
+  recursos,
+  categorias,
+  filtros
+}) %>

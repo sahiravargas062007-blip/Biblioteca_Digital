@@ -1,8 +1,12 @@
 const Ejemplar = require('../../models/Ejemplar');
 const Prestamo = require('../../models/Prestamo');
 const Recurso = require('../../models/Recurso');
+const Reserva = require('../../models/Reserva');
 const Usuario = require('../../models/Usuario');
 const sancionController = require('./sancionController');
+const reservaService = require('../../services/reservaService');
+
+const TIPO_FISICO = 'F\u00edsico';
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
@@ -70,6 +74,15 @@ exports.crear = async (req, res, next) => {
         actualizado_en: now
       })
     ]);
+
+    if (incDisponible > 0) {
+      const siguiente = await Reserva.findOne({
+        recurso_id: item.recurso_id,
+        tipo: TIPO_FISICO,
+        estado: 'Pendiente'
+      }).sort({ posicion: 1 });
+      if (siguiente) await reservaService.marcarDisponible(siguiente, req.session.adminId);
+    }
 
     if (estadoDevolucion === 'Perdido') {
       const sugerida = await sancionController._sugerirSancion('Pérdida', 'Grave');

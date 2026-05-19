@@ -1,34 +1,33 @@
-
-
 <%
-  var arch             = recurso.archivo || null;
-  var tipoArchivo      = arch ? arch.tipo : null;
-  var urlArchivo       = arch ? arch.url  : null;
-  var esLibre          = recurso.digital && recurso.digital.estado_disponibilidad === 'Acceso libre';
-  var esRestringido    = recurso.digital && !esLibre;
-  var esMixto          = recurso.tipo_naturaleza === 'Mixto';
-  var tieneDigital     = recurso.tipo_naturaleza === 'Digital' || esMixto;
-  var tieneFisico      = recurso.tipo_naturaleza === 'Fisico'  || recurso.tipo_naturaleza === 'Físico' || esMixto;
-  var esLectura        = recurso.tipo_contenido === 'Lectura';
-  var esAudio          = recurso.tipo_contenido === 'Audio';
-  var esVideo          = recurso.tipo_contenido === 'Video';
-  var yaTienePrestamo  = recurso.prestamoActivoItem != null;
-  var sesionActiva     = typeof session !== 'undefined' && session && session.userId;
-
-  var licencias_en_uso = (recurso.digital && recurso.digital.licencias_en_uso) ? recurso.digital.licencias_en_uso : 0;
-  var licencias_max    = (recurso.digital && recurso.digital.licencia && recurso.digital.licencia.usuarios_simultaneos)
-                           ? recurso.digital.licencia.usuarios_simultaneos : 1;
-  var hayLicencias     = licencias_en_uso < licencias_max;
+  var arch              = recurso.archivo || null;
+  var tipoArchivo       = arch ? arch.tipo : null;
+  var urlArchivo        = arch ? arch.url : null;
+  var esLibre           = recurso.digital && recurso.digital.estado_disponibilidad === 'Acceso libre';
+  var esMixto           = recurso.tipo_naturaleza === 'Mixto';
+  var TIPO_FISICO       = 'F\u00edsico';
+  var tieneDigital      = recurso.tipo_naturaleza === 'Digital' || esMixto;
+  var tieneFisico       = recurso.tipo_naturaleza === 'Fisico' || recurso.tipo_naturaleza === TIPO_FISICO || recurso.tipo_naturaleza === 'FÃ­sico' || esMixto;
+  var esLectura         = recurso.tipo_contenido === 'Lectura';
+  var esAudio           = recurso.tipo_contenido === 'Audio';
+  var esVideo           = recurso.tipo_contenido === 'Video';
+  var yaTienePrestamo   = recurso.prestamoActivoItem != null;
+  var prestamoEsDigital = yaTienePrestamo && recurso.prestamoActivoItem.tipo === 'Digital';
+  var usuarioActivo     = typeof session !== 'undefined' && session && session.userId;
+  var adminActivo       = typeof session !== 'undefined' && session && session.adminId;
+  var sesionActiva      = usuarioActivo || adminActivo;
+  var licencias_en_uso  = (recurso.digital && recurso.digital.licencias_en_uso) ? recurso.digital.licencias_en_uso : 0;
+  var licencias_max     = (recurso.digital && recurso.digital.licencia && recurso.digital.licencia.usuarios_simultaneos)
+                            ? recurso.digital.licencia.usuarios_simultaneos : 1;
+  var hayLicencias      = licencias_en_uso < licencias_max;
 %>
 
 <section class="resource-detail-user">
-
   <img class="detail-cover-user"
        src="<%= recurso.imagen && recurso.imagen.url ? recurso.imagen.url : '/img/placeholder.png' %>"
        alt="Portada de <%= recurso.titulo %>">
 
   <div class="panel detail-panel">
-    <a class="back-link" href="/catalogo">← Volver al catálogo</a>
+    <a class="back-link" href="/catalogo">Volver al catalogo</a>
 
     <div class="resource-card-meta">
       <span class="badge badge-no-disponible"><%= recurso.tipo_contenido %></span>
@@ -42,8 +41,8 @@
     <dl class="detail-list">
       <div><dt>Material</dt><dd><%= recurso.tipo_material %></dd></div>
       <% if (recurso.editorial) { %><div><dt>Editorial</dt><dd><%= recurso.editorial %></dd></div><% } %>
-      <% if (recurso.isbn)      { %><div><dt>ISBN</dt><dd><%= recurso.isbn %></dd></div><% } %>
-      <% if (recurso.idioma)    { %><div><dt>Idioma</dt><dd><%= recurso.idioma %></dd></div><% } %>
+      <% if (recurso.isbn) { %><div><dt>ISBN</dt><dd><%= recurso.isbn %></dd></div><% } %>
+      <% if (recurso.idioma) { %><div><dt>Idioma</dt><dd><%= recurso.idioma %></dd></div><% } %>
     </dl>
 
     <div class="tag-list">
@@ -52,14 +51,10 @@
       <% }); %>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════ -->
-    <!-- DISPONIBILIDAD — separada para recursos mixtos                    -->
-    <!-- ══════════════════════════════════════════════════════════════════ -->
     <div class="disponibilidad-section">
-
       <% if (tieneFisico) { %>
         <div class="disponibilidad-bloque">
-          <p class="disponibilidad-label">📦 Ejemplar físico</p>
+          <p class="disponibilidad-label">Ejemplar fisico</p>
           <% if (recurso.disponibilidadFisica === 'Disponible') { %>
             <span class="badge badge-disponible">Disponible</span>
             <p class="disponibilidad-detalle">
@@ -74,133 +69,121 @@
 
       <% if (tieneDigital) { %>
         <div class="disponibilidad-bloque">
-          <p class="disponibilidad-label">💻 Formato digital</p>
+          <p class="disponibilidad-label">Formato digital</p>
           <% if (esLibre) { %>
             <span class="badge badge-disponible">Acceso libre</span>
             <p class="disponibilidad-detalle">Disponible sin restricciones para usuarios registrados.</p>
           <% } else { %>
-            <% if (hayLicencias) { %>
-              <span class="badge badge-disponible">Disponible</span>
-            <% } else { %>
-              <span class="badge badge-no-disponible">Sin licencias disponibles</span>
-            <% } %>
+            <span class="badge <%= hayLicencias ? 'badge-disponible' : 'badge-no-disponible' %>">
+              <%= hayLicencias ? 'Disponible' : 'Sin licencias disponibles' %>
+            </span>
             <p class="disponibilidad-detalle">
               <%= licencias_en_uso %> / <%= licencias_max %> licencias en uso
               <% if (recurso.digital && recurso.digital.licencia && recurso.digital.licencia.duracion_prestamo) { %>
-                &nbsp;·&nbsp; Préstamo de <%= recurso.digital.licencia.duracion_prestamo %> <%= recurso.digital.licencia.unidad_duracion || 'días' %>
+                &nbsp;-&nbsp; Prestamo de <%= recurso.digital.licencia.duracion_prestamo %> <%= recurso.digital.licencia.unidad_duracion || 'dias' %>
               <% } %>
             </p>
           <% } %>
         </div>
       <% } %>
-
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════ -->
-    <!-- ACCIONES DIGITALES                                                -->
-    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <% if (tieneFisico) { %>
+      <div class="recurso-acceso">
+        <% if (!sesionActiva) { %>
+          <p class="acceso-info">Inicia sesion para solicitar el ejemplar fisico.</p>
+          <a href="/login" class="btn btn-primary btn-acceso">Iniciar sesion</a>
+        <% } else if (adminActivo) { %>
+          <p class="acceso-info">La sesion de administrador no solicita ejemplares desde el catalogo.</p>
+        <% } else if (yaTienePrestamo) { %>
+          <p class="acceso-info">Ya tienes un prestamo activo de este recurso.</p>
+        <% } else if (recurso.tieneReservaActiva) { %>
+          <p class="acceso-info">
+            Ya tienes una solicitud activa para este recurso
+            <% if (recurso.reservaActiva && recurso.reservaActiva.posicion) { %>
+              en la posicion <strong><%= recurso.reservaActiva.posicion %></strong>.
+            <% } else { %>
+              .
+            <% } %>
+          </p>
+        <% } else if (recurso.disponibilidadFisica === 'Disponible') { %>
+          <form action="/reservas" method="POST">
+            <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
+            <input type="hidden" name="tipo" value="<%= TIPO_FISICO %>">
+            <button type="submit" class="btn btn-secondary btn-acceso">Solicitar en fisico</button>
+          </form>
+        <% } else { %>
+          <p class="acceso-info">No hay ejemplares fisicos disponibles. Puedes reservar turno.</p>
+          <form action="/reservas" method="POST">
+            <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
+            <input type="hidden" name="tipo" value="<%= TIPO_FISICO %>">
+            <button type="submit" class="btn btn-secondary btn-acceso">Reservar turno fisico</button>
+          </form>
+        <% } %>
+      </div>
+    <% } %>
+
     <% if (tieneDigital && urlArchivo) { %>
       <div class="recurso-acceso">
-
-        <!-- ── ACCESO LIBRE ──────────────────────────────────────────── -->
         <% if (esLibre) { %>
-
           <% if (esLectura) { %>
-            <% if (tipoArchivo === 'epub') { %>
-              <!-- ePub: solo lectura en línea, no se descarga -->
-              <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
-                📖 Leer en la plataforma
-              </a>
-
-            <% } else { %>
-              <!-- PDF u otro formato de lectura: visualizar + descargar -->
-              <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
-                👁 Visualizar en la plataforma
-              </a>
+            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
+              <%= tipoArchivo === 'epub' ? 'Leer en la plataforma' : 'Visualizar en la plataforma' %>
+            </a>
+            <% if (tipoArchivo !== 'epub') { %>
               <a href="/catalogo/<%= recurso._id %>/descargar" class="btn btn-secondary btn-acceso">
-                ⬇ Descargar <%= tipoArchivo ? tipoArchivo.toUpperCase() : 'archivo' %>
+                Descargar <%= tipoArchivo ? tipoArchivo.toUpperCase() : 'archivo' %>
               </a>
             <% } %>
-
           <% } else if (esAudio) { %>
-            <!-- Audio acceso libre: reproductor en la plataforma -->
-            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
-              🎧 Escuchar en la plataforma
-            </a>
-
+            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">Escuchar en la plataforma</a>
           <% } else if (esVideo) { %>
-            <!-- Video acceso libre: reproductor en la plataforma -->
-            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
-              ▶ Ver en la plataforma
-            </a>
+            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">Ver en la plataforma</a>
             <% if (tipoArchivo === 'url') { %>
-              <a href="<%= urlArchivo %>" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-acceso">
-                🔗 Abrir enlace externo
-              </a>
+              <a href="<%= urlArchivo %>" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-acceso">Abrir enlace externo</a>
             <% } %>
-
           <% } else { %>
-            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
-              🔗 Acceder al recurso
-            </a>
+            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">Acceder al recurso</a>
           <% } %>
-
-        <!-- ── ACCESO RESTRINGIDO ─────────────────────────────────────── -->
         <% } else { %>
-
           <% if (!sesionActiva) { %>
-            <p class="acceso-info">Inicia sesión para acceder a este recurso.</p>
-            <a href="/login" class="btn btn-primary btn-acceso">Iniciar sesión</a>
-
-          <% } else if (yaTienePrestamo) { %>
-            <!-- Ya tiene préstamo activo → Acceder + Devolver -->
+            <p class="acceso-info">Inicia sesion para acceder a este recurso.</p>
+            <a href="/login" class="btn btn-primary btn-acceso">Iniciar sesion</a>
+          <% } else if (adminActivo) { %>
+            <p class="acceso-info">La sesion de administrador no requiere acceso de usuario a este recurso.</p>
+          <% } else if (yaTienePrestamo && !prestamoEsDigital) { %>
+            <p class="acceso-info">Ya tienes un prestamo activo de este recurso.</p>
+          <% } else if (prestamoEsDigital) { %>
             <p class="acceso-info">
               Tienes acceso hasta el
-              <strong>
-                <%= new Date(recurso.prestamoActivoItem.fecha_limite).toLocaleDateString('es-CO', {day:'2-digit', month:'long', year:'numeric'}) %>
-              </strong>
+              <strong><%= new Date(recurso.prestamoActivoItem.fecha_limite).toLocaleDateString('es-CO', {day:'2-digit', month:'long', year:'numeric'}) %></strong>
             </p>
-            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">
-              📖 Acceder
-            </a>
-            <form action="/prestamos/<%= recurso.prestamoActivoItem.prestamo_id %>/devolver"
-                  method="POST" style="display:inline;">
+            <a href="/catalogo/<%= recurso._id %>/ver" class="btn btn-primary btn-acceso">Acceder</a>
+            <form action="/prestamos/<%= recurso.prestamoActivoItem.prestamo_id %>/devolver" method="POST" style="display:inline;">
               <input type="hidden" name="item_id" value="<%= recurso.prestamoActivoItem.item_id %>">
               <button type="submit" class="btn btn-outline btn-acceso"
-                      onclick="return confirm('¿Deseas devolver este recurso antes de que venza?')">
-                ↩ Devolver
+                      onclick="return confirm('Deseas devolver este recurso antes de que venza?')">
+                Devolver
               </button>
             </form>
-
           <% } else if (hayLicencias) { %>
-            <!-- Hay licencias disponibles → Prestar -->
             <form action="/catalogo/<%= recurso._id %>/prestar" method="POST">
-              <button type="submit" class="btn btn-primary btn-acceso">
-                📥 Prestar
-              </button>
+              <button type="submit" class="btn btn-primary btn-acceso">Prestar digital</button>
             </form>
-
           <% } else { %>
-            <!-- Sin licencias → Reservar -->
             <p class="acceso-info">No hay licencias disponibles en este momento.</p>
             <% if (!recurso.tieneReservaActiva) { %>
               <form action="/reservas" method="POST">
                 <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
                 <input type="hidden" name="tipo" value="Digital">
-                <button type="submit" class="btn btn-secondary btn-acceso">
-                  🔔 Reservar turno
-                </button>
+                <button type="submit" class="btn btn-secondary btn-acceso">Reservar turno digital</button>
               </form>
             <% } else { %>
               <p class="acceso-info">Ya tienes una reserva activa para este recurso.</p>
             <% } %>
           <% } %>
-
         <% } %>
       </div>
     <% } %>
-
   </div>
 </section>
-
-

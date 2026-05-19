@@ -100,6 +100,21 @@ exports.devolverDigital = async (req, res, next) => {
       actualizado_en: new Date()
     });
 
+    const licenciasActivas = await Prestamo.countDocuments({
+      tipo: 'Digital',
+      estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+      items: {
+        $elemMatch: {
+          recurso_id: item.recurso_id,
+          estado: { $in: ['Activo', 'Vencido'] }
+        }
+      }
+    });
+    await Recurso.findByIdAndUpdate(item.recurso_id, {
+      $set: { 'digital.licencias_en_uso': licenciasActivas },
+      actualizado_en: new Date()
+    });
+
     await Notificacion.create({
       destinatario_tipo: 'usuario',
       destinatario_id: prestamo.usuario_id,

@@ -182,6 +182,33 @@ function asArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
+function normalizeTipoNaturaleza(value) {
+  const normalized = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+  if (normalized === 'fisico') return 'Físico';
+  if (normalized === 'mixto') return 'Mixto';
+  return 'Digital';
+}
+
+async function sincronizarFisicoConEjemplares(recursoId) {
+  const [total, disponibles] = await Promise.all([
+    Ejemplar.countDocuments({ recurso_id: recursoId }),
+    Ejemplar.countDocuments({ recurso_id: recursoId, estado: 'Disponible' }),
+  ]);
+
+  await Recurso.findByIdAndUpdate(recursoId, {
+    $set: {
+      'fisico.total_ejemplares': total,
+      'fisico.ejemplares_disponibles': disponibles,
+      actualizado_en: new Date(),
+    },
+  });
+}
+
 async function cargarCategoriasSeleccionadas(body) {
   const categoriaIds    = asArray(body.categoria_id);
   const subcategoriaIds = asArray(body.subcategoria_id);
@@ -209,7 +236,8 @@ async function cargarCategoriasSeleccionadas(body) {
 }
 
 function buildDigital(body) {
-  if (!['Digital', 'Mixto'].includes(body.tipo_naturaleza)) return undefined;
+  const tipoNaturaleza = normalizeTipoNaturaleza(body.tipo_naturaleza);
+  if (!['Digital', 'Mixto'].includes(tipoNaturaleza)) return undefined;
 
   const archivos   = [];
   const archivoUrl  = String(body.archivo_url  || '').trim();
@@ -256,8 +284,9 @@ function buildDigital(body) {
 }
 
 function buildFisico(body) {
-  if (!['Físico', 'Mixto'].includes(body.tipo_naturaleza)) return undefined;
-  const total = Number(body.total_ejemplares || 0);
+  const tipoNaturaleza = normalizeTipoNaturaleza(body.tipo_naturaleza);
+  if (!['Físico', 'Mixto'].includes(tipoNaturaleza)) return undefined;
+  const total = Math.max(0, Number(body.total_ejemplares || 0));
   return {
     total_ejemplares:       total,
     ejemplares_disponibles: total,
@@ -269,6 +298,7 @@ async function buildRecursoPayload(req) {
   const categorias = await cargarCategoriasSeleccionadas(req.body);
   const publicado  = req.body.publicado === 'true';
   const titulo     = String(req.body.titulo || '').trim();
+  const tipoNaturaleza = normalizeTipoNaturaleza(req.body.tipo_naturaleza);
 
   // â”€â”€ PORTADA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let imagen = { url: '/img/placeholder.png', public_id: '', es_default: true };
@@ -290,7 +320,7 @@ async function buildRecursoPayload(req) {
   let digitalPayload = buildDigital(req.body);
 
   const archivoFile = req.files?.archivo?.[0];
-  if (archivoFile && ['Digital', 'Mixto'].includes(req.body.tipo_naturaleza)) {
+  if (archivoFile && ['Digital', 'Mixto'].includes(tipoNaturaleza)) {
     // subirArchivoCloudinary elige automáticamente normal vs chunked según tamaño
     const subido = await subirArchivoCloudinary(
       archivoFile.buffer,
@@ -322,7 +352,7 @@ async function buildRecursoPayload(req) {
   }
 
   const payload = {
-    tipo_naturaleza:   req.body.tipo_naturaleza,
+    tipo_naturaleza:   tipoNaturaleza,
     tipo_contenido:    req.body.tipo_contenido,
     tipo_material:     req.body.tipo_material,
     titulo,
@@ -388,26 +418,47 @@ async function crearEjemplaresParaRecurso(recurso, cantidad) {
 // CONTROLLERS
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+function buildCatalogFilter(query = {}) {
+  const q = String(query.q || '').trim();
+  const tipoContenido = String(query.tipo_contenido || '').trim();
+  const tipoMateriales = query.tipo_material ? String(query.tipo_material).split(',').filter(Boolean) : [];
+  const categoriasIds = query.categorias ? String(query.categorias).split(',').filter(Boolean) : [];
+  const subcatsIds = query.subcategorias ? String(query.subcategorias).split(',').filter(Boolean) : [];
+  const categoriaId = String(query.categoria_id || '').trim();
+  const estado = String(query.estado || '').trim();
+
+  const filtro = {};
+  if (q) {
+    filtro.$or = [
+      { titulo: new RegExp(q, 'i') },
+      { autor: new RegExp(q, 'i') },
+      { isbn: new RegExp(q, 'i') },
+      { 'categorias.categoria_nombre': new RegExp(q, 'i') },
+      { 'categorias.subcategoria_nombre': new RegExp(q, 'i') },
+    ];
+  }
+  if (tipoContenido) filtro.tipo_contenido = tipoContenido;
+  if (tipoMateriales.length) filtro.tipo_material = { $in: tipoMateriales };
+  if (estado) filtro.estado = estado;
+  if (mongoose.isValidObjectId(categoriaId)) filtro['categorias.categoria_id'] = categoriaId;
+  if (categoriasIds.length) {
+    const validIds = categoriasIds.filter((id) => mongoose.isValidObjectId(id));
+    if (validIds.length) filtro['categorias.categoria_id'] = { $in: validIds };
+  }
+  if (subcatsIds.length) {
+    const validIds = subcatsIds.filter((id) => mongoose.isValidObjectId(id));
+    if (validIds.length) filtro['categorias.subcategoria_id'] = { $in: validIds };
+  }
+
+  return {
+    filtro,
+    filtros: { q, tipo_contenido: tipoContenido, categoria_id: categoriaId, estado }
+  };
+}
+
 exports.index = async (req, res, next) => {
   try {
-    const q             = String(req.query.q             || '').trim();
-    const tipoContenido = String(req.query.tipo_contenido || '').trim();
-    const categoriaId   = String(req.query.categoria_id  || '').trim();
-    const estado        = String(req.query.estado         || '').trim();
-
-    const filtro = {};
-    if (q) {
-      filtro.$or = [
-        { titulo:                           new RegExp(q, 'i') },
-        { autor:                            new RegExp(q, 'i') },
-        { isbn:                             new RegExp(q, 'i') },
-        { 'categorias.categoria_nombre':    new RegExp(q, 'i') },
-        { 'categorias.subcategoria_nombre': new RegExp(q, 'i') },
-      ];
-    }
-    if (tipoContenido) filtro.tipo_contenido = tipoContenido;
-    if (estado)        filtro.estado         = estado;
-    if (mongoose.isValidObjectId(categoriaId)) filtro['categorias.categoria_id'] = categoriaId;
+    const { filtro, filtros } = buildCatalogFilter(req.query);
 
     const [recursos, categorias, resumen] = await Promise.all([
       Recurso.find(filtro).sort({ creado_en: -1 }).lean(),
@@ -417,8 +468,31 @@ exports.index = async (req, res, next) => {
 
     res.render('admin/recursos/index', {
       title: 'Materiales', recursos, categorias, resumen,
-      filtros: { q, tipo_contenido: tipoContenido, categoria_id: categoriaId, estado },
+      filtros,
+      pageClass: 'admin-catalog-page'
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.api = async (req, res, next) => {
+  try {
+    const { filtro } = buildCatalogFilter(req.query);
+    const recursos = await Recurso.find(filtro).sort({ creado_en: -1 }).lean();
+
+    return res.json(recursos.map((recurso) => ({
+      _id: recurso._id,
+      titulo: recurso.titulo,
+      autor: recurso.autor,
+      tipo_contenido: recurso.tipo_contenido,
+      tipo_material: recurso.tipo_material,
+      tipo_naturaleza: recurso.tipo_naturaleza,
+      estado: recurso.estado,
+      descripcion: recurso.descripcion,
+      imagen: recurso.imagen,
+      categorias: recurso.categorias
+    })));
   } catch (error) {
     next(error);
   }
@@ -1046,6 +1120,9 @@ exports.crear = async (req, res, next) => {
     const recurso    = await Recurso.create(payload);
     const cantidad   = payload.fisico?.total_ejemplares || 0;
     await crearEjemplaresParaRecurso(recurso, cantidad);
+    if (payload.fisico) {
+      await sincronizarFisicoConEjemplares(recurso._id);
+    }
 
     flash(req, 'success', 'Recurso creado correctamente.');
     return res.redirect(`/admin/recursos/${recurso._id}`);
@@ -1072,6 +1149,9 @@ exports.actualizar = async (req, res, next) => {
         { ...recursoAnterior.toObject(), ...payload, _id: recursoAnterior._id },
         nuevaCantidad - ejemplaresActuales
       );
+    }
+    if (payload.fisico) {
+      await sincronizarFisicoConEjemplares(req.params.id);
     }
 
     flash(req, 'success', 'Recurso actualizado correctamente.');

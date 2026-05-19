@@ -2,6 +2,8 @@ const Configuracion = require('../models/Configuracion');
 const Notificacion = require('../models/Notificacion');
 const Reserva = require('../models/Reserva');
 
+const TIPO_FISICO = 'F\u00edsico';
+
 exports.siguientePosicion = async (recursoId, tipo) => {
   const count = await Reserva.countDocuments({
     recurso_id: recursoId,
@@ -11,7 +13,34 @@ exports.siguientePosicion = async (recursoId, tipo) => {
   return count + 1;
 };
 
-exports.crearReserva = async ({ usuario, recurso, tipo = 'Físico', registradoPor }) => {
+function sumarHorasHabiles(fecha, horas) {
+  const resultado = new Date(fecha);
+  let restantes = Math.max(0, Number(horas || 0));
+
+  while (restantes > 0) {
+    resultado.setHours(resultado.getHours() + 1);
+    const dia = resultado.getDay();
+    if (dia !== 0 && dia !== 6) restantes -= 1;
+  }
+
+  return resultado;
+}
+
+exports.calcularLimiteReclamo = async (fechaBase = new Date()) => {
+  const config = await Configuracion.findOne().lean();
+  const horas = config?.reservas?.tiempo_max_reclamo_horas || 24;
+  return sumarHorasHabiles(fechaBase, horas);
+};
+
+exports.crearReserva = async ({
+  usuario,
+  recurso,
+  tipo = TIPO_FISICO,
+  registradoPor,
+  estadoInicial = 'Pendiente',
+  fechaDisponible,
+  fechaLimiteReclamo
+}) => {
   const posicion = await exports.siguientePosicion(recurso._id, tipo);
   return Reserva.create({
     usuario_id: usuario._id,
@@ -22,8 +51,10 @@ exports.crearReserva = async ({ usuario, recurso, tipo = 'Físico', registradoPo
     recurso_imagen: recurso.imagen?.url,
     tipo,
     posicion,
-    estado: 'Pendiente',
+    estado: estadoInicial,
     fecha_reserva: new Date(),
+    fecha_disponible: fechaDisponible,
+    fecha_limite_reclamo: fechaLimiteReclamo,
     registrado_por: registradoPor,
     creado_en: new Date(),
     actualizado_en: new Date()
@@ -31,10 +62,8 @@ exports.crearReserva = async ({ usuario, recurso, tipo = 'Físico', registradoPo
 };
 
 exports.marcarDisponible = async (reserva, adminId) => {
-  const config = await Configuracion.findOne().lean();
-  const horas = config?.reservas?.tiempo_max_reclamo_horas || 24;
   const now = new Date();
-  const limite = new Date(now.getTime() + horas * 60 * 60 * 1000);
+  const limite = await exports.calcularLimiteReclamo(now);
 
   reserva.estado = 'Disponible para reclamar';
   reserva.fecha_disponible = now;
@@ -47,7 +76,7 @@ exports.marcarDisponible = async (reserva, adminId) => {
     destinatario_id: reserva.usuario_id,
     tipo: 'turno_reserva_disponible',
     titulo: 'Turno de reserva disponible',
-    mensaje: `El recurso "${reserva.recurso_titulo}" está disponible para reclamar hasta ${limite.toLocaleString('es-CO')}.`,
+    mensaje: `El recurso "${reserva.recurso_titulo}" estÃ¡ disponible para reclamar hasta ${limite.toLocaleString('es-CO')}.`,
     referencia_tipo: 'reserva',
     referencia_id: reserva._id,
     creado_en: now
@@ -61,8 +90,8 @@ exports.esRecursoReservable = (recurso) => {
   const digitalDisponible = recurso.digital?.estado_disponibilidad === 'Disponible';
   const colaDigital = recurso.digital?.licencia?.cola_reservas_habilitada === true;
 
-  if (recurso.tipo_naturaleza === 'Físico') {
-    return recurso.fisico?.ejemplares_disponibles === 0;
+  if ([TIPO_FISICO, 'Fisico', 'FÃ­sico'].includes(recurso.tipo_naturaleza)) {
+    return true;
   }
 
   if (recurso.tipo_naturaleza === 'Digital') {
@@ -80,8 +109,8 @@ exports.esRecursoReservable = (recurso) => {
 exports.obtenerTipoReserva = (recurso) => {
   if (recurso.tipo_naturaleza === 'Digital') return 'Digital';
   if (recurso.tipo_naturaleza === 'Mixto') {
-    if (recurso.fisico?.ejemplares_disponibles === 0) return 'Físico';
+    if (recurso.fisico?.ejemplares_disponibles === 0) return TIPO_FISICO;
     return 'Digital';
   }
-  return 'Físico';
+  return TIPO_FISICO;
 };

@@ -176,6 +176,22 @@ exports.crear = async (req, res, next) => {
       return res.redirect('/admin/prestamos/nuevo');
     }
 
+    const recursoIdsSeleccionados = [...new Set(ejemplares.map((ejemplar) => String(ejemplar.recurso_id)))];
+    const yaTieneRecurso = await Prestamo.exists({
+      usuario_id: usuario._id,
+      estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+      items: {
+        $elemMatch: {
+          recurso_id: { $in: recursoIdsSeleccionados },
+          estado: { $in: ['Activo', 'Vencido'] }
+        }
+      }
+    });
+    if (yaTieneRecurso) {
+      flash(req, 'error', 'El usuario ya tiene un prÃ©stamo activo de uno de los recursos seleccionados.');
+      return res.redirect('/admin/prestamos/nuevo');
+    }
+
     const recursos = await Recurso.find({ _id: { $in: ejemplares.map((ejemplar) => ejemplar.recurso_id) } }).lean();
     const recursoMap = new Map(recursos.map((recurso) => [String(recurso._id), recurso]));
     const now = new Date();

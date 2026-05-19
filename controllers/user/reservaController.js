@@ -3,10 +3,18 @@ const Usuario = require('../../models/Usuario');
 const Recurso = require('../../models/Recurso');
 const Sancion = require('../../models/Sancion');
 const Configuracion = require('../../models/Configuracion');
+const Ejemplar = require('../../models/Ejemplar');
+const Prestamo = require('../../models/Prestamo');
 const reservaService = require('../../services/reservaService');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
+}
+
+const TIPO_FISICO = 'F\u00edsico';
+
+function tieneNaturalezaFisica(recurso) {
+  return [TIPO_FISICO, 'Fisico', 'FÃ­sico', 'Mixto'].includes(recurso.tipo_naturaleza);
 }
 
 exports.index = async (req, res, next) => {
@@ -28,7 +36,7 @@ exports.crear = async (req, res, next) => {
   try {
     const usuario = await Usuario.findById(req.session.userId);
     if (!usuario || usuario.estado !== 'Activo') {
-      flash(req, 'error', 'Su usuario no está activo para realizar reservas.');
+      flash(req, 'error', 'Su usuario no estÃ¡ activo para realizar reservas.');
       return res.redirect('/catalogo');
     }
 
@@ -38,17 +46,27 @@ exports.crear = async (req, res, next) => {
       return res.redirect('/catalogo');
     }
 
-    const recursoDisponible = (recurso.tipo_naturaleza === 'Digital' && recurso.digital?.estado_disponibilidad === 'Disponible') ||
-      (['Físico', 'Mixto'].includes(recurso.tipo_naturaleza) && recurso.fisico?.ejemplares_disponibles > 0);
+    const tipoSolicitado = req.body.tipo === 'Digital' ? 'Digital' : TIPO_FISICO;
+    const tieneFisico = tieneNaturalezaFisica(recurso);
+    const tieneDigital = ['Digital', 'Mixto'].includes(recurso.tipo_naturaleza);
 
-    if (recursoDisponible) {
-      flash(req, 'error', 'El recurso está disponible y no requiere reserva.');
+    if ((tipoSolicitado === TIPO_FISICO && !tieneFisico) || (tipoSolicitado === 'Digital' && !tieneDigital)) {
+      flash(req, 'error', 'Ese tipo de reserva no aplica para este recurso.');
       return res.redirect(`/catalogo/${recurso._id}`);
     }
 
-    const recursoReservable = reservaService.esRecursoReservable(recurso);
-    if (!recursoReservable) {
-      flash(req, 'error', 'Este recurso no se puede reservar en este momento.');
+    const yaTienePrestamo = await Prestamo.exists({
+      usuario_id: usuario._id,
+      estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+      items: {
+        $elemMatch: {
+          recurso_id: recurso._id,
+          estado: { $in: ['Activo', 'Vencido'] }
+        }
+      }
+    });
+    if (yaTienePrestamo) {
+      flash(req, 'error', 'Ya tiene un prÃ©stamo activo de este recurso.');
       return res.redirect(`/catalogo/${recurso._id}`);
     }
 
@@ -61,7 +79,7 @@ exports.crear = async (req, res, next) => {
     const config = await Configuracion.findOne().lean();
     const maxReservas = config?.reservas?.max_reservas_por_usuario || 3;
     if ((usuario.reservas_activas || 0) >= maxReservas) {
-      flash(req, 'error', `Ha alcanzado el máximo de ${maxReservas} reservas activas.`);
+      flash(req, 'error', `Ha alcanzado el mÃ¡ximo de ${maxReservas} reservas activas.`);
       return res.redirect(`/catalogo/${recurso._id}`);
     }
 
@@ -75,13 +93,66 @@ exports.crear = async (req, res, next) => {
       return res.redirect(`/catalogo/${recurso._id}`);
     }
 
-    const tipoReserva = reservaService.obtenerTipoReserva(recurso);
+    const [ejemplaresDisponiblesRaw, solicitudesEnReclamo] = tipoSolicitado === TIPO_FISICO
+      ? await Promise.all([
+          Ejemplar.countDocuments({ recurso_id: recurso._id, estado: 'Disponible' }),
+          Reserva.countDocuments({
+            recurso_id: recurso._id,
+            tipo: TIPO_FISICO,
+            estado: 'Disponible para reclamar'
+          })
+        ])
+      : [0, 0];
+    const ejemplaresDisponibles = Math.max(0, ejemplaresDisponiblesRaw - solicitudesEnReclamo);
 
-    await reservaService.crearReserva({
+    recurso.fisico = {
+      ...(recurso.fisico || {}),
+      ejemplares_disponibles: ejemplaresDisponibles
+    };
+
+    const licenciasEnUso = tipoSolicitado === 'Digital'
+      ? await Prestamo.countDocuments({
+          tipo: 'Digital',
+          estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+          items: {
+            $elemMatch: {
+              recurso_id: recurso._id,
+              estado: { $in: ['Activo', 'Vencido'] }
+            }
+          }
+        })
+      : (recurso.digital?.licencias_en_uso || 0);
+    const maxLicencias = recurso.digital?.licencia?.usuarios_simultaneos || 1;
+    const digitalDisponible = recurso.digital?.estado_disponibilidad === 'Disponible'
+      && licenciasEnUso < maxLicencias;
+
+    if (tipoSolicitado === 'Digital' && digitalDisponible) {
+      flash(req, 'error', 'El recurso digital tiene licencias disponibles; puede prestarlo directamente.');
+      return res.redirect(`/catalogo/${recurso._id}`);
+    }
+
+    const recursoReservable = tipoSolicitado === TIPO_FISICO
+      ? true
+      : reservaService.esRecursoReservable(recurso);
+    if (!recursoReservable) {
+      flash(req, 'error', 'Este recurso no se puede reservar en este momento.');
+      return res.redirect(`/catalogo/${recurso._id}`);
+    }
+
+    const now = new Date();
+    const disponibleParaReclamar = tipoSolicitado === TIPO_FISICO && ejemplaresDisponibles > 0;
+    const limiteReclamo = disponibleParaReclamar
+      ? await reservaService.calcularLimiteReclamo(now)
+      : undefined;
+
+    const reserva = await reservaService.crearReserva({
       usuario,
       recurso,
-      tipo: tipoReserva,
-      registradoPor: req.session.userId
+      tipo: tipoSolicitado,
+      registradoPor: req.session.userId,
+      estadoInicial: disponibleParaReclamar ? 'Disponible para reclamar' : 'Pendiente',
+      fechaDisponible: disponibleParaReclamar ? now : undefined,
+      fechaLimiteReclamo: limiteReclamo
     });
 
     await Usuario.findByIdAndUpdate(usuario._id, {
@@ -94,7 +165,10 @@ exports.crear = async (req, res, next) => {
       actualizado_en: new Date()
     });
 
-    flash(req, 'success', 'Reserva registrada correctamente.');
+    const mensaje = disponibleParaReclamar
+      ? `Solicitud fÃ­sica registrada. Tiene plazo para reclamar hasta ${limiteReclamo.toLocaleString('es-CO')}.`
+      : `Reserva registrada correctamente. EstÃ¡ en la posiciÃ³n ${reserva.posicion} de la fila.`;
+    flash(req, 'success', mensaje);
     return res.redirect('/reservas');
   } catch (error) {
     next(error);
@@ -105,7 +179,7 @@ exports.cancelar = async (req, res, next) => {
   try {
     const reserva = await Reserva.findById(req.params.id);
     if (!reserva || String(reserva.usuario_id) !== String(req.session.userId)) {
-      flash(req, 'error', 'No se encontró la reserva.');
+      flash(req, 'error', 'No se encontrÃ³ la reserva.');
       return res.redirect('/reservas');
     }
 

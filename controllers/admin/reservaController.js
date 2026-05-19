@@ -109,6 +109,21 @@ exports.crear = async (req, res, next) => {
       return res.redirect('/admin/reservas/nueva');
     }
 
+    const yaTieneRecurso = await Prestamo.exists({
+      usuario_id: usuario._id,
+      estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+      items: {
+        $elemMatch: {
+          recurso_id: recurso._id,
+          estado: { $in: ['Activo', 'Vencido'] }
+        }
+      }
+    });
+    if (yaTieneRecurso) {
+      flash(req, 'error', 'El usuario ya tiene un prÃ©stamo activo de este recurso.');
+      return res.redirect('/admin/reservas/nueva');
+    }
+
     const ejemplaresDisponibles = await Ejemplar.countDocuments({
       recurso_id: recurso._id,
       estado: 'Disponible'
@@ -195,6 +210,21 @@ exports.procesar = async (req, res, next) => {
     }
 
     const usuario = await Usuario.findById(reserva.usuario_id);
+    const yaTieneRecurso = await Prestamo.exists({
+      usuario_id: reserva.usuario_id,
+      estado: { $in: ['Activo', 'Parcialmente devuelto', 'Vencido'] },
+      items: {
+        $elemMatch: {
+          recurso_id: reserva.recurso_id,
+          estado: { $in: ['Activo', 'Vencido'] }
+        }
+      }
+    });
+    if (yaTieneRecurso) {
+      flash(req, 'error', 'El usuario ya tiene un prÃ©stamo activo de este recurso.');
+      return res.redirect('/admin/reservas');
+    }
+
     const config = await Configuracion.findOne().lean();
     const now = new Date();
     const dias = config?.prestamos_fisicos?.dias_prestamo_defecto || 15;

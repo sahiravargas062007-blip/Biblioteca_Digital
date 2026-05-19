@@ -103,6 +103,12 @@
   display: block;
 }
 
+@media (min-width: 769px) {
+  .cat-sidebar-overlay.is-active {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .cat-sidebar {
     transform: translateX(-250px);
