@@ -4,8 +4,9 @@
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  background: rgba(255, 239, 158, 0.388);
   color: var(--color-text);
+
 }
 
 a {
