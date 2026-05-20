@@ -1,0 +1,302 @@
+<%
+  var _tipo      = typeof paginaTipo         !== 'undefined' ? paginaTipo         : 'novedades';
+  var _titulo    = typeof tituloSeccion      !== 'undefined' ? tituloSeccion      : 'Novedades';
+  var _sub       = typeof subtituloSeccion   !== 'undefined' ? subtituloSeccion   : '';
+  var _badge     = typeof badgeTexto         !== 'undefined' ? badgeTexto         : 'NUEVO';
+  var _mFn       = typeof metricaFn         !== 'undefined' ? metricaFn         : function(r){return '';};
+  var _recursos  = typeof recursos           !== 'undefined' ? recursos           : [];
+  var _categorias= typeof categorias         !== 'undefined' ? categorias         : [];
+
+  var esNov = _tipo === 'novedades';
+
+  // Agrupamos por tipo_material para las filas de slider
+  var grupos = {};
+  _recursos.forEach(function(r){
+    var t = r.tipo_material || 'Otros';
+    if (!grupos[t]) grupos[t] = [];
+    grupos[t].push(r);
+  });
+  var gruposKeys = Object.keys(grupos).filter(function(k){ return grupos[k].length >= 1; });
+%>
+
+<div class="blib-page">
+
+  <!-- Fondo biblioteca fijo (mismo que categorías) -->
+  <div class="blib-bg">
+    <div class="blib-bg__img"></div>
+    <div class="blib-bg__vignette"></div>
+    <div class="blib-bg__gradient"></div>
+  </div>
+
+  <div class="blib-content">
+
+    <!-- ── Header ──────────────────────────────── -->
+    <div class="blib-header">
+      <div class="blib-header__ornament">
+        <svg viewBox="0 0 120 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="10" x2="42" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <path d="M48 10 L54 4 L60 10 L54 16 Z" fill="#c9a84c" opacity="0.9"/>
+          <line x1="66" y1="10" x2="78" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <circle cx="82" cy="10" r="2" fill="#c9a84c" opacity="0.7"/>
+          <line x1="86" y1="10" x2="120" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+        </svg>
+      </div>
+      <% if (esNov) { %>
+        <span class="blib-badge blib-badge--new">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Últimas incorporaciones
+        </span>
+      <% } else { %>
+        <span class="blib-badge blib-badge--hot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tendencias
+        </span>
+      <% } %>
+      <h1 class="blib-header__title"><%= _titulo %></h1>
+      <p class="blib-header__sub"><%= _sub %></p>
+      <div class="blib-header__ornament" style="transform:scaleX(-1)">
+        <svg viewBox="0 0 120 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="10" x2="42" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <path d="M48 10 L54 4 L60 10 L54 16 Z" fill="#c9a84c" opacity="0.9"/>
+          <line x1="66" y1="10" x2="78" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <circle cx="82" cy="10" r="2" fill="#c9a84c" opacity="0.7"/>
+          <line x1="86" y1="10" x2="120" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+        </svg>
+      </div>
+    </div>
+
+    <% if (!_recursos.length) { %>
+    <!-- Estado vacío -->
+    <div class="blib-panel" style="text-align:center;padding:60px 32px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(201,168,76,0.4)" stroke-width="1.2" width="64" height="64" style="margin:0 auto 16px;display:block"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <p style="color:rgba(245,234,214,0.5);margin:0 0 20px">No hay recursos disponibles aún.</p>
+      <a href="/catalogo" class="blib-viewall">Explorar catálogo</a>
+    </div>
+    <% } else { %>
+
+    <!-- ── Slider TODOS ──────────────────────────── -->
+    <div class="blib-panel" style="margin-bottom:24px">
+      <div class="blib-slider-section-head">
+        <div class="blib-slider-section-head__left">
+          <% if (esNov) { %>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" width="22" height="22"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <% } else { %>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" width="22" height="22"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <% } %>
+          <h2 class="blib-slider-title">Todos los recursos</h2>
+          <span class="blib-slider-badge"><%= _recursos.length %></span>
+        </div>
+        <div class="blib-slider-btns">
+          <button class="blib-slider-nav" data-prev="all">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="blib-slider-nav" data-next="all">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="blib-slider-viewport" data-sid="all">
+        <div class="blib-slider-track" id="st-all">
+          <% _recursos.forEach(function(r, idx){ %>
+            <% var metrica = _mFn(r); %>
+            <a class="blib-rec-card" href="/catalogo/<%= r._id %>">
+              <div class="blib-rec-card__cover">
+                <img src="<%= (r.imagen && r.imagen.url) ? r.imagen.url : '/img/placeholder.png' %>" alt="" loading="lazy">
+                <span class="blib-rec-card__badge"><%= r.tipo_material || '' %></span>
+                <% if (!esNov && idx < 3) { %><span class="blib-rank-badge">#<%= idx+1 %></span><% } %>
+                <% if (metrica) { %><span class="blib-metrica-badge"><%= metrica %></span><% } %>
+              </div>
+              <div class="blib-rec-card__body">
+                <p class="blib-rec-card__title"><%= r.titulo %></p>
+                <p class="blib-rec-card__author"><%= r.autor %></p>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+      <div class="blib-dots" id="dots-all"></div>
+      <div class="blib-panel__footer" style="margin-top:16px">
+        <div></div>
+        <a href="/catalogo" class="blib-viewall">
+          Ver todos en catálogo
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Sliders por tipo de material ──────────── -->
+    <% gruposKeys.forEach(function(tipo){ %>
+      <% if (grupos[tipo].length > 1) { %>
+      <div class="blib-panel" style="margin-bottom:20px">
+        <div class="blib-slider-section-head">
+          <div class="blib-slider-section-head__left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" width="20" height="20"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <h2 class="blib-slider-title"><%= tipo %>s</h2>
+            <span class="blib-slider-badge"><%= grupos[tipo].length %></span>
+          </div>
+          <div class="blib-slider-btns">
+            <button class="blib-slider-nav" data-prev="<%= tipo %>">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="blib-slider-nav" data-next="<%= tipo %>">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="blib-slider-viewport" data-sid="<%= tipo %>">
+          <div class="blib-slider-track" id="st-<%= tipo.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') %>">
+            <% grupos[tipo].forEach(function(r, idx){ %>
+              <% var metrica = _mFn(r); %>
+              <a class="blib-rec-card" href="/catalogo/<%= r._id %>">
+                <div class="blib-rec-card__cover">
+                  <img src="<%= (r.imagen && r.imagen.url) ? r.imagen.url : '/img/placeholder.png' %>" alt="" loading="lazy">
+                  <span class="blib-rec-card__badge"><%= r.tipo_material || '' %></span>
+                  <% if (!esNov && idx < 3) { %><span class="blib-rank-badge">#<%= idx+1 %></span><% } %>
+                  <% if (metrica) { %><span class="blib-metrica-badge"><%= metrica %></span><% } %>
+                </div>
+                <div class="blib-rec-card__body">
+                  <p class="blib-rec-card__title"><%= r.titulo %></p>
+                  <p class="blib-rec-card__author"><%= r.autor %></p>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+        <div class="blib-dots" id="dots-<%= tipo.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') %>"></div>
+      </div>
+      <% } %>
+    <% }) %>
+
+    <% } %>
+  </div>
+</div>
+
+<style>
+/* ── Reutiliza .blib-page, .blib-bg, .blib-content, .blib-header,
+      .blib-panel, .blib-rec-card, .blib-viewall del CSS de categorías.
+      Sólo estilos adicionales aquí. ─────────────────────────────── */
+
+.blib-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 99px;
+  width: fit-content;
+}
+.blib-badge--new { background: rgba(38,138,74,0.22); color: #5dcd8a; border: 1px solid rgba(93,205,138,0.3); }
+.blib-badge--hot { background: rgba(230,81,0,0.2); color: #ff8a50; border: 1px solid rgba(255,138,80,0.3); }
+
+.blib-slider-section-head {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.blib-slider-section-head__left { display: flex; align-items: center; gap: 10px; }
+.blib-slider-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.15rem; font-weight: 700;
+  color: #f5ead6; margin: 0;
+}
+.blib-slider-badge {
+  font-size: 0.72rem; font-weight: 600;
+  background: rgba(201,168,76,0.14);
+  color: #c9a84c;
+  border: 1px solid rgba(201,168,76,0.28);
+  padding: 2px 9px; border-radius: 99px;
+}
+.blib-slider-btns { display: flex; gap: 8px; }
+
+/* Metrica & rank badges */
+.blib-metrica-badge {
+  position: absolute; bottom: 9px; right: 9px;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  color: rgba(245,234,214,0.8);
+  font-size: 0.68rem; font-weight: 500;
+  padding: 2px 8px; border-radius: 99px;
+}
+.blib-rank-badge {
+  position: absolute; top: 9px; right: 9px;
+  background: #c9a84c; color: #1a1208;
+  font-size: 0.72rem; font-weight: 800;
+  padding: 2px 8px; border-radius: 99px;
+  letter-spacing: 0.3px;
+}
+</style>
+
+<script>
+(function(){
+  var states = {};
+
+  function getVis(vp) {
+    var w = vp.offsetWidth;
+    if (w < 280) return 1;
+    if (w < 460) return 2;
+    if (w < 660) return 3;
+    if (w < 860) return 4;
+    return 5;
+  }
+
+  function initSlider(sid, vp, track) {
+    var cards = Array.from(track.children);
+    var s = { page: 0, cards: cards };
+    states[sid] = s;
+    var dotsId = 'dots-' + (sid === 'all' ? 'all' : sid.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''));
+    var dotsEl = document.getElementById(dotsId);
+
+    function render() {
+      var vis = getVis(vp);
+      var cw = 200 + 16;
+      var total = Math.ceil(cards.length / vis);
+      s.page = Math.max(0, Math.min(s.page, total - 1));
+      track.style.transform = 'translateX(-' + (s.page * vis * cw) + 'px)';
+      if (dotsEl) {
+        dotsEl.innerHTML = '';
+        for (var i = 0; i < total; i++) {
+          var d = document.createElement('button');
+          d.className = 'blib-dot' + (i === s.page ? ' is-active' : '');
+          (function(pg) {
+            d.addEventListener('click', function() { s.page = pg; render(); });
+          })(i);
+          dotsEl.appendChild(d);
+        }
+      }
+      var pBtn = document.querySelector('[data-prev="'+sid+'"]');
+      var nBtn = document.querySelector('[data-next="'+sid+'"]');
+      if (pBtn) pBtn.disabled = s.page === 0;
+      if (nBtn) nBtn.disabled = s.page >= total - 1;
+    }
+    s.render = render;
+    render();
+  }
+
+  document.querySelectorAll('.blib-slider-viewport').forEach(function(vp) {
+    var sid = vp.getAttribute('data-sid');
+    var track = vp.querySelector('.blib-slider-track');
+    if (sid && track && track.children.length) initSlider(sid, vp, track);
+  });
+
+  document.querySelectorAll('[data-prev]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var s = states[this.getAttribute('data-prev')];
+      if (s && s.page > 0) { s.page--; s.render(); }
+    });
+  });
+  document.querySelectorAll('[data-next]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var sid = this.getAttribute('data-next');
+      var s = states[sid];
+      if (!s) return;
+      var vp = document.querySelector('[data-sid="'+sid+'"]');
+      var vis = getVis(vp);
+      var total = Math.ceil(s.cards.length / vis);
+      if (s.page < total - 1) { s.page++; s.render(); }
+    });
+  });
+
+  window.addEventListener('resize', function() {
+    Object.keys(states).forEach(function(sid) {
+      if (states[sid].render) states[sid].render();
+    });
+  });
+})();
+</script>

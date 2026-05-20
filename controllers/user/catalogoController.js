@@ -250,6 +250,9 @@ exports.detalle = async (req, res, next) => {
 
     if (recurso.digital) recurso.digital.licencias_en_uso = licenciasEnUsoReal;
 
+    // Incrementar vistas
+    Recurso.findByIdAndUpdate(recurso._id, { $inc: { total_vistas: 1 } }).catch(() => {});
+
     let prestamoActivoItem = null;
     if (prestamoActivo) {
       const item = (prestamoActivo.items || []).find(
@@ -526,6 +529,89 @@ exports.descargar = async (req, res, next) => {
 
     cloudReq.on('error', next);
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Categorías con recursos ───────────────────────────────────────────────
+exports.categorias = async (req, res, next) => {
+  try {
+    const categorias = await Categoria.find({ activa: true }).sort({ nombre: 1 }).lean();
+    res.render('user/catalogo/categorias', {
+      title: 'Categorías',
+      categorias,
+      pageClass: 'catalog-page'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.apiCategoriaRecursos = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const filtro = { estado: 'Activo', publicado: true };
+    if (id && id !== 'all') {
+      if (mongoose.isValidObjectId(id)) {
+        filtro['categorias.categoria_id'] = new mongoose.Types.ObjectId(id);
+      }
+    }
+    const recursos = await Recurso.find(filtro)
+      .sort({ publicado_en: -1, creado_en: -1 })
+      .limit(40)
+      .lean();
+    res.json({ recursos });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Novedades ─────────────────────────────────────────────────────────────
+exports.novedades = async (req, res, next) => {
+  try {
+    const hace30dias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const [recientes, categorias] = await Promise.all([
+      Recurso.find({ estado: 'Activo', publicado: true })
+        .sort({ publicado_en: -1, creado_en: -1 })
+        .limit(40)
+        .lean(),
+      Categoria.find({ activa: true }).sort({ nombre: 1 }).lean()
+    ]);
+    res.render('user/catalogo/novedades', {
+      title: 'Novedades',
+      recursos: recientes,
+      categorias,
+      pageClass: 'catalog-page'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ── Más leídos ───────────────────────────────────────────────────────────
+exports.masLeidos = async (req, res, next) => {
+  try {
+    const [masVistos, categorias] = await Promise.all([
+      Recurso.find({ estado: 'Activo', publicado: true, total_vistas: { $gt: 0 } })
+        .sort({ total_vistas: -1 })
+        .limit(40)
+        .lean(),
+      Categoria.find({ activa: true }).sort({ nombre: 1 }).lean()
+    ]);
+    // Si no hay vistas aún, ordenar por préstamos
+    const recursos = masVistos.length > 0 ? masVistos :
+      await Recurso.find({ estado: 'Activo', publicado: true })
+        .sort({ total_prestamos: -1, total_reservas: -1 })
+        .limit(40)
+        .lean();
+
+    res.render('user/catalogo/mas-leidos', {
+      title: 'Más leídos',
+      recursos,
+      categorias,
+      pageClass: 'catalog-page'
+    });
   } catch (error) {
     next(error);
   }

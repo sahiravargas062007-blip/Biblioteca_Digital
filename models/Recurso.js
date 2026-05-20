@@ -96,6 +96,7 @@ const recursoSchema = new mongoose.Schema({
   publicado_en: Date,
   total_prestamos: { type: Number, default: 0 },
   total_reservas: { type: Number, default: 0 },
+  total_vistas: { type: Number, default: 0 },
   creado_en: { type: Date, default: Date.now },
   actualizado_en: { type: Date, default: Date.now }
 }, {

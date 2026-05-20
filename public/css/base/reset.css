@@ -4,7 +4,7 @@
 
 body {
   margin: 0;
-  background: rgba(255, 239, 158, 0.388);
+  background: var(--color-bg);
   color: var(--color-text);
 
 }

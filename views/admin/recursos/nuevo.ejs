@@ -1,375 +1,580 @@
+<% layout = 'layouts/adminLayout' %>
 <link rel="stylesheet" href="/css/components/forms.css">
 <link rel="stylesheet" href="/css/pages/admin-recursos.css">
 
 <% const isEdit = Boolean(recurso); %>
-    <% const firstCategoria = recurso?.categorias?.[0]; %>
-    <% const principal = recurso?.digital?.archivos?.find(function(a){ return a.es_principal; }); %>
-    <% const audioComplementario = recurso?.digital?.archivos?.find(function(a){ return a.tipo === 'mp3' && !a.es_principal; }); %>
+<% const firstCategoria = recurso?.categorias?.[0]; %>
+<% const principal = recurso?.digital?.archivos?.find(function(a){ return a.es_principal; }); %>
+<% const audioComplementario = recurso?.digital?.archivos?.find(function(a){ return a.tipo === 'mp3' && !a.es_principal; }); %>
 
-    <section class="panel page-header">
-      <div>
-        <p class="eyebrow">Registro bibliográfico</p>
-        <h1><%= isEdit ? 'Editar recurso' : 'Nuevo recurso' %></h1>
-      </div>
-      <a class="secondary-link" href="<%= isEdit ? `/admin/recursos/${recurso._id}` : '/admin/recursos' %>">Volver</a>
-    </section>
+<div class="af-page">
+  <div class="af-header">
+    <div class="af-header__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28" height="28">
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="af-header__title"><%= isEdit ? 'Editar recurso digital' : 'Nuevo recurso digital' %></h1>
+      <p class="af-header__sub">Administra la información bibliográfica del recurso</p>
+    </div>
+    <a class="af-header__back" href="<%= isEdit ? `/admin/recursos/${recurso._id}` : '/admin/recursos' %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Volver al catálogo
+    </a>
+  </div>
 
-    <section class="panel">
-      <form class="form-stack" enctype="multipart/form-data" method="post"
-            action="<%= isEdit ? `/admin/recursos/${recurso._id}?_method=PUT` : '/admin/recursos' %>">
+  <!-- Paso 1 — Información principal -->
+  <form class="af-form" id="af-form" enctype="multipart/form-data" method="post"
+        action="<%= isEdit ? `/admin/recursos/${recurso._id}?_method=PUT` : '/admin/recursos' %>">
 
-        <!-- ── TIPO ──────────────────────────────────────────────────────── -->
-        <div class="field-row">
-          <label>
+    <div class="af-card">
+      <p class="af-card__label">Clasificación</p>
+      <div class="af-grid-4">
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             Tipo de contenido
-            <select name="tipo_contenido" id="tipo_contenido" required>
-              <% ['Lectura', 'Audio', 'Video'].forEach(function(tipo) { %>
-                <option value="<%= tipo %>" <%= (recurso?.tipo_contenido || 'Lectura') === tipo ? 'selected' : '' %>><%= tipo %></option>
-              <% }); %>
-            </select>
-          </label>
-          <label>
-            Tipo de material
-            <select name="tipo_material" id="tipo_material" required>
-              <% ['Libro', 'Revista', 'Tesis', 'Artículo', 'Ley y Normativa', 'Mapa', 'Audiolibro', 'Video'].forEach(function(tipo) { %>
-                <option value="<%= tipo %>" <%= (recurso?.tipo_material || 'Libro') === tipo ? 'selected' : '' %>><%= tipo %></option>
-              <% }); %>
-            </select>
-          </label>
-          <label>
-            Disponibilidad
-            <select name="tipo_naturaleza" id="tipo_naturaleza" required>
-              <% ['Digital', 'Físico', 'Mixto'].forEach(function(tipo) { %>
-                <option value="<%= tipo %>" <%= (recurso?.tipo_naturaleza || 'Digital') === tipo ? 'selected' : '' %>><%= tipo %></option>
-              <% }); %>
-            </select>
-          </label>
-          <label>
-            Estado
-            <select name="estado">
-              <% ['Activo', 'Inactivo', 'Pendiente de configuración', 'Bloqueado'].forEach(function(estado) { %>
-                <option value="<%= estado %>" <%= (recurso?.estado || 'Pendiente de configuración') === estado ? 'selected' : '' %>><%= estado %></option>
-              <% }); %>
-            </select>
-          </label>
-        </div>
-
-        <!-- ── ISBN ──────────────────────────────────────────────────────── -->
-        <div class="isbn-row" id="isbn-row">
-          <label>
-            ISBN
-            <input name="isbn" id="isbn-input" value="<%= recurso?.isbn || '' %>" placeholder="978-...">
-          </label>
-          <button type="button" id="isbn-search-btn">Buscar ISBN</button>
-          <small id="isbn-hint"></small>
-        </div>
-
-        <!-- ── CAMPOS COMUNES ─────────────────────────────────────────────── -->
-        <div class="field-row">
-          <label>
-            Título
-            <input name="titulo" id="titulo" required value="<%= recurso?.titulo || '' %>">
-          </label>
-          <label>
-            <span id="label-autor">Autor / Creador</span>
-            <input name="autor" id="autor" required value="<%= recurso?.autor || '' %>">
-          </label>
-          <label id="label-editorial-wrap">
-            Editorial
-            <input name="editorial" value="<%= recurso?.editorial || '' %>">
-          </label>
-        </div>
-
-        <!-- ── CAMPOS ESPECÍFICOS AUDIO ──────────────────────────────────── -->
-        <div class="field-row" id="audio-fields" style="display:none;">
-          <label>
-            Narrador / Locutor
-            <input name="narrador" value="<%= recurso?.narrador || '' %>" placeholder="Quién presta la voz">
-          </label>
-          <label>
-            Formato de audio
-            <select name="audio_formato_tipo" id="audio-format-select">
-              <% ['MP3', 'WAV', 'M4B', 'AAC', 'OGG', 'Otro'].forEach(function(f) { %>
-                <option value="<%= f.toLowerCase() %>"><%= f %></option>
-              <% }); %>
-            </select>
-          </label>
-        </div>
-
-        <!-- ── CAMPOS ESPECÍFICOS VIDEO ──────────────────────────────────── -->
-        <div class="field-row" id="video-fields" style="display:none;">
-          <label>
-            Director / Creador
-            <input name="director" value="<%= recurso?.director || '' %>">
-          </label>
-          <label>
-            Productora / Editor
-            <input name="productora" value="<%= recurso?.productora || '' %>" placeholder="Netflix, SENA, Discovery...">
-          </label>
-          <label>
-            Resolución
-            <select name="resolucion">
-              <% ['720p', '1080p', '4K', 'SD', 'Otra'].forEach(function(r) { %>
-                <option value="<%= r %>" <%= recurso?.resolucion === r ? 'selected' : '' %>><%= r %></option>
-              <% }); %>
-            </select>
-          </label>
-        </div>
-
-        <div class="field-row">
-          <label>
-            Idioma
-            <input name="idioma" value="<%= recurso?.idioma || 'Español' %>">
-          </label>
-          <label>
-            Fecha de publicación
-            <input type="date" name="fecha_publicacion"
-                   value="<%= recurso?.fecha_publicacion ? new Date(recurso.fecha_publicacion).toISOString().slice(0,10) : '' %>">
-          </label>
-          <label id="paginas-wrap">
-            Páginas
-            <input type="number" min="0" name="cantidad_paginas" value="<%= recurso?.cantidad_paginas || '' %>">
-          </label>
-          <label id="duracion-wrap">
-            Duración (HH:MM:SS)
-            <input name="duracion_hhmmss" id="duracion-hhmmss" placeholder="00:00:00"
-                   value="<%= recurso?.duracion_segundos ? new Date(recurso.duracion_segundos * 1000).toISOString().slice(11,19) : '' %>">
-            <input type="hidden" name="duracion_segundos" id="duracion-segundos"
-                   value="<%= recurso?.duracion_segundos || '' %>">
-          </label>
-        </div>
-
-        <label>
-          Descripción / Sinopsis
-          <textarea name="descripcion" rows="4" required><%= recurso?.descripcion || '' %></textarea>
+          </span>
+          <select name="tipo_contenido" id="tipo_contenido" required>
+            <% ['Lectura', 'Audio', 'Video'].forEach(function(t) { %>
+              <option value="<%= t %>" <%= (recurso?.tipo_contenido || 'Lectura') === t ? 'selected' : '' %>><%= t %></option>
+            <% }); %>
+          </select>
         </label>
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            Tipo de material
+          </span>
+          <select name="tipo_material" id="tipo_material" required>
+            <% ['Libro','Revista','Tesis','Artículo','Ley y Normativa','Mapa','Audiolibro','Video'].forEach(function(t) { %>
+              <option value="<%= t %>" <%= (recurso?.tipo_material || 'Libro') === t ? 'selected' : '' %>><%= t %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Disponibilidad
+          </span>
+          <select name="tipo_naturaleza" id="tipo_naturaleza" required>
+            <% ['Digital','Físico','Mixto'].forEach(function(t) { %>
+              <option value="<%= t %>" <%= (recurso?.tipo_naturaleza || 'Digital') === t ? 'selected' : '' %>><%= t %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Estado
+          </span>
+          <select name="estado">
+            <% ['Activo','Inactivo','Pendiente de configuración','Bloqueado'].forEach(function(e) { %>
+              <option value="<%= e %>" <%= (recurso?.estado || 'Pendiente de configuración') === e ? 'selected' : '' %>><%= e %></option>
+            <% }); %>
+          </select>
+        </label>
+      </div>
+    </div>
 
-        <!-- ── IMAGEN ─────────────────────────────────────────────────────── -->
-        <div class="field-row">
-          <label>
-            <span id="label-imagen">Imagen de portada / carátula</span>
-            <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
-            <small>JPG, PNG o WEBP.</small>
-            <% if (recurso && !recurso.imagen?.es_default) { %>
-              <p class="muted">Imagen actual: <a href="<%= recurso.imagen.url %>" target="_blank">Ver</a></p>
-            <% } %>
+    <div class="af-card">
+      <p class="af-card__label">ISBN (opcional — autocompleta metadatos)</p>
+      <div class="af-isbn-row">
+        <label class="af-label" style="flex:1">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            ISBN
+          </span>
+          <input name="isbn" id="isbn-input" value="<%= recurso?.isbn || '' %>" placeholder="978-...">
+        </label>
+        <button type="button" id="isbn-search-btn" class="af-btn-isbn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Buscar ISBN
+        </button>
+        <small id="isbn-hint" class="af-hint"></small>
+      </div>
+    </div>
+
+    <div class="af-card">
+      <p class="af-card__label">Información bibliográfica</p>
+      <div class="af-grid-2">
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+            Título
+          </span>
+          <input name="titulo" id="titulo" required value="<%= recurso?.titulo || '' %>">
+        </label>
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span id="label-autor">Autor / Creador</span>
+          </span>
+          <input name="autor" id="autor" required value="<%= recurso?.autor || '' %>">
+        </label>
+      </div>
+      <div class="af-grid-3" style="margin-top:14px">
+        <label class="af-label" id="label-editorial-wrap">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            Editorial
+          </span>
+          <input name="editorial" value="<%= recurso?.editorial || '' %>">
+        </label>
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+            Idioma
+          </span>
+          <select name="idioma">
+            <% ['Español','Inglés','Francés','Portugués','Alemán','Otro'].forEach(function(l){ %>
+              <option value="<%= l %>" <%= (recurso?.idioma || 'Español') === l ? 'selected' : '' %>><%= l %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Fecha de publicación
+          </span>
+          <input type="date" name="fecha_publicacion"
+                 value="<%= recurso?.fecha_publicacion ? new Date(recurso.fecha_publicacion).toISOString().slice(0,10) : '' %>">
+        </label>
+      </div>
+      <div class="af-grid-2" style="margin-top:14px" id="paginas-wrap">
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Páginas
+          </span>
+          <input type="number" min="0" name="cantidad_paginas" value="<%= recurso?.cantidad_paginas || '' %>">
+        </label>
+        <label class="af-label" id="duracion-wrap" style="display:none">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Duración (HH:MM:SS)
+          </span>
+          <input name="duracion_hhmmss" id="duracion-hhmmss" placeholder="00:00:00"
+                 value="<%= recurso?.duracion_segundos ? new Date(recurso.duracion_segundos * 1000).toISOString().slice(11,19) : '' %>">
+          <input type="hidden" name="duracion_segundos" id="duracion-segundos" value="<%= recurso?.duracion_segundos || '' %>">
+        </label>
+      </div>
+      <!-- Campos específicos audio -->
+      <div class="af-grid-2" style="margin-top:14px; display:none" id="audio-fields">
+        <label class="af-label">
+          <span>Narrador / Locutor</span>
+          <input name="narrador" value="<%= recurso?.narrador || '' %>" placeholder="Quién presta la voz">
+        </label>
+      </div>
+      <!-- Campos específicos video -->
+      <div class="af-grid-3" style="margin-top:14px; display:none" id="video-fields">
+        <label class="af-label">
+          <span>Director / Creador</span>
+          <input name="director" value="<%= recurso?.director || '' %>">
+        </label>
+        <label class="af-label">
+          <span>Productora</span>
+          <input name="productora" value="<%= recurso?.productora || '' %>" placeholder="Netflix, SENA…">
+        </label>
+        <label class="af-label">
+          <span>Resolución</span>
+          <select name="resolucion">
+            <% ['720p','1080p','4K','SD','Otra'].forEach(function(r){ %>
+              <option value="<%= r %>" <%= recurso?.resolucion === r ? 'selected' : '' %>><%= r %></option>
+            <% }); %>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="af-card">
+      <p class="af-card__label">Descripción / Sinopsis</p>
+      <label class="af-label">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Descripción
+        </span>
+        <textarea name="descripcion" rows="4" required><%= recurso?.descripcion || '' %></textarea>
+      </label>
+    </div>
+
+    <div class="af-card">
+      <p class="af-card__label">Imagen y categorización</p>
+      <div class="af-grid-2">
+        <div>
+          <label class="af-label">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Portada (Archivo y enlace)
+            </span>
           </label>
-          <label>
-            O URL de imagen
+          <div class="af-cover-zone" id="af-cover-drop">
+            <div class="af-cover-drop__inner" id="af-cover-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p>Arrastra la portada aquí<br><small>o haz clic para seleccionar</small><br><small>JPG, PNG o WEBP</small></p>
+              <input type="file" name="imagen" id="af-cover-input" accept="image/jpeg,image/png,image/webp" style="display:none">
+            </div>
+            <% if (recurso && !recurso.imagen?.es_default) { %>
+              <div class="af-cover-preview" id="af-cover-preview-wrap">
+                <p class="af-cover-preview__label">Vista previa</p>
+                <img id="af-cover-preview-img" src="<%= recurso.imagen.url %>" alt="">
+                <button type="button" class="af-cover-remove" id="af-cover-remove">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                  Eliminar imagen
+                </button>
+              </div>
+            <% } else { %>
+              <div class="af-cover-preview" id="af-cover-preview-wrap" style="display:none">
+                <p class="af-cover-preview__label">Vista previa</p>
+                <img id="af-cover-preview-img" src="" alt="">
+                <button type="button" class="af-cover-remove" id="af-cover-remove">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                  Eliminar imagen
+                </button>
+              </div>
+            <% } %>
+          </div>
+          <label class="af-label" style="margin-top:10px">
+            <span>O URL de imagen</span>
             <input name="imagen_url"
                    value="<%= recurso?.imagen?.es_default ? '' : recurso?.imagen?.url || '' %>"
                    placeholder="https://...">
           </label>
         </div>
-
-        <!-- ── CATEGORÍA ──────────────────────────────────────────────────── -->
-        <div class="field-row">
-          <label>
-            Categoría
-            <select name="categoria_id" id="categoria-select" required>
-              <option value="">Seleccione</option>
-              <% categorias.forEach(function(categoria) { %>
-                <option value="<%= categoria._id %>"
-                  <%= String(firstCategoria?.categoria_id || '') === String(categoria._id) ? 'selected' : '' %>>
-                  <%= categoria.nombre %>
-                </option>
-              <% }); %>
-            </select>
-          </label>
-          <label>
-            Subcategoría
+        <div>
+          <label class="af-label">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              Subcategoría
+            </span>
             <select name="subcategoria_id" id="subcategoria-select">
               <option value="">Sin subcategoría</option>
             </select>
           </label>
+          <label class="af-label" style="margin-top:14px">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+              Categoría
+            </span>
+            <select name="categoria_id" id="categoria-select" required>
+              <option value="">Seleccione</option>
+              <% categorias.forEach(function(cat) { %>
+                <option value="<%= cat._id %>"
+                  <%= String(firstCategoria?.categoria_id || '') === String(cat._id) ? 'selected' : '' %>>
+                  <%= cat.nombre %>
+                </option>
+              <% }); %>
+            </select>
+          </label>
         </div>
+      </div>
+    </div>
 
-        <!-- ══════════════════════════════════════════════════════════════════ -->
-        <!-- SECCIÓN DIGITAL                                                   -->
-        <!-- ══════════════════════════════════════════════════════════════════ -->
-        <section class="embedded-section" id="digital-section">
-          <div class="subheading-row"><h2>Configuración digital</h2></div>
+    <label class="af-checkbox-row">
+      <input type="checkbox" name="publicado" value="true" <%= recurso?.publicado ? 'checked' : '' %>>
+      <span>Publicar recurso en el catálogo</span>
+    </label>
 
-          <!-- ── Lectura (PDF / ePub) ───────────────────────────────────────── -->
-          <div id="archivo-lectura-block">
-            <div class="field-row">
-              <label>
-                Tipo de archivo
-                <select name="archivo_tipo" id="archivo-tipo-select">
-                  <% ['pdf', 'epub', 'url'].forEach(function(tipo) { %>
-                    <option value="<%= tipo %>" <%= principal?.tipo === tipo ? 'selected' : '' %>><%= tipo.toUpperCase() %></option>
-                  <% }); %>
-                </select>
-              </label>
-              <label>
-                Subir archivo (PDF o ePub)
-                <input type="file" name="archivo" id="archivo-file-lectura" accept=".pdf,.epub">
-                <% if (principal?.url) { %><p class="muted"><a href="<%= principal.url %>" target="_blank">Archivo actual</a></p><% } %>
-              </label>
-              <label>
-                O URL del archivo
-                <input name="archivo_url" value="<%= principal?.url || '' %>" placeholder="https://...">
-                <small>Si subes archivo, no es necesario URL.</small>
-              </label>
-            </div>
-            <div class="field-row">
-              <label>
-                Audiolibro MP3 complementario (opcional)
-                <input name="audio_url" value="<%= audioComplementario?.url || '' %>" placeholder="URL del MP3">
-              </label>
-            </div>
-          </div>
+    <!-- Botón Siguiente → abre el modal de configuración -->
+    <div class="af-form-actions">
+      <button type="button" id="af-btn-siguiente" class="af-btn-primary">
+        Siguiente: Configuración
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <a class="af-btn-secondary" href="/admin/recursos">Cancelar</a>
+    </div>
 
-          <!-- ── Audio — sube directo a Cloudinary ─────────────────────────── -->
-          <div id="archivo-audio-block" style="display:none;">
-            <%# Campos hidden — reciben datos tras subida con el widget %>
-            <input type="hidden" name="archivo_url"       id="audio-cloudinary-url"   value="<%= recurso?.tipo_contenido === 'Audio' ? (principal?.url || '') : '' %>">
-            <input type="hidden" name="archivo_tipo"      id="audio-cloudinary-tipo"  value="<%= principal?.tipo || 'mp3' %>">
-            <input type="hidden" name="archivo_public_id" id="audio-cloudinary-pubid" value="<%= principal?.public_id || '' %>">
+    <!-- Campos hidden que el modal escribe -->
+    <input type="hidden" name="_config_done" id="af-config-done" value="0">
 
-            <div class="field-row">
-              <div>
-                <label>Subir archivo de audio</label>
-                <button type="button" class="upload-widget-btn" id="audio-upload-btn">☁ Seleccionar audio</button>
-                <div class="upload-status" id="audio-upload-status"></div>
-                <div class="upload-preview" id="audio-upload-preview">
-                  <% if (principal?.url && recurso?.tipo_contenido === 'Audio') { %>
-                    ✓ Audio actual: <a href="<%= principal.url %>" target="_blank">Escuchar</a>
-                  <% } %>
-                </div>
-                <small>MP3, WAV, M4B, AAC, OGG, FLAC. Se sube directo a la nube.</small>
-              </div>
-              <label>
-                O URL del audio
-                <input placeholder="https://..."
-                       oninput="document.getElementById('audio-cloudinary-url').value=this.value;document.getElementById('audio-cloudinary-tipo').value='mp3';">
-              </label>
-            </div>
-          </div>
+  </form>
+</div>
 
-          <!-- ── Video — sube directo a Cloudinary ─────────────────────────── -->
-          <div id="archivo-video-block" style="display:none;">
-            <div class="field-row">
-              <label>
-                Origen del video
-                <select id="video-origen-select" name="video_origen">
-                  <option value="url"     <%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? 'selected' : '' %>>URL externa (YouTube, Vimeo…)</option>
-                  <option value="archivo" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? 'selected' : '' %>>Subir archivo de video</option>
-                </select>
-              </label>
-            </div>
+<!-- ══════════════════════════════════════════════════════════
+     MODAL DE CONFIGURACIÓN (Digital / Física / Mixta)
+     ══════════════════════════════════════════════════════════ -->
+<div class="af-modal-overlay" id="af-modal" hidden>
+  <div class="af-modal">
+    <div class="af-modal__head">
+      <h2 class="af-modal__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Configuración del recurso
+      </h2>
+      <button type="button" class="af-modal__close" id="af-modal-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="af-modal__body">
 
-            <!-- URL externa -->
-            <div id="video-url-block">
-              <label>
-                URL del video
-                <input name="archivo_url" id="video-url-input"
-                       value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? (principal?.url || '') : '' %>"
-                       placeholder="https://youtube.com/watch?v=...">
-              </label>
-              <input type="hidden" name="archivo_tipo" id="video-tipo-url" value="url">
-            </div>
+      <!-- Tabs digital / física dentro del modal -->
+      <div class="af-modal-tabs" id="af-modal-tabs">
+        <button type="button" class="af-modal-tab is-active" data-modal-tab="digital" id="tab-digital">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Configuración digital
+        </button>
+        <button type="button" class="af-modal-tab" data-modal-tab="fisica" id="tab-fisica">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Configuración física
+        </button>
+      </div>
 
-            <!-- Subir archivo — widget sube directo al browser → Cloudinary -->
-            <div id="video-archivo-block" style="display:none;">
-              <%# Campos hidden — reciben URL y public_id tras subida exitosa con el widget %>
-              <input type="hidden" name="archivo_url"       id="video-cloudinary-url"   value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? (principal?.url || '') : '' %>">
-              <input type="hidden" name="archivo_tipo"      id="video-cloudinary-tipo"  value="<%= principal?.tipo || 'mp4' %>">
-              <input type="hidden" name="archivo_public_id" id="video-cloudinary-pubid" value="<%= principal?.public_id || '' %>">
+      <!-- Panel digital -->
+      <div class="af-modal-panel is-active" id="panel-digital">
 
-              <div>
-                <label>Archivo de video</label>
-                <button type="button" class="upload-widget-btn" id="video-upload-btn">☁ Seleccionar video</button>
-                <div class="upload-status" id="video-upload-status"></div>
-                <div class="upload-preview" id="video-upload-preview">
-                  <% if (principal?.url && recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url') { %>
-                    ✓ Video actual: <a href="<%= principal.url %>" target="_blank">Ver</a>
-                  <% } %>
-                </div>
-                <small>MP4, WebM, AVI, MOV, MKV. <strong>Sube directo a la nube</strong> — el formulario no espera.</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Licencia -->
-          <div class="field-row">
-            <label>
-              Licencia
-              <select name="tipo_licencia" id="licencia-select">
-                <% ['Libre', 'Restringida'].forEach(function(tipo) { %>
-                  <option value="<%= tipo %>" <%= (recurso?.digital?.tipo_licencia || 'Libre') === tipo ? 'selected' : '' %>><%= tipo %></option>
+        <!-- Lectura -->
+        <div id="archivo-lectura-block">
+          <div class="af-grid-3">
+            <label class="af-label">
+              <span>Tipo de archivo</span>
+              <select name="archivo_tipo" id="archivo-tipo-select">
+                <% ['pdf','epub','url'].forEach(function(t){ %>
+                  <option value="<%= t %>" <%= principal?.tipo === t ? 'selected' : '' %>><%= t.toUpperCase() %></option>
                 <% }); %>
               </select>
             </label>
-          </div>
-
-          <div id="licencia-restringida-block" style="display:none;">
-            <div class="field-row">
-              <label>Usuarios simultáneos
-                <input type="number" min="1" name="usuarios_simultaneos" value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>">
-              </label>
-              <label>Duración préstamo
-                <input type="number" min="1" name="duracion_prestamo" value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>">
-              </label>
-              <label>Unidad
-                <select name="unidad_duracion">
-                  <% ['horas', 'dias', 'semanas'].forEach(function(u) { %>
-                    <option value="<%= u %>" <%= (recurso?.digital?.licencia?.unidad_duracion || 'dias') === u ? 'selected' : '' %>><%= u %></option>
-                  <% }); %>
-                </select>
-              </label>
-              <label>Máx. préstamos por usuario
-                <input type="number" min="1" name="max_prestamos_por_usuario" value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>">
-              </label>
-            </div>
-            <div class="field-row">
-              <label>Reservas digitales
-                <select name="cola_reservas_habilitada">
-                  <option value="true"  <%= recurso?.digital?.licencia?.cola_reservas_habilitada  ? 'selected' : '' %>>Sí</option>
-                  <option value="false" <%= !recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>No</option>
-                </select>
-              </label>
-              <label>Espera cola (días)
-                <input type="number" min="1" name="tiempo_max_espera_cola_dias" value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>">
-              </label>
-              <label>Vencimiento licencia
-                <input type="date" name="fecha_vencimiento_licencia"
-                       value="<%= recurso?.digital?.licencia?.fecha_vencimiento_licencia ? new Date(recurso.digital.licencia.fecha_vencimiento_licencia).toISOString().slice(0,10) : '' %>">
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <!-- ══════════════════════════════════════════════════════════════════ -->
-        <!-- SECCIÓN FÍSICA                                                    -->
-        <!-- ══════════════════════════════════════════════════════════════════ -->
-        <section class="embedded-section" id="physical-section" style="display:none;">
-          <div class="subheading-row"><h2>Configuración física</h2></div>
-          <div class="field-row">
-            <label>
-              Cantidad de ejemplares
-              <input type="number" min="0" name="total_ejemplares" value="<%= recurso?.fisico?.total_ejemplares || 0 %>">
+            <label class="af-label" style="grid-column:span 2">
+              <span>Subir archivo (PDF o ePub)</span>
+              <input type="file" name="archivo" id="archivo-file-lectura" accept=".pdf,.epub">
+              <% if (principal?.url) { %><p class="af-hint">Archivo actual: <a href="<%= principal.url %>" target="_blank">Ver</a></p><% } %>
             </label>
           </div>
-        </section>
-
-        <label class="checkbox-row">
-          <input type="checkbox" name="publicado" value="true" <%= recurso?.publicado ? 'checked' : '' %>>
-          Publicar recurso en el catálogo
-        </label>
-
-        <div class="form-actions">
-          <button type="submit" id="btn-guardar"><%= isEdit ? 'Guardar cambios' : 'Crear recurso' %></button>
-          <a class="secondary-link" href="/admin/recursos">Cancelar</a>
+          <label class="af-label" style="margin-top:12px">
+            <span>O URL del archivo</span>
+            <input name="archivo_url" value="<%= principal?.url || '' %>" placeholder="https://...">
+            <small class="af-hint">Si subes archivo, no es necesario poner URL.</small>
+          </label>
+          <label class="af-label" style="margin-top:12px">
+            <span>Audiolibro MP3 complementario (opcional)</span>
+            <input name="audio_url" value="<%= audioComplementario?.url || '' %>" placeholder="URL del MP3">
+          </label>
         </div>
-      </form>
-    </section>
+
+        <!-- Audio -->
+        <div id="archivo-audio-block" style="display:none">
+          <input type="hidden" name="archivo_url"       id="audio-cloudinary-url"   value="<%= recurso?.tipo_contenido === 'Audio' ? (principal?.url || '') : '' %>">
+          <input type="hidden" name="archivo_tipo"      id="audio-cloudinary-tipo"  value="<%= principal?.tipo || 'mp3' %>">
+          <input type="hidden" name="archivo_public_id" id="audio-cloudinary-pubid" value="<%= principal?.public_id || '' %>">
+          <div class="af-grid-2">
+            <div>
+              <label class="af-label"><span>Subir archivo de audio</span></label>
+              <button type="button" class="upload-widget-btn" id="audio-upload-btn">☁ Seleccionar audio</button>
+              <div class="upload-status" id="audio-upload-status"></div>
+              <div class="upload-preview" id="audio-upload-preview">
+                <% if (principal?.url && recurso?.tipo_contenido === 'Audio') { %>✓ Audio actual: <a href="<%= principal.url %>" target="_blank">Escuchar</a><% } %>
+              </div>
+              <small class="af-hint">MP3, WAV, M4B, AAC, OGG. Se sube directo a la nube.</small>
+            </div>
+            <label class="af-label">
+              <span>O URL del audio</span>
+              <input placeholder="https://..."
+                     oninput="document.getElementById('audio-cloudinary-url').value=this.value;document.getElementById('audio-cloudinary-tipo').value='mp3';">
+            </label>
+          </div>
+        </div>
+
+        <!-- Video -->
+        <div id="archivo-video-block" style="display:none">
+          <label class="af-label">
+            <span>Origen del video</span>
+            <select id="video-origen-select" name="video_origen">
+              <option value="url"     <%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? 'selected' : '' %>>URL externa (YouTube, Vimeo…)</option>
+              <option value="archivo" <%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? 'selected' : '' %>>Subir archivo de video</option>
+            </select>
+          </label>
+          <div id="video-url-block" style="margin-top:12px">
+            <label class="af-label">
+              <span>URL del video</span>
+              <input name="archivo_url" id="video-url-input"
+                     value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo === 'url' ? (principal?.url || '') : '' %>"
+                     placeholder="https://youtube.com/watch?v=...">
+            </label>
+            <input type="hidden" name="archivo_tipo" id="video-tipo-url" value="url">
+          </div>
+          <div id="video-archivo-block" style="display:none; margin-top:12px">
+            <input type="hidden" name="archivo_url"       id="video-cloudinary-url"   value="<%= recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url' ? (principal?.url || '') : '' %>">
+            <input type="hidden" name="archivo_tipo"      id="video-cloudinary-tipo"  value="<%= principal?.tipo || 'mp4' %>">
+            <input type="hidden" name="archivo_public_id" id="video-cloudinary-pubid" value="<%= principal?.public_id || '' %>">
+            <label class="af-label"><span>Archivo de video</span></label>
+            <button type="button" class="upload-widget-btn" id="video-upload-btn">☁ Seleccionar video</button>
+            <div class="upload-status" id="video-upload-status"></div>
+            <div class="upload-preview" id="video-upload-preview">
+              <% if (principal?.url && recurso?.tipo_contenido === 'Video' && principal?.tipo !== 'url') { %>✓ Video actual: <a href="<%= principal.url %>" target="_blank">Ver</a><% } %>
+            </div>
+            <small class="af-hint">MP4, WebM, AVI, MOV, MKV. Sube directo a la nube.</small>
+          </div>
+        </div>
+
+        <!-- Licencia -->
+        <div class="af-section-divider">Licencia</div>
+        <label class="af-label">
+          <span>Tipo de licencia</span>
+          <select name="tipo_licencia" id="licencia-select">
+            <% ['Libre','Restringida'].forEach(function(t){ %>
+              <option value="<%= t %>" <%= (recurso?.digital?.tipo_licencia || 'Libre') === t ? 'selected' : '' %>><%= t %></option>
+            <% }); %>
+          </select>
+        </label>
+        <div id="licencia-restringida-block" style="display:none; margin-top:14px">
+          <div class="af-grid-4">
+            <label class="af-label"><span>Usuarios simultáneos</span><input type="number" min="1" name="usuarios_simultaneos" value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>"></label>
+            <label class="af-label"><span>Duración préstamo</span><input type="number" min="1" name="duracion_prestamo" value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>"></label>
+            <label class="af-label"><span>Unidad</span>
+              <select name="unidad_duracion">
+                <% ['horas','dias','semanas'].forEach(function(u){ %>
+                  <option value="<%= u %>" <%= (recurso?.digital?.licencia?.unidad_duracion || 'dias') === u ? 'selected' : '' %>><%= u %></option>
+                <% }); %>
+              </select>
+            </label>
+            <label class="af-label"><span>Máx. préstamos/usuario</span><input type="number" min="1" name="max_prestamos_por_usuario" value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>"></label>
+          </div>
+          <div class="af-grid-3" style="margin-top:12px">
+            <label class="af-label"><span>Reservas digitales</span>
+              <select name="cola_reservas_habilitada">
+                <option value="true"  <%= recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>Sí</option>
+                <option value="false" <%= !recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>No</option>
+              </select>
+            </label>
+            <label class="af-label"><span>Espera cola (días)</span><input type="number" min="1" name="tiempo_max_espera_cola_dias" value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>"></label>
+            <label class="af-label"><span>Vencimiento licencia</span><input type="date" name="fecha_vencimiento_licencia" value="<%= recurso?.digital?.licencia?.fecha_vencimiento_licencia ? new Date(recurso.digital.licencia.fecha_vencimiento_licencia).toISOString().slice(0,10) : '' %>"></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel físico -->
+      <div class="af-modal-panel" id="panel-fisica">
+        <label class="af-label">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Cantidad de ejemplares
+          </span>
+          <input type="number" min="0" name="total_ejemplares" value="<%= recurso?.fisico?.total_ejemplares || 0 %>">
+          <small class="af-hint">Se crearán automáticamente los ejemplares con código de inventario.</small>
+        </label>
+      </div>
+
+    </div><!-- /af-modal__body -->
+    <div class="af-modal__foot">
+      <button type="button" class="af-btn-secondary" id="af-modal-cancel">Cancelar</button>
+      <button type="button" class="af-btn-primary" id="af-modal-guardar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <%= isEdit ? 'Guardar cambios' : 'Crear recurso' %>
+      </button>
+    </div>
+  </div>
+</div>
 
 <script>
-    window.BIBLIOTECA_CATEGORIAS          = <%- JSON.stringify(categorias) %>;
-    window.BIBLIOTECA_SUBCATEGORIA_ACTUAL = "<%= firstCategoria?.subcategoria_id || '' %>";
-    window.CLOUDINARY_CLOUD_NAME          = "<%= process.env.CLOUDINARY_CLOUD_NAME %>";
-    window.CLOUDINARY_UPLOAD_PRESET      = "<%= process.env.CLOUDINARY_UPLOAD_PRESET || '' %>";
-  </script>
+window.BIBLIOTECA_CATEGORIAS          = <%- JSON.stringify(categorias) %>;
+window.BIBLIOTECA_SUBCATEGORIA_ACTUAL = "<%= firstCategoria?.subcategoria_id || '' %>";
+window.CLOUDINARY_CLOUD_NAME          = "<%= process.env.CLOUDINARY_CLOUD_NAME %>";
+window.CLOUDINARY_UPLOAD_PRESET       = "<%= process.env.CLOUDINARY_UPLOAD_PRESET || '' %>";
+</script>
 <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 <script src="/js/admin/recursos.js"></script>
+<script>
+(function () {
+  /* ── Portada drag & drop preview ── */
+  var coverInput   = document.getElementById('af-cover-input');
+  var coverDrop    = document.getElementById('af-cover-drop');
+  var coverPreview = document.getElementById('af-cover-preview-wrap');
+  var coverImg     = document.getElementById('af-cover-preview-img');
+  var coverRemove  = document.getElementById('af-cover-remove');
+  var coverPH      = document.getElementById('af-cover-placeholder');
+
+  if (coverDrop && coverInput) {
+    coverDrop.addEventListener('click', function (e) {
+      if (e.target === coverRemove || coverRemove && coverRemove.contains(e.target)) return;
+      coverInput.click();
+    });
+    coverDrop.addEventListener('dragover', function (e) { e.preventDefault(); coverDrop.classList.add('is-drag'); });
+    coverDrop.addEventListener('dragleave', function () { coverDrop.classList.remove('is-drag'); });
+    coverDrop.addEventListener('drop', function (e) {
+      e.preventDefault(); coverDrop.classList.remove('is-drag');
+      var file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) { coverInput.files = e.dataTransfer.files; previewCover(file); }
+    });
+    coverInput.addEventListener('change', function () {
+      if (this.files[0]) previewCover(this.files[0]);
+    });
+    if (coverRemove) {
+      coverRemove.addEventListener('click', function (e) {
+        e.stopPropagation();
+        coverInput.value = '';
+        coverPreview.style.display = 'none';
+        coverPH.style.display = '';
+      });
+    }
+  }
+
+  function previewCover(file) {
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      coverImg.src = ev.target.result;
+      coverPreview.style.display = '';
+      coverPH.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Modal de configuración ── */
+  var btnSiguiente = document.getElementById('af-btn-siguiente');
+  var modal        = document.getElementById('af-modal');
+  var modalClose   = document.getElementById('af-modal-close');
+  var modalCancel  = document.getElementById('af-modal-cancel');
+  var modalGuardar = document.getElementById('af-modal-guardar');
+  var configDone   = document.getElementById('af-config-done');
+
+  function abrirModal() {
+    syncModalTabs();
+    modal.hidden = false;
+    requestAnimationFrame(function () { modal.classList.add('is-open'); });
+  }
+  function cerrarModal() {
+    modal.classList.remove('is-open');
+    setTimeout(function () { modal.hidden = true; }, 230);
+  }
+
+  if (btnSiguiente) btnSiguiente.addEventListener('click', abrirModal);
+  if (modalClose)   modalClose.addEventListener('click', cerrarModal);
+  if (modalCancel)  modalCancel.addEventListener('click', cerrarModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) cerrarModal(); });
+
+  if (modalGuardar) {
+    modalGuardar.addEventListener('click', function () {
+      configDone.value = '1';
+      cerrarModal();
+      /* Pequeño delay para que el DOM procese, luego submit */
+      setTimeout(function () { document.getElementById('af-form').submit(); }, 240);
+    });
+  }
+
+  /* Tabs dentro del modal */
+  function syncModalTabs() {
+    var naturaleza = document.getElementById('tipo_naturaleza').value;
+    var tabDigital = document.getElementById('tab-digital');
+    var tabFisica  = document.getElementById('tab-fisica');
+    var tabsWrap   = document.getElementById('af-modal-tabs');
+    if (naturaleza === 'Digital') {
+      tabFisica.style.display = 'none'; activarModalTab('digital');
+    } else if (naturaleza === 'Físico') {
+      tabDigital.style.display = 'none'; activarModalTab('fisica');
+    } else {
+      tabDigital.style.display = ''; tabFisica.style.display = ''; activarModalTab('digital');
+    }
+  }
+
+  function activarModalTab(nombre) {
+    document.querySelectorAll('.af-modal-tab').forEach(function (t) { t.classList.remove('is-active'); });
+    document.querySelectorAll('.af-modal-panel').forEach(function (p) { p.classList.remove('is-active'); });
+    var btn = document.querySelector('[data-modal-tab="' + nombre + '"]');
+    var panel = document.getElementById('panel-' + nombre);
+    if (btn) btn.classList.add('is-active');
+    if (panel) panel.classList.add('is-active');
+  }
+
+  document.querySelectorAll('.af-modal-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () { activarModalTab(tab.dataset.modalTab); });
+  });
+})();
+</script>

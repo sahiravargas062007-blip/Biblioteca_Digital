@@ -580,3 +580,65 @@
 .rd-modal-grid div:last-child { border-bottom: none; padding-bottom: 0; }
 .rd-modal-grid span { color: var(--rd-muted); }
 .rd-modal-grid strong { text-align: right; }
+
+/* ═══════════════════════════════════════════════════════════════
+   detalle-badges-patch.css
+   FIX 3: Badges de tipo contenido y estado iguales en detalle
+   Replica los colores de .cat-card__badge del catálogo.
+   
+   INSTRUCCIÓN: agregar AL FINAL de public/css/pages/detalle-recurso.css
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Reutiliza las mismas clases que usa el catálogo en las tarjetas */
+.rd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 99px;
+  line-height: 1;
+}
+
+/* Tipo de contenido: Lectura, Audio, Video */
+.rd-badge--content,
+.rd-badge:first-child {
+  background: #eaf2ff;
+  color: #1a5fb4;
+}
+
+/* Estado: Activo */
+.rd-badge--activo,
+.rd-badge--ok {
+  background: #e6f7ee;
+  color: #1a7a3f;
+}
+
+/* Estado: Inactivo / Pendiente */
+.rd-badge--inactivo,
+.rd-badge--muted,
+.rd-badge--pendiente {
+  background: #f0f4f8;
+  color: #5a6a7a;
+}
+
+/* Estado: Bloqueado */
+.rd-badge--bloqueado {
+  background: #fde8e6;
+  color: #c0392b;
+}
+
+/* Sobreescribe los badges genéricos del encabezado para que usen
+   los colores del catálogo según el valor del tipo */
+.rd-header .rd-badges .rd-badge:nth-child(1) {
+  /* tipo_contenido: mismo chip azul del catálogo */
+  background: #eaf2ff;
+  color: #1a5fb4;
+}
+
+.rd-header .rd-badges .rd-badge:nth-child(2) {
+  /* tipo_naturaleza: chip neutro */
+  background: #f0f4f8;
+  color: #5a6a7a;
+}

@@ -1,0 +1,20 @@
+<%- include('../../partials/novedades-masleidos-header', {
+  paginaTipo: 'novedades',
+  tituloSeccion: 'Novedades',
+  subtituloSeccion: 'Los recursos más recientes de la biblioteca',
+  badgeTexto: 'NUEVO',
+  metricaFn: function(r) {
+    if (!r.publicado_en && !r.creado_en) return '';
+    var d = new Date(r.publicado_en || r.creado_en);
+    var ahora = new Date();
+    var diff = Math.floor((ahora - d) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return 'Hoy';
+    if (diff === 1) return 'Ayer';
+    if (diff < 7) return 'Hace ' + diff + ' días';
+    if (diff < 30) return 'Hace ' + Math.floor(diff/7) + ' sem.';
+    return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  },
+  metricaLabel: 'Publicado',
+  recursos,
+  categorias
+}) %>

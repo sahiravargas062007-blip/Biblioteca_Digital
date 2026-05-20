@@ -1,0 +1,720 @@
+<%
+  // ── Iconos SVG por nombre de categoría ───────────────────────────
+  var iconosCat = {
+    'Literatura':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+    'Filosofía':           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h20M12 2c-2.8 3-4 6-4 10s1.2 7 4 10M12 2c2.8 3 4 6 4 10s-1.2 7-4 10"/></svg>',
+    'Filosofía y Psicología': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h20M12 2c-2.8 3-4 6-4 10s1.2 7 4 10M12 2c2.8 3 4 6 4 10s-1.2 7-4 10"/></svg>',
+    'Ciencias Sociales':   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'Ciencias Naturales':  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22V12M12 12C12 7 7 2 2 2c5 5 5 10 10 10M12 12c0-5 5-10 10-10-5 5-5 10-10 10"/></svg>',
+    'Ciencias Básicas':    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    'Historia':            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    'Tecnología':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    'Arte':                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    'Economía':            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    'Derecho':             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    'Medicina':            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+    'Educación':           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+    'Ingeniería':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    'Psicología':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>',
+    'Religión':            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+    'Lenguas':             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    'DEFAULT':             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+  };
+  function getIcono(nombre) {
+    return iconosCat[nombre] || iconosCat['DEFAULT'];
+  }
+%>
+
+<!-- ══════════════════════════════════════════════════
+     CATEGORÍAS — fondo biblioteca inmersivo
+══════════════════════════════════════════════════ -->
+<div class="blib-page">
+
+  <!-- Fondo biblioteca fijo -->
+  <div class="blib-bg">
+    <div class="blib-bg__img"></div>
+    <div class="blib-bg__vignette"></div>
+    <div class="blib-bg__gradient"></div>
+  </div>
+
+  <!-- Contenido -->
+  <div class="blib-content">
+
+    <!-- Header decorativo -->
+    <div class="blib-header">
+      <div class="blib-header__ornament">
+        <svg viewBox="0 0 120 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="10" x2="42" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <path d="M48 10 L54 4 L60 10 L54 16 Z" fill="#c9a84c" opacity="0.9"/>
+          <line x1="66" y1="10" x2="78" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <circle cx="82" cy="10" r="2" fill="#c9a84c" opacity="0.7"/>
+          <line x1="86" y1="10" x2="120" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+        </svg>
+      </div>
+      <h1 class="blib-header__title">Explora nuestras categorías</h1>
+      <p class="blib-header__sub">Encuentra el conocimiento que buscas entre nuestras colecciones</p>
+      <div class="blib-header__ornament" style="transform:scaleX(-1)">
+        <svg viewBox="0 0 120 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="10" x2="42" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <path d="M48 10 L54 4 L60 10 L54 16 Z" fill="#c9a84c" opacity="0.9"/>
+          <line x1="66" y1="10" x2="78" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+          <circle cx="82" cy="10" r="2" fill="#c9a84c" opacity="0.7"/>
+          <line x1="86" y1="10" x2="120" y2="10" stroke="#c9a84c" stroke-width="1" opacity="0.7"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ══ GRID DE CATEGORÍAS (tarjetas con imagen estilo colección) ══ -->
+    <div class="blib-cat-grid" id="blib-cat-grid">
+      <% categorias.forEach(function(cat, idx) { %>
+        <button class="blib-cat-card" 
+                data-cat-id="<%= cat._id %>" 
+                data-cat-nombre="<%= cat.nombre %>"
+                id="catcard-<%= cat._id %>">
+          <!-- Imagen de fondo (Cloudinary o degradado) -->
+          <% if (cat.imagen && cat.imagen.url) { %>
+            <div class="blib-cat-card__img" style="background-image:url('<%= cat.imagen.url %>')"></div>
+          <% } else { %>
+            <div class="blib-cat-card__img blib-cat-card__img--default blib-cat-card__img--c<%= idx % 8 %>"></div>
+          <% } %>
+          <!-- Overlay siempre oscuro para legibilidad -->
+          <div class="blib-cat-card__overlay"></div>
+          <!-- Contenido -->
+          <div class="blib-cat-card__content">
+            <div class="blib-cat-card__eyebrow">· Colección ·</div>
+            <div class="blib-cat-card__icon"><%- getIcono(cat.nombre) %></div>
+            <h3 class="blib-cat-card__name"><%= cat.nombre %></h3>
+            <% if (cat.subcategorias && cat.subcategorias.length) { %>
+              <p class="blib-cat-card__subs"><%= cat.subcategorias.slice(0,3).map(function(s){return s.nombre}).join(', ') %><% if(cat.subcategorias.length>3){%><span> y más</span><%}%></p>
+            <% } %>
+          </div>
+          <!-- Flecha -->
+          <div class="blib-cat-card__arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </button>
+      <% }) %>
+    </div>
+
+    <!-- ══ PANEL DE RECURSOS (aparece al hacer clic) ══ -->
+    <div class="blib-panel" id="blib-panel" style="display:none">
+      <div class="blib-panel__header">
+        <div class="blib-panel__header-left">
+          <div class="blib-panel__icon" id="blib-panel-icon"></div>
+          <div>
+            <h2 class="blib-panel__title" id="blib-panel-title">Recursos</h2>
+            <p class="blib-panel__count" id="blib-panel-count">Cargando…</p>
+          </div>
+        </div>
+        <button class="blib-panel__close" id="blib-panel-close" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Slider -->
+      <div class="blib-slider-wrap">
+        <button class="blib-slider-nav blib-slider-nav--prev" id="blib-prev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="blib-slider-viewport" id="blib-viewport">
+          <!-- Loading -->
+          <div class="blib-loading" id="blib-loading">
+            <span class="blib-spinner"></span>
+            <p>Cargando recursos…</p>
+          </div>
+          <!-- Empty -->
+          <div class="blib-empty" id="blib-empty" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <p>Esta categoría aún no tiene recursos publicados.</p>
+          </div>
+          <!-- Track -->
+          <div class="blib-slider-track" id="blib-track"></div>
+        </div>
+        <button class="blib-slider-nav blib-slider-nav--next" id="blib-next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Dots + Ver todos -->
+      <div class="blib-panel__footer">
+        <div class="blib-dots" id="blib-dots"></div>
+        <a href="/catalogo" class="blib-viewall" id="blib-viewall">
+          Ver todos en catálogo
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /blib-content -->
+</div><!-- /blib-page -->
+
+<style>
+/* ════════════════════════════════════════════════════
+   PÁGINA BIBLIOTECA — fondo inmersivo
+════════════════════════════════════════════════════ */
+.blib-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Fondo biblioteca fijo */
+.blib-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.blib-bg__img {
+  position: absolute;
+  inset: 0;
+  background: url('/img/hero-library.png') center/cover no-repeat;
+  filter: brightness(0.38) saturate(0.7) sepia(0.3);
+}
+.blib-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.72) 100%);
+}
+.blib-bg__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,8,6,0.55) 0%,
+    rgba(10,8,6,0.25) 40%,
+    rgba(10,8,6,0.45) 100%
+  );
+}
+
+/* Contenido sobre el fondo */
+.blib-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 28px 80px;
+}
+
+/* ── Header decorativo ───────────────────────────── */
+.blib-header {
+  text-align: center;
+  margin-bottom: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.blib-header__ornament { opacity: 0.85; }
+.blib-header__title {
+  font-family: 'Poppins', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: #f5ead6;
+  margin: 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.8);
+}
+.blib-header__sub {
+  color: rgba(245,234,214,0.72);
+  font-size: 1.05rem;
+  margin: 0;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.7);
+}
+
+/* ── Grid de categorías ──────────────────────────── */
+.blib-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+/* Tarjeta de categoría */
+.blib-cat-card {
+  position: relative;
+  height: 160px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  outline: none;
+}
+.blib-cat-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+.blib-cat-card.is-active {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 0 0 3px #c9a84c, 0 16px 48px rgba(0,0,0,0.5);
+}
+
+/* Imagen de fondo */
+.blib-cat-card__img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s;
+}
+.blib-cat-card:hover .blib-cat-card__img { transform: scale(1.08); }
+
+/* Degradados por defecto cuando no hay imagen */
+.blib-cat-card__img--default { background-image: none; }
+.blib-cat-card__img--c0 { background: linear-gradient(135deg,#1a3a2a 0%,#2d6c50 100%); }
+.blib-cat-card__img--c1 { background: linear-gradient(135deg,#1a2a4a 0%,#2d4c8a 100%); }
+.blib-cat-card__img--c2 { background: linear-gradient(135deg,#3a1a2a 0%,#7a2d50 100%); }
+.blib-cat-card__img--c3 { background: linear-gradient(135deg,#2a1a0a 0%,#7a4a10 100%); }
+.blib-cat-card__img--c4 { background: linear-gradient(135deg,#1a3a3a 0%,#2d7a7a 100%); }
+.blib-cat-card__img--c5 { background: linear-gradient(135deg,#2a1a4a 0%,#5a2d8a 100%); }
+.blib-cat-card__img--c6 { background: linear-gradient(135deg,#1a2a1a 0%,#2d5a2d 100%); }
+.blib-cat-card__img--c7 { background: linear-gradient(135deg,#3a2a0a 0%,#8a6a1a 100%); }
+
+/* Overlay */
+.blib-cat-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.65) 100%
+  );
+  transition: background 0.3s;
+}
+.blib-cat-card:hover .blib-cat-card__overlay { background: linear-gradient(160deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.78) 100%); }
+
+/* Contenido de la tarjeta */
+.blib-cat-card__content {
+  position: absolute;
+  inset: 0;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 3px;
+}
+.blib-cat-card__eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: #c9a84c;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.blib-cat-card__icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  background: rgba(201,168,76,0.18);
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.blib-cat-card__icon svg { width: 20px; height: 20px; stroke: #c9a84c; }
+.blib-cat-card__name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  line-height: 1.2;
+}
+.blib-cat-card__subs {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.65);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.blib-cat-card__subs span { opacity: 0.7; }
+
+/* Flecha */
+.blib-cat-card__arrow {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.blib-cat-card:hover .blib-cat-card__arrow,
+.blib-cat-card.is-active .blib-cat-card__arrow { opacity: 1; transform: translateX(0); }
+.blib-cat-card__arrow svg { width: 18px; height: 18px; stroke: #c9a84c; }
+
+/* ── Panel de recursos ───────────────────────────── */
+.blib-panel {
+  background: rgba(12,10,8,0.82);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 22px;
+  padding: 28px 32px 24px;
+  animation: blibPanelIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes blibPanelIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.blib-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.blib-panel__header-left { display: flex; align-items: center; gap: 14px; }
+.blib-panel__icon {
+  width: 44px; height: 44px;
+  background: rgba(201,168,76,0.14);
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.blib-panel__icon svg { width: 22px; height: 22px; stroke: #c9a84c; }
+.blib-panel__title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f5ead6;
+  margin: 0 0 2px;
+}
+.blib-panel__count { font-size: 0.84rem; color: rgba(245,234,214,0.55); margin: 0; }
+.blib-panel__close {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  color: rgba(245,234,214,0.7);
+}
+.blib-panel__close:hover { background: rgba(255,255,255,0.14); }
+.blib-panel__close svg { width: 18px; height: 18px; stroke: currentColor; }
+
+/* ── Slider ──────────────────────────────────────── */
+.blib-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.blib-slider-nav {
+  flex-shrink: 0;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,0.4);
+  background: rgba(201,168,76,0.08);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  color: #c9a84c;
+}
+.blib-slider-nav:hover { background: rgba(201,168,76,0.22); border-color: #c9a84c; }
+.blib-slider-nav:disabled { opacity: 0.25; cursor: default; }
+.blib-slider-nav svg { width: 20px; height: 20px; stroke: #c9a84c; }
+
+.blib-slider-viewport {
+  flex: 1;
+  overflow: hidden;
+  min-height: 280px;
+  position: relative;
+}
+
+.blib-loading {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding: 60px 0;
+  color: rgba(245,234,214,0.5);
+}
+.blib-spinner {
+  width: 34px; height: 34px;
+  border: 3px solid rgba(201,168,76,0.2);
+  border-top-color: #c9a84c;
+  border-radius: 50%;
+  animation: blibSpin 0.8s linear infinite;
+  display: block;
+}
+@keyframes blibSpin { to { transform: rotate(360deg); } }
+
+.blib-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding: 60px 0;
+  color: rgba(245,234,214,0.45);
+  text-align: center;
+}
+.blib-empty svg { stroke: rgba(245,234,214,0.3); }
+.blib-empty p { margin: 0; font-size: 0.9rem; }
+
+.blib-slider-track {
+  display: flex;
+  gap: 16px;
+  transition: transform 0.45s cubic-bezier(0.25,1,0.5,1);
+  will-change: transform;
+}
+
+/* ── Tarjeta recurso en panel ────────────────────── */
+.blib-rec-card {
+  flex-shrink: 0;
+  width: 200px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s, border-color 0.25s;
+  display: flex; flex-direction: column;
+}
+.blib-rec-card:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+  border-color: rgba(201,168,76,0.4);
+}
+
+.blib-rec-card__cover {
+  width: 100%; height: 168px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  position: relative; flex-shrink: 0;
+}
+.blib-rec-card__cover img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+}
+.blib-rec-card:hover .blib-rec-card__cover img { transform: scale(1.06); }
+
+.blib-rec-card__badge {
+  position: absolute; top: 9px; left: 9px;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(5px);
+  color: #c9a84c;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(201,168,76,0.3);
+}
+
+.blib-rec-card__body {
+  padding: 13px 14px;
+  flex: 1; display: flex; flex-direction: column; gap: 4px;
+}
+.blib-rec-card__title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.87rem; font-weight: 600;
+  color: #f5ead6; margin: 0; line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.blib-rec-card__author {
+  font-size: 0.74rem;
+  color: rgba(245,234,214,0.5);
+  margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Panel footer (dots + ver todos) ─────────────── */
+.blib-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.blib-dots { display: flex; gap: 6px; }
+.blib-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(201,168,76,0.25);
+  border: none; cursor: pointer;
+  transition: all 0.2s; padding: 0;
+}
+.blib-dot.is-active { background: #c9a84c; width: 26px; border-radius: 4px; }
+
+.blib-viewall {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #c9a84c;
+  color: #1a1208;
+  text-decoration: none;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: background 0.2s, transform 0.2s;
+}
+.blib-viewall:hover { background: #e0bc60; transform: translateX(3px); }
+.blib-viewall svg { width: 16px; height: 16px; stroke: #1a1208; }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .blib-content { padding: 40px 16px 60px; }
+  .blib-cat-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .blib-cat-card { height: 130px; }
+  .blib-rec-card { width: 165px; }
+  .blib-rec-card__cover { height: 138px; }
+  .blib-panel { padding: 20px 16px 18px; }
+}
+@media (max-width: 480px) {
+  .blib-cat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .blib-rec-card { width: 148px; }
+}
+</style>
+
+<script>
+(function() {
+  var allRecursos = [];
+  var page = 0;
+  var activeCatId = null;
+
+  var panel      = document.getElementById('blib-panel');
+  var title      = document.getElementById('blib-panel-title');
+  var count      = document.getElementById('blib-panel-count');
+  var iconEl     = document.getElementById('blib-panel-icon');
+  var loading    = document.getElementById('blib-loading');
+  var empty      = document.getElementById('blib-empty');
+  var track      = document.getElementById('blib-track');
+  var dots       = document.getElementById('blib-dots');
+  var prev       = document.getElementById('blib-prev');
+  var next       = document.getElementById('blib-next');
+  var closeBtn   = document.getElementById('blib-panel-close');
+  var viewall    = document.getElementById('blib-viewall');
+
+  function getVisible() {
+    var w = document.getElementById('blib-viewport').offsetWidth;
+    if (w < 280) return 1;
+    if (w < 460) return 2;
+    if (w < 660) return 3;
+    if (w < 860) return 4;
+    return 5;
+  }
+
+  function renderSlider() {
+    var vis  = getVisible();
+    var cardW = 200 + 16;
+    var total = Math.ceil(allRecursos.length / vis);
+    page = Math.max(0, Math.min(page, total - 1));
+    track.style.transform = 'translateX(-' + (page * vis * cardW) + 'px)';
+    // dots
+    dots.innerHTML = '';
+    for (var i = 0; i < total; i++) {
+      var d = document.createElement('button');
+      d.className = 'blib-dot' + (i === page ? ' is-active' : '');
+      d.setAttribute('data-p', i);
+      (function(pg) {
+        d.addEventListener('click', function() { page = pg; renderSlider(); });
+      })(i);
+      dots.appendChild(d);
+    }
+    prev.disabled = page === 0;
+    next.disabled = page >= total - 1;
+  }
+
+  function buildCards(recursos) {
+    track.innerHTML = '';
+    recursos.forEach(function(r) {
+      var a = document.createElement('a');
+      a.className = 'blib-rec-card';
+      a.href = '/catalogo/' + r._id;
+      var img = (r.imagen && r.imagen.url) ? r.imagen.url : '/img/placeholder.png';
+      a.innerHTML =
+        '<div class="blib-rec-card__cover">' +
+          '<img src="' + img + '" alt="" loading="lazy">' +
+          '<span class="blib-rec-card__badge">' + (r.tipo_material || '') + '</span>' +
+        '</div>' +
+        '<div class="blib-rec-card__body">' +
+          '<p class="blib-rec-card__title">' + escHtml(r.titulo || '') + '</p>' +
+          '<p class="blib-rec-card__author">' + escHtml(r.autor || '') + '</p>' +
+        '</div>';
+      track.appendChild(a);
+    });
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function openPanel(catId, catNombre, iconHtml) {
+    activeCatId = catId;
+    page = 0;
+    title.textContent = catNombre;
+    count.textContent = 'Cargando…';
+    iconEl.innerHTML = iconHtml;
+    loading.style.display = 'flex';
+    empty.style.display = 'none';
+    track.innerHTML = '';
+    dots.innerHTML = '';
+    panel.style.display = 'block';
+    viewall.href = '/catalogo?categoria_id=' + catId;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    fetch('/catalogo/categorias/api/' + catId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        loading.style.display = 'none';
+        allRecursos = data.recursos || [];
+        if (!allRecursos.length) {
+          empty.style.display = 'flex';
+          count.textContent = 'Sin recursos';
+          return;
+        }
+        count.textContent = allRecursos.length + ' recurso' + (allRecursos.length !== 1 ? 's disponibles' : ' disponible');
+        buildCards(allRecursos);
+        renderSlider();
+      })
+      .catch(function() {
+        loading.style.display = 'none';
+        empty.style.display = 'flex';
+        count.textContent = 'Error al cargar';
+      });
+  }
+
+  // ── Click en tarjeta de categoría ──
+  document.querySelectorAll('.blib-cat-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var id = this.getAttribute('data-cat-id');
+      var nombre = this.getAttribute('data-cat-nombre');
+      var iconSvg = this.querySelector('.blib-cat-card__icon') ?
+        this.querySelector('.blib-cat-card__icon').innerHTML : '';
+      document.querySelectorAll('.blib-cat-card').forEach(function(c) { c.classList.remove('is-active'); });
+      this.classList.add('is-active');
+      openPanel(id, nombre, iconSvg);
+    });
+  });
+
+  prev.addEventListener('click', function() { if (page > 0) { page--; renderSlider(); } });
+  next.addEventListener('click', function() {
+    var vis = getVisible();
+    var total = Math.ceil(allRecursos.length / vis);
+    if (page < total - 1) { page++; renderSlider(); }
+  });
+  closeBtn.addEventListener('click', function() {
+    panel.style.display = 'none';
+    document.querySelectorAll('.blib-cat-card').forEach(function(c) { c.classList.remove('is-active'); });
+    activeCatId = null;
+  });
+  window.addEventListener('resize', function() {
+    if (allRecursos.length) renderSlider();
+  });
+})();
+</script>

@@ -1,0 +1,13 @@
+<%- include('../../partials/novedades-masleidos-header', {
+  paginaTipo: 'mas-leidos',
+  tituloSeccion: 'Más leídos',
+  subtituloSeccion: 'Los recursos más populares de nuestra biblioteca',
+  badgeTexto: 'POPULAR',
+  metricaFn: function(r) {
+    var v = r.total_vistas || r.total_prestamos || 0;
+    return v > 0 ? v + (v === 1 ? ' vista' : ' vistas') : '—';
+  },
+  metricaLabel: 'Vistas',
+  recursos,
+  categorias
+}) %>
