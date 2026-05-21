@@ -126,7 +126,7 @@
 
     <!-- ── Sliders por tipo de material ──────────── -->
     <% gruposKeys.forEach(function(tipo){ %>
-      <% if (grupos[tipo].length > 1) { %>
+      <% if (grupos[tipo].length >= 1) { %>
       <div class="blib-panel" style="margin-bottom:20px">
         <div class="blib-slider-section-head">
           <div class="blib-slider-section-head__left">
@@ -227,12 +227,14 @@
 (function(){
   var states = {};
 
+  var CARD_W = 200 + 16;
+
   function getVis(vp) {
-    var w = vp.offsetWidth;
+    var w = vp ? vp.offsetWidth : 800;
     if (w < 280) return 1;
-    if (w < 460) return 2;
+    if (w < 450) return 2;
     if (w < 660) return 3;
-    if (w < 860) return 4;
+    if (w < 880) return 4;
     return 5;
   }
 
@@ -245,10 +247,10 @@
 
     function render() {
       var vis = getVis(vp);
-      var cw = 200 + 16;
       var total = Math.ceil(cards.length / vis);
       s.page = Math.max(0, Math.min(s.page, total - 1));
-      track.style.transform = 'translateX(-' + (s.page * vis * cw) + 'px)';
+      // Desplazar por índice de primera tarjeta visible
+      track.style.transform = 'translateX(-' + (s.page * vis * CARD_W) + 'px)';
       if (dotsEl) {
         dotsEl.innerHTML = '';
         for (var i = 0; i < total; i++) {

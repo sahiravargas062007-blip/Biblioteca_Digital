@@ -551,7 +551,7 @@ exports.categorias = async (req, res, next) => {
 exports.apiCategoriaRecursos = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const filtro = { estado: 'Activo', publicado: true };
+    const filtro = { estado: 'Activo', publicado: { $ne: false } };
     if (id && id !== 'all') {
       if (mongoose.isValidObjectId(id)) {
         filtro['categorias.categoria_id'] = new mongoose.Types.ObjectId(id);
@@ -570,9 +570,10 @@ exports.apiCategoriaRecursos = async (req, res, next) => {
 // ── Novedades ─────────────────────────────────────────────────────────────
 exports.novedades = async (req, res, next) => {
   try {
-    const hace30dias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const [recientes, categorias] = await Promise.all([
-      Recurso.find({ estado: 'Activo', publicado: true })
+      // publicado: { $ne: false } incluye documentos con publicado:true Y documentos
+      // que no tienen el campo seteado (audiolibros, recursos importados, etc.)
+      Recurso.find({ estado: 'Activo', publicado: { $ne: false } })
         .sort({ publicado_en: -1, creado_en: -1 })
         .limit(40)
         .lean(),
@@ -593,7 +594,7 @@ exports.novedades = async (req, res, next) => {
 exports.masLeidos = async (req, res, next) => {
   try {
     const [masVistos, categorias] = await Promise.all([
-      Recurso.find({ estado: 'Activo', publicado: true, total_vistas: { $gt: 0 } })
+      Recurso.find({ estado: 'Activo', publicado: { $ne: false }, total_vistas: { $gt: 0 } })
         .sort({ total_vistas: -1 })
         .limit(40)
         .lean(),
@@ -601,7 +602,7 @@ exports.masLeidos = async (req, res, next) => {
     ]);
     // Si no hay vistas aún, ordenar por préstamos
     const recursos = masVistos.length > 0 ? masVistos :
-      await Recurso.find({ estado: 'Activo', publicado: true })
+      await Recurso.find({ estado: 'Activo', publicado: { $ne: false } })
         .sort({ total_prestamos: -1, total_reservas: -1 })
         .limit(40)
         .lean();

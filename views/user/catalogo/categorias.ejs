@@ -600,21 +600,24 @@
   var closeBtn   = document.getElementById('blib-panel-close');
   var viewall    = document.getElementById('blib-viewall');
 
+  var CARD_W = 200 + 16;
+
   function getVisible() {
-    var w = document.getElementById('blib-viewport').offsetWidth;
+    var vp = document.getElementById('blib-viewport');
+    var w = vp ? vp.offsetWidth : 800;
     if (w < 280) return 1;
-    if (w < 460) return 2;
+    if (w < 450) return 2;
     if (w < 660) return 3;
-    if (w < 860) return 4;
+    if (w < 880) return 4;
     return 5;
   }
 
   function renderSlider() {
-    var vis  = getVisible();
-    var cardW = 200 + 16;
+    var vis   = getVisible();
     var total = Math.ceil(allRecursos.length / vis);
     page = Math.max(0, Math.min(page, total - 1));
-    track.style.transform = 'translateX(-' + (page * vis * cardW) + 'px)';
+    // Offset = índice de la primera tarjeta visible * ancho de tarjeta
+    track.style.transform = 'translateX(-' + (page * vis * CARD_W) + 'px)';
     // dots
     dots.innerHTML = '';
     for (var i = 0; i < total; i++) {

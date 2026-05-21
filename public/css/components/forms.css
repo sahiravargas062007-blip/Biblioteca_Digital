@@ -363,10 +363,11 @@ textarea {
   justify-content: center;
   padding: 20px;
   opacity: 0;
+  pointer-events: none;
   transition: opacity .23s;
 }
 
-.af-modal-overlay.is-open { opacity: 1; }
+.af-modal-overlay.is-open { opacity: 1; pointer-events: auto; }
 
 .af-modal {
   background: var(--af-card);

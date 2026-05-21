@@ -29,11 +29,13 @@ function syncForm() {
 
   // Sección digital
   var showDigital = naturaleza === 'Digital' || naturaleza === 'Mixto';
-  document.getElementById('digital-section').style.display = showDigital ? '' : 'none';
+  var digitalSection = document.getElementById('digital-section') || document.getElementById('panel-digital');
+  if (digitalSection) digitalSection.style.display = showDigital ? '' : 'none';
 
   // Sección física
   var showFisico = naturaleza === 'Físico' || naturaleza === 'Mixto';
-  document.getElementById('physical-section').style.display = showFisico ? '' : 'none';
+  var physicalSection = document.getElementById('physical-section') || document.getElementById('panel-fisica');
+  if (physicalSection) physicalSection.style.display = showFisico ? '' : 'none';
 
   // Bloques de archivo según tipo de contenido
   var lectura = contenido === 'Lectura';
@@ -267,9 +269,9 @@ function deshabilitarCamposOcultos() {
   }
 
   // Sección digital completa si no aplica
-  if (naturaleza === 'Físico') bloquesInactivos.push('digital-section');
+  if (naturaleza === 'Físico') bloquesInactivos.push(document.getElementById('digital-section') ? 'digital-section' : 'panel-digital');
   // Sección física completa si no aplica
-  if (naturaleza === 'Digital') bloquesInactivos.push('physical-section');
+  if (naturaleza === 'Digital') bloquesInactivos.push(document.getElementById('physical-section') ? 'physical-section' : 'panel-fisica');
   // Licencia restringida si está oculta
   var licSel = document.getElementById('licencia-select');
   if (licSel && licSel.value !== 'Restringida') bloquesInactivos.push('licencia-restringida-block');

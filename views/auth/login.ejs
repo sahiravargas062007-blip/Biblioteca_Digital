@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/layouts/topbar.css">
   <link rel="stylesheet" href="/css/layouts/sidebar.css">
+  <link rel="stylesheet" href="/css/components/modals.css">
 </head>
 <body>
   <%- include('../partials/topbar', { topbarHero: false }) %>
@@ -78,7 +79,7 @@
             <label for="correo">Correo electrónico</label>
             <div class="input-wrapper">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              <input type="email" id="correo" name="correo" placeholder="Ingresa tu correo electrónico" required autocomplete="username" autofocus>
+              <input type="email" id="correo" name="correo" placeholder="Ingresa tu correo electrónico" required autocomplete="off" autofocus>
             </div>
           </div>
 
@@ -86,7 +87,7 @@
             <label for="password">Contraseña</label>
             <div class="input-wrapper">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input type="password" id="password" name="password" placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+              <input type="password" id="password" name="password" placeholder="Ingresa tu contraseña" required autocomplete="off">
               <button type="button" class="password-toggle" id="toggle-password" aria-label="Mostrar contraseña">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>

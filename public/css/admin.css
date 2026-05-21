@@ -7,22 +7,11 @@
   background: var(--color-background, #f8fafc);
 }
 
+/* FIX: .cat-topbar es position:fixed con height:72px.
+   El admin-main necesita padding-top >= 72px para que el contenido
+   no quede debajo del topbar y los botones sean clicables. */
 .admin-main {
-  padding: 80px 24px 24px;
-}
-
-.sidebar a {
-  border-radius: 6px;
-  color: #f2f7f6;
-  padding: 10px 12px;
-}
-
-.sidebar a:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.admin-main {
-  padding: 24px;
+  padding: 88px 24px 24px;  /* 72px topbar + 16px aire */
 }
 
 .page-header {

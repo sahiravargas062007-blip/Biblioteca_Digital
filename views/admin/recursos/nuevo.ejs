@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    <div class="af-card">
+    <div class="af-card" id="isbn-row">
       <p class="af-card__label">ISBN (opcional — autocompleta metadatos)</p>
       <div class="af-isbn-row">
         <label class="af-label" style="flex:1">
@@ -206,7 +206,7 @@
           <label class="af-label">
             <span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              Portada (Archivo y enlace)
+              <span id="label-imagen">Portada (Archivo y enlace)</span>
             </span>
           </label>
           <div class="af-cover-zone" id="af-cover-drop">
@@ -288,9 +288,6 @@
     <!-- Campos hidden que el modal escribe -->
     <input type="hidden" name="_config_done" id="af-config-done" value="0">
 
-  </form>
-</div>
-
 <!-- ══════════════════════════════════════════════════════════
      MODAL DE CONFIGURACIÓN (Digital / Física / Mixta)
      ══════════════════════════════════════════════════════════ -->
@@ -320,7 +317,7 @@
       </div>
 
       <!-- Panel digital -->
-      <div class="af-modal-panel is-active" id="panel-digital">
+      <div class="af-modal-panel is-active" id="panel-digital" data-alias="digital-section">
 
         <!-- Lectura -->
         <div id="archivo-lectura-block">
@@ -442,7 +439,7 @@
       </div>
 
       <!-- Panel físico -->
-      <div class="af-modal-panel" id="panel-fisica">
+      <div class="af-modal-panel" id="panel-fisica" data-alias="physical-section">
         <label class="af-label">
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -462,6 +459,8 @@
       </button>
     </div>
   </div>
+</div>
+  </form>
 </div>
 
 <script>
@@ -545,7 +544,15 @@ window.CLOUDINARY_UPLOAD_PRESET       = "<%= process.env.CLOUDINARY_UPLOAD_PRESE
       configDone.value = '1';
       cerrarModal();
       /* Pequeño delay para que el DOM procese, luego submit */
-      setTimeout(function () { document.getElementById('af-form').submit(); }, 240);
+      setTimeout(function () {
+        /* CRITICAL: .submit() programático NO dispara el evento 'submit',
+           así que deshabilitarCamposOcultos() nunca se ejecutaría.
+           Lo llamamos explícitamente antes de enviar. */
+        if (typeof deshabilitarCamposOcultos === 'function') {
+          deshabilitarCamposOcultos();
+        }
+        document.getElementById('af-form').submit();
+      }, 240);
     });
   }
 

@@ -874,6 +874,14 @@
   overflow: hidden;
   min-height: 290px;
   position: relative;
+  /* Ensure last card isn't clipped - slight right padding absorbed by overflow */
+}
+
+/* Wrap that holds nav buttons + viewport */
+.blib-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .blib-slider-track {
   display: flex;
@@ -886,6 +894,7 @@
 .blib-rec-card {
   flex-shrink: 0;
   width: 200px;
+  /* IMPORTANT: width must match CARD_W constant in JS (200 + 16px gap = 216) */
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px;
@@ -1038,89 +1047,4 @@
 @media (max-width: 480px) {
   .blib-rec-card { width: 148px; }
   .blib-rec-card__cover { height: 124px; }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   catalogo-browse.css — PARCHES
-   FIX 1: Primeras cards se bloquean (z-index + overflow en .cat-sidebar)
-   FIX 2: Filtros sticky que bajan con el scroll en el admin
-   ═══════════════════════════════════════════════════════════════
-
-   INSTRUCCIÓN: agrega estas reglas AL FINAL de tu
-   public/css/pages/catalogo-browse.css
-   ─────────────────────────────────────────────────────────────── */
-
-/* ── FIX 1: Primeras 1-2 cards bloqueadas ───────────────────────
-   Causa: .cat-sidebar tenía position:fixed con un alto z-index
-   que tapaba las tarjetas aunque estuviera "colapsada".
-   La solución es bajar su z-index al mínimo útil (por debajo
-   de las tarjetas) cuando está colapsada. ──────────────────────── */
-
-.cat-sidebar {
-  z-index: 200;   /* tapaba tarjetas al estar colapsada */
-}
-
-.cat-sidebar.is-collapsed {
-  pointer-events: none;   /* colapso total: no intercepta ningún clic */
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.2s, visibility 0.2s;
-}
-
-.cat-sidebar:not(.is-collapsed) {
-  pointer-events: auto;
-  visibility: visible;
-  opacity: 1;
-}
-
-/* El overlay solo existe cuando el drawer está abierto */
-.cat-sidebar-overlay {
-  z-index: 190;
-  pointer-events: none;
-}
-
-.cat-sidebar:not(.is-collapsed) ~ .cat-sidebar-overlay {
-  pointer-events: auto;
-}
-
-/* ── FIX 2: Filtros sticky en la vista admin ────────────────────
-   Causa: .admin-catalog-page sobreescribía max-height:none y
-   top:88px pero la altura del contenedor padre no estaba
-   correctamente definida para que sticky funcionara.
-   
-   Para que position:sticky funcione el padre directo NO puede
-   tener overflow:hidden ni overflow:auto. ──────────────────────── */
-
-/* Contenedor general: sin overflow que rompa sticky */
-.admin-catalog-page .cat-main {
-  overflow: visible !important;
-  align-items: start;       /* necesario para que sticky funcione en grid */
-}
-
-/* Panel de resultados: es él quien debe hacer scroll, no el padre */
-.admin-catalog-page .cat-results {
-  overflow-y: auto;
-  max-height: calc(100vh - 120px);
-}
-
-/* Filtro sticky propiamente dicho */
-.admin-catalog-page .cat-filters {
-  position: sticky;
-  top: 88px;                       /* altura del topbar admin */
-  max-height: calc(100vh - 108px);
-  overflow-y: auto;
-  align-self: start;               /* clave para sticky en grid */
-}
-
-/* Vista usuario: mismo principio */
-.cat-main:not(.cat-main--admin) .cat-results {
-  overflow-y: visible; /* el scroll del usuario es el de la página */
-}
-
-.cat-main:not(.cat-main--admin) .cat-filters {
-  position: sticky;
-  top: 0;
-  max-height: calc(100vh - 64px);
-  overflow-y: auto;
-  align-self: start;
 }
