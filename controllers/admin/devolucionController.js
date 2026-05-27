@@ -1,3 +1,5 @@
+const notifService = require('../../services/notificacionService');
+
 const Ejemplar = require('../../models/Ejemplar');
 const Prestamo = require('../../models/Prestamo');
 const Recurso = require('../../models/Recurso');
@@ -101,6 +103,14 @@ exports.crear = async (req, res, next) => {
       });
     }
 
+    // Notificar al usuario (devolución confirmada)
+    try {
+      const Usuario = require('../../models/Usuario');
+      const usuarioDoc = await Usuario.findById(prestamo.usuario_id).lean();
+      if (usuarioDoc && item) {
+        await notifService.devolucionConfirmada(usuarioDoc, prestamo, item);
+      }
+    } catch (_e) { }
     flash(req, 'success', 'Devolución registrada correctamente.');
     return res.redirect(`/admin/prestamos/${prestamo._id}`);
   } catch (error) {

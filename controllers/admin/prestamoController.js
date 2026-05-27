@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const notifService = require('../../services/notificacionService');
 const { validationResult } = require('express-validator');
 const Configuracion = require('../../models/Configuracion');
 const Ejemplar = require('../../models/Ejemplar');
@@ -97,12 +98,12 @@ exports.historial = async (req, res, next) => {
     const q = String(req.query.q || '').trim();
     const filtro = q
       ? {
-          $or: [
-            { usuario_nombre: new RegExp(q, 'i') },
-            { usuario_documento: new RegExp(q, 'i') },
-            { 'items.recurso_titulo': new RegExp(q, 'i') }
-          ]
-        }
+        $or: [
+          { usuario_nombre: new RegExp(q, 'i') },
+          { usuario_documento: new RegExp(q, 'i') },
+          { 'items.recurso_titulo': new RegExp(q, 'i') }
+        ]
+      }
       : {};
     const prestamos = await Prestamo.find(filtro).sort({ creado_en: -1 }).lean();
     res.render('admin/prestamos/historial', { title: 'Historial de préstamos', prestamos, q });
@@ -253,6 +254,15 @@ exports.crear = async (req, res, next) => {
       }))
     ]);
 
+    // Notificar al usuario (préstamo aprobado)
+    try {
+      const Usuario = require('../../models/Usuario');
+      const usuarioDoc = await Usuario.findById(prestamo.usuario_id).lean();
+      if (usuarioDoc) {
+        const titulos = prestamo.items.map(i => i.recurso_titulo);
+        await notifService.prestamoAprobado(usuarioDoc, prestamo, titulos);
+      }
+    } catch (_e) { }
     flash(req, 'success', 'Préstamo registrado correctamente.');
     return res.redirect(`/admin/prestamos/${prestamo._id}`);
   } catch (error) {

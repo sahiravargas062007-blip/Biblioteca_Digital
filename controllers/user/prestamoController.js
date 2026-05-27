@@ -165,6 +165,8 @@ exports.acceder = async (req, res, next) => {
       recurso,
       archivo,
       backUrl: '/prestamos',
+      puedeDescargar: false,
+      urlDescarga: null,
       downloadLink: `/prestamos/${req.params.id}/descargar/${req.params.item_id}`,
       archivoViewUrl: `/prestamos/${req.params.id}/archivo/${req.params.item_id}`
     });

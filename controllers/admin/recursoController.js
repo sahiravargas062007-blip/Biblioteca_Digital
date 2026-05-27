@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const AdmZip = require('adm-zip');
 const fs = require('fs').promises;
 const os = require('os');
@@ -544,15 +544,11 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
     const detalles = [];
     const errores = [...erroresParsingExcel];
 
-    // CA-03: Actualizar registros existentes
     for (const registro of filas) {
       try {
         const nombreArchivo = String(registro.nombreArchivoOriginal || '').trim();
-        const nombreBusqueda = normalizeSearchKey(nombreArchivo);
-        const tituloRegex = buildFlexibleTextRegex(nombreArchivo);
-        const publicIdRegex = new RegExp(escapeRegExp(nombreBusqueda), 'i');
-
         const datosProcesados = { ...registro.datosProcesados };
+
         if (datosProcesados.tipo_material) {
           const tipoMaterialNormalizado = normalizeTipoMaterial(datosProcesados.tipo_material);
           if (tipoMaterialNormalizado) {
@@ -584,22 +580,62 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
           delete datosProcesados.imagen_url;
         }
 
+        // 1. Búsqueda por nombreArchivoOriginal (recurso previamente creado por ZIP - Escenario A)
         const recursoBuscado = await Recurso.findOne({
-          estado: 'Pendiente de configuración',
-          $or: [
-            { titulo: tituloRegex },
-            { 'digital.archivos.public_id': { $regex: publicIdRegex } },
-            { 'digital.archivos.url': { $regex: publicIdRegex } },
-          ],
+          nombreArchivoOriginal: { $regex: new RegExp("^" + escapeRegExp(nombreArchivo) + "$", "i") }
         });
 
+        // 2. Búsqueda por Título o por ISBN para evitar duplicar recursos que ya existan en la base de datos
+        const tituloABuscar = datosProcesados.titulo || nombreArchivo;
+        const existentePorTitulo = await Recurso.findOne({
+          titulo: { $regex: new RegExp("^" + escapeRegExp(tituloABuscar) + "$", "i") }
+        });
+        const existentePorIsbn = datosProcesados.isbn
+          ? await Recurso.findOne({ isbn: datosProcesados.isbn })
+          : null;
+
+        const existente = existentePorTitulo || existentePorIsbn;
+
+        // Si no se encuentra por nombre de archivo (nuevo escenario), pero sí existe por Título o ISBN:
+        // Se debe alertar al usuario y no crearlo para evitar duplicidad.
+        if (!recursoBuscado && existente) {
+          errores.push(`"${nombreArchivo}": El recurso ya se encuentra creado en el sistema con el título "${existente.titulo}".`);
+          continue;
+        }
+
+        const datosMerged = { ...(recursoBuscado ? recursoBuscado.toObject() : {}), ...datosProcesados };
+        
+        // Campos obligatorios: titulo, autor, descripcion, tipo_material (Clasificación)
+        const tieneObligatorios = datosMerged.titulo && datosMerged.autor && datosMerged.descripcion && datosMerged.tipo_material;
+        const tieneArchivoFisico = (recursoBuscado?.digital?.archivos?.some(a => a.es_principal)) || false;
+
+        let nuevoEstado = 'Pendiente de configuración';
+        let seraPublicado = false;
+        let publicadoEn = recursoBuscado?.publicado_en;
+
+        if (req.body.auto_publicar === 'true' && tieneObligatorios && tieneArchivoFisico) {
+          nuevoEstado = 'Activo';
+          seraPublicado = true;
+          if (!publicadoEn) publicadoEn = new Date();
+        }
+
+        // Determinar los motivos de pendiente
+        let motivosPendiente = [];
+        if (!seraPublicado) {
+          if (!tieneObligatorios) motivosPendiente.push('Faltan campos obligatorios');
+          if (!tieneArchivoFisico) motivosPendiente.push('Falta archivo principal');
+        }
+        const motivoPendienteStr = motivosPendiente.join(', ');
+
         if (!recursoBuscado) {
+          // CA4: Crear recurso nuevo en estado "Pendiente de configuración"
           const titulo = datosProcesados.titulo || nombreArchivo || 'Sin título';
           const autor = datosProcesados.autor || 'Pendiente de completar';
           const descripcion = datosProcesados.descripcion || 'Recurso creado desde Excel. Pendiente de completar metadatos.';
           const tipoMaterial = datosProcesados.tipo_material || 'Libro';
 
           const nuevoRecurso = {
+            nombreArchivoOriginal: nombreArchivo,
             tipo_naturaleza: 'Digital',
             tipo_contenido: datosProcesados.tipo_contenido || 'Lectura',
             tipo_material: tipoMaterial,
@@ -621,8 +657,9 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
               ? { url: datosProcesados.imagen_url, public_id: '', es_default: false }
               : { url: '/img/placeholder.png', public_id: '', es_default: true },
             categorias: [],
-            estado: 'Pendiente de configuración',
-            publicado: false,
+            estado: nuevoEstado,
+            publicado: seraPublicado,
+            publicado_en: publicadoEn,
             digital: {
               tipo_licencia: 'Libre',
               archivos: [],
@@ -638,13 +675,6 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
               : {}),
           };
 
-          const tieneObligatorios = titulo && tipoMaterial;
-          if (req.body.auto_publicar === 'true' && tieneObligatorios) {
-            nuevoRecurso.estado = 'Activo';
-            nuevoRecurso.publicado = true;
-            nuevoRecurso.publicado_en = new Date();
-          }
-
           const creado = await Recurso.create(nuevoRecurso);
           if (creado) {
             exitosos += 1;
@@ -653,44 +683,37 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
               nombreArchivo: registro.nombreArchivoOriginal,
               titulo: creado.titulo || 'Sin título',
               publicado: creado.publicado,
+              accion: 'Creado',
+              motivo: motivoPendienteStr
             });
           }
+        } else {
+          // CA3: Actualizar con findByIdAndUpdate
+          const actualizado = await Recurso.findByIdAndUpdate(
+            recursoBuscado._id,
+            {
+              ...datosProcesados,
+              ...imagenUpdate,
+              estado: nuevoEstado,
+              publicado: seraPublicado,
+              publicado_en: publicadoEn,
+              actualizado_en: new Date(),
+            },
+            { new: true, runValidators: true, context: 'query' }
+          );
 
-          continue;
-        }
+          if (actualizado) {
+            exitosos += 1;
+            if (actualizado.publicado) publicados += 1;
 
-        // RN-02: Validar campos obligatorios antes de cambiar estado
-        const datosMerged = { ...recursoBuscado.toObject(), ...datosProcesados };
-        const tieneObligatorios = datosMerged.titulo && datosMerged.tipo_material;
-
-        // Determinar nuevo estado
-        let nuevoEstado = recursoBuscado.estado;
-        if (req.body.auto_publicar === 'true' && tieneObligatorios) {
-          nuevoEstado = 'Activo';
-        }
-
-        // CA-03: Actualizar con findOneAndUpdate
-        const actualizado = await Recurso.findByIdAndUpdate(
-          recursoBuscado._id,
-          {
-            ...datosProcesados,
-            ...imagenUpdate,
-            estado: nuevoEstado,
-            publicado: req.body.auto_publicar === 'true' && tieneObligatorios,
-            actualizado_en: new Date(),
-          },
-          { new: true, runValidators: true, context: 'query' }
-        );
-
-        if (actualizado) {
-          exitosos += 1;
-          if (actualizado.publicado) publicados += 1;
-
-          detalles.push({
-            nombreArchivo: registro.nombreArchivoOriginal,
-            titulo: actualizado.titulo || 'Sin título',
-            publicado: actualizado.publicado,
-          });
+            detalles.push({
+              nombreArchivo: registro.nombreArchivoOriginal,
+              titulo: actualizado.titulo || 'Sin título',
+              publicado: actualizado.publicado,
+              accion: 'Actualizado',
+              motivo: motivoPendienteStr
+            });
+          }
         }
       } catch (errActualizar) {
         console.error(
@@ -703,7 +726,7 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
       }
     }
 
-    // CA-04: Reporte de resultados
+    // CA-09: Reporte de resultados
     const resultados = {
       procesados: filas.length,
       exitosos,
@@ -713,173 +736,13 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
     };
 
     return res.render('admin/recursos/excel-metadatos', {
-      title: 'Importar metadatos â€” Resultados',
+      title: 'Importar metadatos — Resultados',
       resultados,
     });
   } catch (error) {
     next(error);
   }
 };
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// HELPERS PARA CARGA MASIVA (HU-08)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function extension(filename) {
-  return filename.split('.').pop().toLowerCase();
-}
-
-function tipoArchivoFromExt(ext) {
-  const audioExts = ['mp3', 'wav', 'm4b', 'm4a', 'ogg', 'aac', 'flac'];
-  const videoExts = ['mp4', 'webm', 'avi', 'mov', 'mkv'];
-  if (audioExts.includes(ext)) return ext;
-  if (videoExts.includes(ext)) return ext;
-  if (ext === 'pdf')  return 'pdf';
-  if (ext === 'epub') return 'epub';
-  return ext;
-}
-
-function materialFromContenido(tipoContenido) {
-  if (tipoContenido === 'Audio') return 'Audiolibro';
-  if (tipoContenido === 'Video') return 'Video';
-  return 'Libro';
-}
-
-function allowedMainExtensions(tipoContenido) {
-  if (tipoContenido === 'Audio') return ['mp3', 'wav', 'm4b', 'm4a', 'ogg', 'aac', 'flac', 'wma'];
-  if (tipoContenido === 'Video') return ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv'];
-  return ['pdf', 'epub'];
-}
-
-// â”€â”€ Normaliza el nombre base (sin extensión) para asociar archivos planos â”€â”€â”€â”€â”€
-function nombreBase(filename) {
-  const partes = filename.split('.');
-  if (partes.length > 1) partes.pop();
-  return partes.join('.').toLowerCase();
-}
-
-/**
- * Si el ZIP tiene un folder raíz único que envuelve todo, lo quitamos.
- * Ejemplo: Ejemplo/Libro1/archivo.pdf -> Libro1/archivo.pdf
- */
-function stripCommonRoot(entries) {
-  const paths = entries.map((e) => e.entryName.split('/').filter(Boolean));
-  if (paths.length === 0) return entries.map((entry) => ({ entry, normalizedEntryName: entry.entryName }));
-
-  const root = paths[0][0];
-  const commonRoot = paths.every((parts) => parts[0] === root);
-  const hasDeepEntry = paths.some((parts) => parts.length > 1);
-
-  if (!commonRoot || !hasDeepEntry) {
-    return entries.map((entry) => ({ entry, normalizedEntryName: entry.entryName }));
-  }
-
-  return entries.map((entry) => {
-    const parts = entry.entryName.split('/').filter(Boolean);
-    return {
-      entry,
-      normalizedEntryName: parts.slice(1).join('/'),
-    };
-  });
-}
-
-/**
- * CA1 + CA2: Analiza las entradas del ZIP y devuelve recursos detectados.
- * - Estructura plana  â†’ asociación por nombre base compartido.
- * - Estructura carpetas â†’ cada carpeta = 1 recurso.
- */
-function analizarZip(zip, tipoContenido) {
-  const allowedMain = allowedMainExtensions(tipoContenido);
-  const allEntries = zip.getEntries().filter((e) => e.entryName && e.entryName !== '');
-  const entries = stripCommonRoot(allEntries);
-  const fileEntries = entries.filter(({ entry }) => !entry.isDirectory && !entry.entryName.endsWith('/'));
-
-  // Â¿Hay entradas dentro de subcarpetas? â†’ estructura por carpetas
-  const haySubcarpetas = entries.some(({ normalizedEntryName }) => {
-    const parts = normalizedEntryName.split('/').filter(Boolean);
-    return parts.length >= 2;
-  });
-
-  const recursos = [];
-  const errores  = [];
-
-  if (haySubcarpetas) {
-    // â”€â”€ CA2: Estructura por carpetas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const folderNames = new Set();
-
-    for (const { normalizedEntryName } of entries) {
-      const parts = normalizedEntryName.split('/').filter(Boolean);
-      if (parts.length >= 2) folderNames.add(parts[0]);
-    }
-
-    for (const folder of folderNames) {
-      const folderEntries = fileEntries.filter(({ normalizedEntryName }) => {
-        const parts = normalizedEntryName.split('/').filter(Boolean);
-        return parts[0] === folder;
-      }).map(({ entry }) => entry);
-
-      const mainEntry        = folderEntries.find((e) => allowedMain.includes(extension(e.name)));
-      const portadaEntry     = folderEntries.find((e) => IMAGE_EXTS.has(extension(e.name)));
-      const complementoEntry = tipoContenido === 'Lectura'
-        ? folderEntries.find((e) => ['mp3', 'wav', 'm4a'].includes(extension(e.name)) && e !== mainEntry)
-        : null;
-
-      if (!mainEntry) {
-        errores.push(`Carpeta "${folder}" no tiene archivo principal válido para "${tipoContenido}".`);
-        recursos.push({ titulo: folder, tieneMain: false, tienePortada: !!portadaEntry });
-        continue;
-      }
-
-      recursos.push({
-        titulo:           folder,
-        tieneMain:        true,
-        tienePortada:     !!portadaEntry,
-        mainEntry,
-        portadaEntry:     portadaEntry     || null,
-        complementoEntry: complementoEntry || null,
-      });
-    }
-  } else {
-    // â”€â”€ CA1: Estructura plana â€” asociación por nombre base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Solo procesar archivos que tengan extensión
-    const entriesConExtension = entries.filter(({ entry }) => entry.name.includes('.'));
-
-    const grupos = new Map();
-
-    for (const { entry } of entriesConExtension) {
-      const ext  = extension(entry.name);
-      const base = nombreBase(entry.name);
-
-      if (!grupos.has(base)) grupos.set(base, { main: null, portada: null, complemento: null });
-      const grupo = grupos.get(base);
-
-      if (allowedMain.includes(ext))                                               grupo.main = entry;
-      else if (IMAGE_EXTS.has(ext))                                                grupo.portada = entry;
-      else if (tipoContenido === 'Lectura' && ['mp3','wav','m4a'].includes(ext))   grupo.complemento = entry;
-    }
-
-    for (const [base, grupo] of grupos.entries()) {
-      if (!grupo.main && !grupo.portada && !grupo.complemento) continue;
-
-      if (!grupo.main) {
-        errores.push(`Archivo "${base}" no tiene archivo principal válido para "${tipoContenido}".`);
-        recursos.push({ titulo: base, tieneMain: false, tienePortada: !!grupo.portada });
-        continue;
-      }
-
-      recursos.push({
-        titulo:           base.replace(/_/g, ' ').replace(/-/g, ' '),
-        tieneMain:        true,
-        tienePortada:     !!grupo.portada,
-        mainEntry:        grupo.main,
-        portadaEntry:     grupo.portada     || null,
-        complementoEntry: grupo.complemento || null,
-      });
-    }
-  }
-
-  return { recursos, errores };
-}
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PASO 1 â€” POST /admin/recursos/masivo/previsualizar
@@ -940,22 +803,52 @@ exports.confirmarMasivo = async (req, res, next) => {
     const zip = new AdmZip(zipBuffer);
     const { recursos, errores: erroresDeteccion } = analizarZip(zip, tipoContenido);
 
-    // Permitir guardar todos los recursos (con o sin archivo digital)
-    const recursosAGuardar = recursos;
+    // Enriquecer recursos con el estado de detección (igual que en previsualizar)
+    const titulos = recursos.map(r => r.titulo);
+    const recursosExistentes = await Recurso.find({ titulo: { $in: titulos } });
+
+    const recursosAGuardar = [];
+
+    for (const recurso of recursos) {
+      if (!recurso.tieneMain) {
+        recurso.estadoDeteccion = 'Error';
+      } else {
+        const existente = recursosExistentes.find(
+          e => e.titulo.toLowerCase().trim() === recurso.titulo.toLowerCase().trim()
+        );
+        if (existente) {
+          const tieneArchivoPrincipal = existente.digital?.archivos?.some(a => a.es_principal);
+          if (tieneArchivoPrincipal) {
+            recurso.estadoDeteccion = 'Ya existente con archivo';
+          } else {
+            recurso.estadoDeteccion = 'Archivo pendiente encontrado';
+            recurso.existenteDoc = existente;
+          }
+        } else {
+          recurso.estadoDeteccion = 'Nuevo';
+        }
+      }
+
+      // Solo procesar Nuevos y Pendientes
+      if (recurso.estadoDeteccion === 'Nuevo' || recurso.estadoDeteccion === 'Archivo pendiente encontrado') {
+        recursosAGuardar.push(recurso);
+      }
+    }
 
     if (recursosAGuardar.length === 0) {
-      flash(req, 'error', 'No se detectaron carpetas en el ZIP.');
+      flash(req, 'error', 'No se detectaron recursos procesables en el ZIP.');
       return res.redirect('/admin/recursos/masivo');
     }
 
     let creados = 0;
+    let actualizados = 0;
     const erroresSubida = [];
 
     for (const recurso of recursosAGuardar) {
       try {
         const archivos = [];
 
-        // â”€â”€ Subir archivo principal a Cloudinary solo si existe (RN5) â”€â”€â”€â”€â”€â”€â”€â”€
+        // Subir archivo principal a Cloudinary solo si existe
         if (recurso.mainEntry) {
           const mainBuffer = recurso.mainEntry.getData();
           const mainSubido = await subirArchivoCloudinary(
@@ -975,7 +868,7 @@ exports.confirmarMasivo = async (req, res, next) => {
           });
         }
 
-        // â”€â”€ Complemento de audio (solo Lectura y si hay main) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Complemento de audio (solo Lectura y si hay main)
         if (recurso.complementoEntry && recurso.mainEntry) {
           const compBuffer = recurso.complementoEntry.getData();
           const compSubido = await subirArchivoCloudinary(
@@ -994,7 +887,7 @@ exports.confirmarMasivo = async (req, res, next) => {
           });
         }
 
-        // â”€â”€ Portada: subir a Cloudinary o usar placeholder (CA3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Portada: subir a Cloudinary o usar placeholder
         let imagen = { url: '/img/placeholder.png', public_id: '', es_default: true };
 
         if (recurso.portadaEntry) {
@@ -1011,36 +904,59 @@ exports.confirmarMasivo = async (req, res, next) => {
           };
         }
 
-        // â”€â”€ RN4: guardar en MongoDB con estado "Pendiente de configuración" â”€â”€
-        await Recurso.create({
-          tipo_naturaleza: 'Digital',
-          tipo_contenido:  tipoContenido,
-          tipo_material:   materialFromContenido(tipoContenido),
-          titulo:          recurso.titulo,
-          autor:           'Pendiente de completar',
-          descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
-          idioma:          '',
-          imagen,
-          categorias:      [],
-          estado:          'Pendiente de configuración',
-          publicado:       false,
-          digital: {
-            tipo_licencia:         'Libre',
-            archivos,
-            licencias_en_uso:      0,
-            estado_disponibilidad: 'Acceso libre',
-          },
-          fisico:          undefined,
-          total_prestamos: 0,
-          total_reservas:  0,
-          creado_en:       new Date(),
-          actualizado_en:  new Date(),
-          ...(mongoose.isValidObjectId(req.session?.adminId)
-            ? { registrado_por: req.session.adminId }
-            : {}),
-        });
+        if (recurso.estadoDeteccion === 'Archivo pendiente encontrado' && recurso.existenteDoc) {
+          // Actualizar Recurso existente en MongoDB
+          const doc = recurso.existenteDoc;
 
-        creados += 1;
+          // Mantener archivos anteriores que no sean principales si corresponde
+          const archivosFiltrados = (doc.digital?.archivos || []).filter(a => !a.es_principal);
+          const todosArchivos = [...archivos, ...archivosFiltrados];
+
+          // Actualizar imagen si se subió portada nueva, si no dejar la existente
+          const nuevaImagen = recurso.portadaEntry ? imagen : doc.imagen;
+
+          await Recurso.findByIdAndUpdate(doc._id, {
+            $set: {
+              'digital.archivos': todosArchivos,
+              imagen: nuevaImagen,
+              estado: 'Pendiente de configuración',
+              actualizado_en: new Date()
+            }
+          });
+          actualizados += 1;
+        } else {
+          // Guardar en MongoDB con estado "Pendiente de configuración"
+          await Recurso.create({
+            nombreArchivoOriginal: recurso.mainEntry ? nombreBase(recurso.mainEntry.name) : recurso.titulo,
+            tipo_naturaleza: 'Digital',
+            tipo_contenido:  tipoContenido,
+            tipo_material:   materialFromContenido(tipoContenido),
+            titulo:          recurso.titulo,
+            autor:           'Pendiente de completar',
+            descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
+            idioma:          '',
+            imagen,
+            categorias:      [],
+            estado:          'Pendiente de configuración',
+            publicado:       false,
+            digital: {
+              tipo_licencia:         'Libre',
+              archivos,
+              licencias_en_uso:      0,
+              estado_disponibilidad: 'Acceso libre',
+            },
+            fisico:          undefined,
+            total_prestamos: 0,
+            total_reservas:  0,
+            creado_en:       new Date(),
+            actualizado_en:  new Date(),
+            ...(mongoose.isValidObjectId(req.session?.adminId)
+              ? { registrado_por: req.session.adminId }
+              : {}),
+          });
+
+          creados += 1;
+        }
       } catch (errSubida) {
         console.error(`[MasivoZIP] Error al procesar "${recurso.titulo}":`, errSubida);
         erroresSubida.push(`"${recurso.titulo}": ${errSubida.message}`);
@@ -1053,7 +969,7 @@ exports.confirmarMasivo = async (req, res, next) => {
     flash(
       req,
       totalErrores.length ? 'error' : 'success',
-      `Carga completada. Recursos creados: ${creados}.${detalleErrores}`
+      `Carga completada. Recursos creados: ${creados}. Recursos actualizados: ${actualizados}.${detalleErrores}`
     );
     return res.redirect('/admin/recursos');
   } catch (error) {

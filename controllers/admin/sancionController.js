@@ -1,4 +1,5 @@
 const Administrador = require('../../models/Administrador');
+const notifService = require('../../services/notificacionService');
 const Configuracion = require('../../models/Configuracion');
 const Prestamo = require('../../models/Prestamo');
 const Sancion = require('../../models/Sancion');
@@ -69,6 +70,9 @@ async function crearSancionDesdePayload(req, payload) {
       actualizado_en: now
     });
   }
+
+  // Notificar al usuario (CA2)
+  await notifService.sancionRegistrada(usuario, sancion).catch(() => null);
 
   return sancion;
 }

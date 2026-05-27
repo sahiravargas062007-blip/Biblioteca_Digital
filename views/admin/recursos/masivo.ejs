@@ -68,72 +68,91 @@
        * PASO 2 — Vista previa: el admin revisa y confirma o cancela (CA4)
        * ─────────────────────────────────────────────────────────────────────
        */
-      const validos   = recursos.filter(r => r.tieneMain);
-      const invalidos = recursos.filter(r => !r.tieneMain);
-    %>
-    <section class="panel">
-      <h2>Vista previa de la carga</h2>
-      <p class="form-hint">
-        Revise los recursos detectados antes de confirmar. <strong>Se guardarán todos</strong> — inclusive los sin archivo digital (completar luego).
-      </p>
+        const nuevos = recursos.filter(r => r.estadoDeteccion === 'Nuevo');
+        const pendientes = recursos.filter(r => r.estadoDeteccion === 'Archivo pendiente encontrado');
+        const ignorados = recursos.filter(r => r.estadoDeteccion === 'Ya existente con archivo');
+        const erroresDet = recursos.filter(r => r.estadoDeteccion === 'Error');
+        const validos = [...nuevos, ...pendientes];
+      %>
+      <section class="panel">
+        <h2>Vista previa de la carga</h2>
+        <p class="form-hint">
+          Revise los recursos detectados antes de confirmar. <strong>Nuevos</strong> se crearán. <strong>Pendientes</strong> recibirán el archivo. <strong>Ya existentes</strong> se ignorarán.
+        </p>
 
-      <!-- Resumen estadístico -->
-      <div class="summary-bar">
-        <div class="summary-stat">
-          <strong><%= recursos.length %></strong>
-          Total detectados
+        <!-- Resumen estadístico -->
+        <div class="summary-bar">
+          <div class="summary-stat">
+            <strong><%= recursos.length %></strong>
+            Total detectados
+          </div>
+          <div class="summary-stat">
+            <strong style="color:#065f46"><%= nuevos.length %></strong>
+            Nuevos a crear
+          </div>
+          <div class="summary-stat">
+            <strong style="color:#0369a1"><%= pendientes.length %></strong>
+            Archivos a adjuntar
+          </div>
+          <div class="summary-stat">
+            <strong style="color:#9ca3af"><%= ignorados.length %></strong>
+            Ya existentes (ignorados)
+          </div>
+          <div class="summary-stat">
+            <strong style="color:#991b1b"><%= erroresDet.length %></strong>
+            Con errores
+          </div>
         </div>
-        <div class="summary-stat">
-          <strong style="color:#065f46"><%= recursos.length %></strong>
-          Se crearán
-        </div>
-        <div class="summary-stat">
-          <strong style="color:#991b1b"><%= invalidos.length %></strong>
-          Sin archivo
-        </div>
-        <div class="summary-stat">
-          <strong><%= tipoContenido %></strong>
-          Tipo de contenido
-        </div>
-      </div>
 
-      <!-- Tabla de recursos detectados -->
-      <% if (recursos.length > 0) { %>
-      <div style="overflow-x:auto">
-        <table class="preview-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Título provisional</th>
-              <th>Estado</th>
-              <th>Portada</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% recursos.forEach((r, i) => { %>
-            <tr>
-              <td style="color:var(--text-muted,#6b7280);font-size:.8rem"><%= i + 1 %></td>
-              <td><strong><%= r.titulo %></strong></td>
-              <td>
-                <% if (r.tieneMain) { %>
-                  <span class="badge-ok">Listo</span>
-                <% } else { %>
-                  <span class="badge-error">Sin archivo principal</span>
-                <% } %>
-              </td>
-              <td>
-                <% if (r.tienePortada) { %>
-                  <span class="badge-ok">Incluida</span>
-                <% } else { %>
-                  <span class="badge-warn">Usará placeholder</span>
-                <% } %>
-              </td>
-            </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-      <% } %>
+        <!-- Tabla de recursos detectados -->
+        <% if (recursos.length > 0) { %>
+        <div style="overflow-x:auto">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Título provisional</th>
+                <th>Estado</th>
+                <th>Clasificación</th>
+                <th>Portada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recursos.forEach((r, i) => { %>
+              <tr>
+                <td style="color:var(--text-muted,#6b7280);font-size:.8rem"><%= i + 1 %></td>
+                <td><strong><%= r.titulo %></strong></td>
+                <td>
+                  <% if (r.tieneMain) { %>
+                    <span class="badge-ok">Listo</span>
+                  <% } else { %>
+                    <span class="badge-error">Sin archivo principal</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (r.estadoDeteccion === 'Nuevo') { %>
+                    <span class="badge-ok" style="background:#dcfce7;color:#166534">Nuevo</span>
+                  <% } else if (r.estadoDeteccion === 'Archivo pendiente encontrado') { %>
+                    <span class="badge-warn" style="background:#dbeafe;color:#1e40af">Pendiente encontrado</span>
+                  <% } else if (r.estadoDeteccion === 'Ya existente con archivo') { %>
+                    <span style="background:#f3f4f6;color:#374151;padding:2px 6px;border-radius:4px;font-size:0.75rem">Ya existente</span>
+                  <% } else { %>
+                    <span class="badge-error">Error</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (r.tienePortada) { %>
+                    <span class="badge-ok">Incluida</span>
+                  <% } else { %>
+                    <span class="badge-warn">Placeholder</span>
+                  <% } %>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
 
       <!-- Errores de detección (CA4) -->
       <% if (errores && errores.length > 0) { %>
@@ -161,20 +180,19 @@
 
         <% if (validos.length > 0) { %>
         <div class="panel-note">
-          Se subirán <strong><%= recursos.length %> recurso(s)</strong> a Cloudinary y se registrarán en la base de datos con estado <em>Pendiente de configuración</em>.
-          Los que carecen de archivo digital podrán completarse después. Este proceso puede tardar varios minutos dependiendo del tamaño de los archivos.
+          Se procesarán <strong><%= validos.length %> recurso(s)</strong> (Nuevos + Pendientes).
+          Este proceso puede tardar varios minutos dependiendo del tamaño de los archivos.
         </div>
         <% } else { %>
         <div class="panel-note">
-          Se registrarán <strong><%= recursos.length %> recurso(s)</strong> con estado <em>Pendiente de configuración</em>.
-          Completar archivos y metadatos después.
+          No hay recursos válidos para procesar (todos son errores o ya existen).
         </div>
         <% } %>
 
         <div class="form-actions">
-          <button type="submit" name="accion" value="confirmar">
-            <span class="btn-label">Confirmar y guardar (<%= recursos.length %>)</span>
-            <span class="btn-spinner"><span class="spinner-icon"></span> Subiendo archivos…</span>
+          <button type="submit" name="accion" value="confirmar" <%= validos.length === 0 ? 'disabled' : '' %>>
+            <span class="btn-label">Confirmar y procesar (<%= validos.length %>)</span>
+            <span class="btn-spinner"><span class="spinner-icon"></span> Procesando…</span>
           </button>
           <!-- CA6: cancelar limpia sin guardar nada -->
           <button

@@ -22,6 +22,7 @@ const categoriaRecursoSchema = new mongoose.Schema({
 }, { _id: false, versionKey: false });
 
 const recursoSchema = new mongoose.Schema({
+  nombreArchivoOriginal: { type: String, trim: true, index: true },
   tipo_naturaleza: {
     type: String,
     enum: ['Digital', 'Físico', 'Mixto'],
