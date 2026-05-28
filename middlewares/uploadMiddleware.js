@@ -23,10 +23,11 @@ function fileFilter(req, file, cb) {
       mime === 'application/pdf' ||
       mime === 'application/epub+zip' ||
       mime.startsWith('audio/') ||
-      mime.startsWith('video/');
+      mime.startsWith('video/') ||
+      mime.startsWith('image/');
     return ok
       ? cb(null, true)
-      : cb(new Error('Formato no permitido. Se aceptan PDF, ePub, audio y video.'));
+      : cb(new Error('Formato no permitido. Se aceptan PDF, ePub, audio, video e imágenes.'));
   }
 
   if (field === 'zip') {

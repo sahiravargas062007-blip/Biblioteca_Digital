@@ -12,6 +12,40 @@
 var modoAdmin  = typeof modo !== 'undefined' && modo === 'admin';
 var modoUsuario = !modoAdmin;
 
+// Parsear metadatos dinámicos de forma segura
+var metaObj = {};
+if (recurso.metadatos) {
+  if (recurso.metadatos instanceof Map) {
+    metaObj = Object.fromEntries(recurso.metadatos);
+  } else if (typeof recurso.metadatos.toObject === 'function') {
+    metaObj = recurso.metadatos.toObject();
+  } else {
+    metaObj = recurso.metadatos;
+  }
+}
+
+var metaLabels = {
+  editorial: "Editorial",
+  paginas: "Páginas",
+  isbn: "ISBN",
+  volumen: "Volumen",
+  numero: "Número",
+  issn: "ISSN",
+  revista: "Revista / Diario",
+  doi: "DOI",
+  universidad: "Universidad",
+  programa: "Programa Académico",
+  tipo_tesis: "Tipo de Tesis",
+  director: "Director / Tutor",
+  numero_norma: "Número de Norma",
+  entidad_emisora: "Entidad Emisora",
+  diario_oficial: "Diario Oficial",
+  escala: "Escala",
+  region: "Región Geográfica",
+  proyeccion: "Proyección Cartográfica",
+  año_cartografico: "Año Cartográfico"
+};
+
 /* Naturaleza */
 var tieneDigital = recurso.tipo_naturaleza === 'Digital' || recurso.tipo_naturaleza === 'Mixto';
 var tieneFisico  = recurso.tipo_naturaleza === 'Físico'  || recurso.tipo_naturaleza === 'Mixto';
@@ -98,10 +132,11 @@ var ejemplaresArr = typeof ejemplares !== 'undefined' ? ejemplares : [];
       <% if (recurso.narrador) { %>
         <div class="rd-info-row"><span>Narrador</span><strong><%= recurso.narrador %></strong></div>
       <% } %>
-      <% if (recurso.productora || recurso.editorial) { %>
+      <% var editorialVal = recurso.editorial || metaObj.editorial; %>
+      <% if (recurso.productora || editorialVal) { %>
         <div class="rd-info-row">
           <span><%= recurso.tipo_contenido === 'Video' ? 'Productora' : 'Editorial' %></span>
-          <strong><%= recurso.productora || recurso.editorial %></strong>
+          <strong><%= recurso.productora || editorialVal %></strong>
         </div>
       <% } %>
     </div>
@@ -120,10 +155,11 @@ var ejemplaresArr = typeof ejemplares !== 'undefined' ? ejemplares : [];
           <div><span>Fecha de publicación</span><strong><%= new Date(recurso.fecha_publicacion).getFullYear() %></strong></div>
         </div>
         <% } %>
-        <% if (recurso.productora || recurso.editorial) { %>
+        <% var editorialVal = recurso.editorial || metaObj.editorial; %>
+        <% if (recurso.productora || editorialVal) { %>
         <div class="rd-meta-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <div><span>Proveedor / Productora</span><strong><%= recurso.productora || recurso.editorial %></strong></div>
+          <div><span>Proveedor / Productora</span><strong><%= recurso.productora || editorialVal %></strong></div>
         </div>
         <% } %>
         <% if (durStr) { %>
@@ -200,34 +236,126 @@ var ejemplaresArr = typeof ejemplares !== 'undefined' ? ejemplares : [];
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <div><span>Material</span><strong><%= recurso.tipo_material %></strong></div>
       </div>
-      <% if (recurso.editorial) { %>
+      
+      <% var editorialVal = recurso.editorial || metaObj.editorial; %>
+      <% if (editorialVal) { %>
       <div class="rd-meta-cell">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <div><span>Editorial</span><strong><%= recurso.editorial %></strong></div>
+        <div><span>Editorial</span><strong><%= editorialVal %></strong></div>
       </div>
       <% } %>
-      <% if (recurso.isbn) { %>
+
+      <% var isbnVal = recurso.isbn || metaObj.isbn; %>
+      <% if (isbnVal) { %>
       <div class="rd-meta-cell">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        <div><span>ISBN</span><strong><%= recurso.isbn %></strong></div>
+        <div><span>ISBN</span><strong><%= isbnVal %></strong></div>
       </div>
       <% } %>
+
       <% if (recurso.idioma) { %>
       <div class="rd-meta-cell">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         <div><span>Idioma</span><strong><%= recurso.idioma %></strong></div>
       </div>
       <% } %>
+
       <% if (catPrincipal) { %>
       <div class="rd-meta-cell">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
         <div><span>Categoría</span><strong><%= catPrincipal %></strong></div>
       </div>
       <% } %>
-      <% if (recurso.cantidad_paginas) { %>
+
+      <% var paginasVal = recurso.cantidad_paginas || metaObj.paginas; %>
+      <% if (paginasVal) { %>
       <div class="rd-meta-cell">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <div><span>Páginas</span><strong><%= recurso.cantidad_paginas %></strong></div>
+        <div><span>Páginas</span><strong><%= paginasVal %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.revista) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <div><span>Revista</span><strong><%= metaObj.revista %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.volumen) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        <div><span>Volumen</span><strong><%= metaObj.volumen %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.numero) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        <div><span>Número</span><strong><%= metaObj.numero %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.issn) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <div><span>ISSN</span><strong><%= metaObj.issn %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.doi) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <div><span>DOI</span><strong><%= metaObj.doi %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.universidad) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+        <div><span>Universidad</span><strong><%= metaObj.universidad %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.programa) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <div><span>Programa</span><strong><%= metaObj.programa %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.tipo_tesis) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="7" r="4"/><path d="M5.5 21l3-12h7l3 12z"/></svg>
+        <div><span>Tipo Tesis</span><strong><%= metaObj.tipo_tesis %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.numero_norma) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div><span>Núm. Norma</span><strong><%= metaObj.numero_norma %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.entidad_emisora) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div><span>Emisor</span><strong><%= metaObj.entidad_emisora %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.escala) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+        <div><span>Escala</span><strong><%= metaObj.escala %></strong></div>
+      </div>
+      <% } %>
+
+      <% if (metaObj.region) { %>
+      <div class="rd-meta-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div><span>Región</span><strong><%= metaObj.region %></strong></div>
       </div>
       <% } %>
     </div>
@@ -452,6 +580,13 @@ var ejemplaresArr = typeof ejemplares !== 'undefined' ? ejemplares : [];
         <% if (recurso.director) { %><div><span>Director</span><strong><%= recurso.director %></strong></div><% } %>
         <% if (recurso.resolucion) { %><div><span>Resolución</span><strong><%= recurso.resolucion %></strong></div><% } %>
         <% if (recurso.productora) { %><div><span>Productora</span><strong><%= recurso.productora %></strong></div><% } %>
+
+        <% Object.keys(metaObj).forEach(function(key) { %>
+          <% if (metaLabels[key] && metaObj[key]) { %>
+            <% if ((key === 'isbn' && recurso.isbn) || (key === 'editorial' && recurso.editorial) || (key === 'paginas' && recurso.cantidad_paginas)) return; %>
+            <div><span><%= metaLabels[key] %></span><strong><%= metaObj[key] %></strong></div>
+          <% } %>
+        <% }); %>
       </div>
     </div>
 

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const archivoDigitalSchema = new mongoose.Schema({
   tipo: {
     type: String,
-    enum: ['pdf', 'epub', 'mp3', 'wav', 'm4b', 'm4a', 'aac', 'ogg', 'flac', 'wma', 'mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv', 'url'],
+    enum: ['pdf', 'epub', 'mp3', 'wav', 'm4b', 'm4a', 'aac', 'ogg', 'flac', 'wma', 'mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv', 'url', 'jpg', 'jpeg', 'png', 'webp', 'gif'],
     required: true
   },
   url: { type: String, required: true },
@@ -56,6 +56,10 @@ const recursoSchema = new mongoose.Schema({
     es_default: { type: Boolean, default: true }
   },
   categorias: [categoriaRecursoSchema],
+  metadatos: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed
+  },
   estado: {
     type: String,
     enum: ['Activo', 'Inactivo', 'Pendiente de configuración', 'Bloqueado'],

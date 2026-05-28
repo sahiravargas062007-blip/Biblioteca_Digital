@@ -22,6 +22,145 @@ function syncMaterialOptions() {
   }).join('');
 }
 
+// ── Esquemas de metadatos dinámicos para Lectura ─────────────────────────
+var METADATOS_SCHEMAS = {
+  "Libro": [
+    { name: "editorial", label: "Editorial", type: "text", required: true, icon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>' },
+    { name: "paginas", label: "Páginas", type: "number", required: true, min: 1, icon: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>' },
+    { name: "isbn", label: "ISBN", type: "text", required: false, icon: '<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>' }
+  ],
+  "Revista": [
+    { name: "volumen", label: "Volumen", type: "number", required: true, min: 1, icon: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>' },
+    { name: "numero", label: "Número", type: "number", required: true, min: 1, icon: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>' },
+    { name: "issn", label: "ISSN", type: "text", required: false, icon: '<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>' }
+  ],
+  "Artículo": [
+    { name: "revista", label: "Revista / Diario", type: "text", required: true, icon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>' },
+    { name: "doi", label: "DOI", type: "text", required: false, icon: '<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>' },
+    { name: "volumen", label: "Volumen", type: "number", required: false, min: 1, icon: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>' }
+  ],
+  "Tesis": [
+    { name: "universidad", label: "Universidad", type: "text", required: true, icon: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>' },
+    { name: "programa", label: "Programa Académico", type: "text", required: true, icon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>' },
+    { name: "tipo_tesis", label: "Tipo de Tesis", type: "select", options: ["Pregrado", "Maestría", "Doctorado"], required: true, icon: '<circle cx="12" cy="7" r="4"/><path d="M5.5 21l3-12h7l3 12z"/>' },
+    { name: "director", label: "Director / Tutor", type: "text", required: false, icon: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>' }
+  ],
+  "Ley y Normativa": [
+    { name: "numero_norma", label: "Número de Norma", type: "text", required: true, icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>' },
+    { name: "entidad_emisora", label: "Entidad Emisora", type: "text", required: true, icon: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>' },
+    { name: "diario_oficial", label: "Diario Oficial (Publicación)", type: "text", required: false, icon: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>' }
+  ],
+  "Mapa": [
+    { name: "escala", label: "Escala", type: "text", placeholder: "e.g., 1:50000", required: true, icon: '<line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>' },
+    { name: "region", label: "Región Geográfica", type: "text", required: true, icon: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>' },
+    { name: "proyeccion", label: "Proyección Cartográfica", type: "text", placeholder: "e.g., Mercator", required: false, icon: '<circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><line x1="2" y1="12" x2="22" y2="12"/>' },
+    { name: "año_cartografico", label: "Año Cartográfico", type: "number", required: false, min: 1, icon: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' }
+  ]
+};
+
+// Renderiza dinámicamente el conjunto de inputs según tipo de material de Lectura
+function renderMetadatosDinamicos() {
+  var container = document.getElementById('metadatos-dinamicos-container');
+  if (!container) return;
+
+  var content = val('tipo_contenido');
+  var material = val('tipo_material');
+
+  // Solo para Lectura y si el material tiene esquema
+  if (content !== 'Lectura' || !METADATOS_SCHEMAS[material]) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = '';
+
+  var fields = METADATOS_SCHEMAS[material];
+  var existing = window.RECURSO_METADATOS || {};
+
+  var html = '<div class="af-grid-3" style="margin-top:14px">';
+
+  fields.forEach(function(field) {
+    var value = existing[field.name] !== undefined && existing[field.name] !== null ? existing[field.name] : '';
+    var reqAttr = field.required ? ' required' : '';
+    var placeholder = field.placeholder ? ' placeholder="' + field.placeholder + '"' : '';
+    var minAttr = field.min !== undefined ? ' min="' + field.min + '"' : '';
+
+    var inputHtml = '';
+    if (field.type === 'select') {
+      var optionsHtml = (field.options || []).map(function(opt) {
+        return '<option value="' + opt + '"' + (String(opt) === String(value) ? ' selected' : '') + '>' + opt + '</option>';
+      }).join('');
+      inputHtml = '<select name="metadatos[' + field.name + ']" id="meta-' + field.name + '"' + reqAttr + '>' +
+                    '<option value="">Seleccione</option>' + optionsHtml +
+                  '</select>';
+    } else {
+      inputHtml = '<input type="' + field.type + '" name="metadatos[' + field.name + ']" id="meta-' + field.name + '" value="' + value + '"' + placeholder + reqAttr + minAttr + '>';
+    }
+
+    html += '<label class="af-label">' +
+              '<span>' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">' + field.icon + '</svg>' +
+                field.label + (field.required ? ' *' : '') +
+              '</span>' +
+              inputHtml +
+            '</label>';
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Sincroniza la fila de autocompletar (ISBN para Libro, DOI para Artículo, oculto para otros)
+function syncAutocompletarRow() {
+  var row = document.getElementById('isbn-row');
+  if (!row) return;
+
+  var content = val('tipo_contenido');
+  var material = val('tipo_material');
+
+  if (content === 'Lectura' && (material === 'Libro' || material === 'Artículo')) {
+    row.style.display = '';
+
+    var cardLabel = row.querySelector('.af-card__label');
+    var inputSpan = row.querySelector('.af-label span');
+    var inputEl = document.getElementById('isbn-input');
+    var btn = document.getElementById('isbn-search-btn');
+
+    if (material === 'Libro') {
+      if (cardLabel) cardLabel.innerHTML = 'ISBN (opcional — autocompleta metadatos)';
+      if (inputSpan) {
+        inputSpan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> ISBN';
+      }
+      if (inputEl) {
+        inputEl.placeholder = '978-...';
+        if (!inputEl.value && window.RECURSO_METADATOS && window.RECURSO_METADATOS.isbn) {
+          inputEl.value = window.RECURSO_METADATOS.isbn;
+        }
+      }
+      if (btn) {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar ISBN';
+      }
+    } else if (material === 'Artículo') {
+      if (cardLabel) cardLabel.innerHTML = 'DOI (opcional — autocompleta metadatos)';
+      if (inputSpan) {
+        inputSpan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> DOI';
+      }
+      if (inputEl) {
+        inputEl.placeholder = 'e.g., 10.1000/xyz123';
+        if ((!inputEl.value || inputEl.value.includes('-')) && window.RECURSO_METADATOS && window.RECURSO_METADATOS.doi) {
+          inputEl.value = window.RECURSO_METADATOS.doi;
+        }
+      }
+      if (btn) {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar DOI';
+      }
+    }
+  } else {
+    row.style.display = 'none';
+  }
+}
+
 // ── Mostrar / ocultar secciones según tipo de contenido y naturaleza ──────
 function syncForm() {
   var contenido  = val('tipo_contenido');
@@ -50,13 +189,33 @@ function syncForm() {
   document.getElementById('audio-fields').style.display = audio ? '' : 'none';
   document.getElementById('video-fields').style.display = video ? '' : 'none';
 
-  // ISBN: visible en Lectura siempre, en Audio si es audiolibro comercial
-  var isbnRow = document.getElementById('isbn-row');
-  if (isbnRow) isbnRow.style.display = (lectura || audio) ? '' : 'none';
+  // ISBN: visible en Lectura y Audio (pero para Lectura lo delegamos a syncAutocompletarRow)
+  if (contenido === 'Audio') {
+    var isbnRow = document.getElementById('isbn-row');
+    if (isbnRow) {
+      isbnRow.style.display = '';
+      var cardLabel = isbnRow.querySelector('.af-card__label');
+      var inputSpan = isbnRow.querySelector('.af-label span');
+      var inputEl = document.getElementById('isbn-input');
+      var btn = document.getElementById('isbn-search-btn');
+      if (cardLabel) cardLabel.innerHTML = 'ISBN (opcional — autocompleta metadatos)';
+      if (inputSpan) {
+        inputSpan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> ISBN';
+      }
+      if (inputEl) inputEl.placeholder = '978-...';
+      if (btn) {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar ISBN';
+      }
+    }
+  } else if (contenido === 'Video') {
+    hide('isbn-row');
+  } else {
+    syncAutocompletarRow();
+  }
 
-  // Páginas solo para Lectura
+  // Páginas estático: siempre oculto para Lectura (que usa dinámico en Libro), y oculto para los demás
   var paginasWrap = document.getElementById('paginas-wrap');
-  if (paginasWrap) paginasWrap.style.display = lectura ? '' : 'none';
+  if (paginasWrap) paginasWrap.style.display = 'none';
 
   // Duración para Audio y Video
   var duracionWrap = document.getElementById('duracion-wrap');
@@ -78,9 +237,11 @@ function syncForm() {
     else              labelImagen.textContent = 'Imagen de portada';
   }
 
-  // Editorial solo para Lectura y Audio
+  // Editorial estático: visible solo en Audio
   var editorialWrap = document.getElementById('label-editorial-wrap');
-  if (editorialWrap) editorialWrap.style.display = video ? 'none' : '';
+  if (editorialWrap) {
+    editorialWrap.style.display = (contenido === 'Audio') ? '' : 'none';
+  }
 }
 
 // ── Licencia restringida ──────────────────────────────────────────────────
@@ -135,13 +296,13 @@ function hhmmssToSegundos(str) {
   return Number(str) || 0;
 }
 
-// ── Búsqueda ISBN ─────────────────────────────────────────────────────────
+// ── Búsqueda ISBN (Open Library) ──────────────────────────────────────────
 async function handleIsbnSearch() {
   var input = document.getElementById('isbn-input');
   if (!input || !input.value.trim()) return;
 
   var hint = document.getElementById('isbn-hint');
-  if (hint) hint.textContent = 'Buscando...';
+  if (hint) hint.textContent = 'Buscando libro en Open Library...';
 
   try {
     var response = await fetch('/admin/recursos/isbn/' + encodeURIComponent(input.value.trim()));
@@ -157,9 +318,22 @@ async function handleIsbnSearch() {
       if (el && value) el.value = value;
     }
 
+    function fillMetaInput(name, value) {
+      var el = document.getElementById('meta-' + name);
+      if (el && value) el.value = value;
+    }
+
     fillInput('titulo', data.title);
-    fillInput('editorial', Array.isArray(data.publishers) ? data.publishers[0] : '');
+    
+    var editorialVal = Array.isArray(data.publishers) ? data.publishers[0] : (data.publishers || '');
+    fillInput('editorial', editorialVal);
+    fillMetaInput('editorial', editorialVal);
+
     fillInput('cantidad_paginas', data.number_of_pages);
+    fillMetaInput('paginas', data.number_of_pages);
+
+    fillMetaInput('isbn', input.value.trim());
+
     if (data.publish_date) {
       var year = (data.publish_date.match(/\d{4}/) || [])[0];
       if (year) fillInput('fecha_publicacion', year + '-01-01');
@@ -171,6 +345,52 @@ async function handleIsbnSearch() {
     if (hint) hint.textContent = '✅ Datos completados desde Open Library.';
   } catch (err) {
     if (hint) hint.textContent = 'Error al buscar ISBN. Completa los datos manualmente.';
+  }
+}
+
+// ── Búsqueda DOI (CrossRef) ────────────────────────────────────────────────
+async function handleDoiSearch() {
+  var input = document.getElementById('isbn-input');
+  if (!input || !input.value.trim()) return;
+
+  var hint = document.getElementById('isbn-hint');
+  if (hint) hint.textContent = 'Buscando artículo en CrossRef...';
+
+  try {
+    var doi = input.value.trim();
+    doi = doi.replace(/^https?:\/\/doi\.org\//i, '');
+
+    var response = await fetch('/admin/recursos/doi/' + encodeURIComponent(doi));
+    var data = await response.json();
+
+    if (!data || !Object.keys(data).length) {
+      if (hint) hint.textContent = 'No se encontró información para ese DOI.';
+      return;
+    }
+
+    function fillInput(name, value) {
+      var el = document.querySelector('[name="' + name + '"]');
+      if (el && value) el.value = value;
+    }
+
+    function fillMetaInput(name, value) {
+      var el = document.getElementById('meta-' + name);
+      if (el && value) el.value = value;
+    }
+
+    fillInput('titulo', data.title);
+    fillInput('autor', data.autor);
+    if (data.fecha_publicacion) {
+      fillInput('fecha_publicacion', data.fecha_publicacion);
+    }
+
+    fillMetaInput('revista', data.revista);
+    fillMetaInput('volumen', data.volumen);
+    fillMetaInput('doi', doi);
+
+    if (hint) hint.textContent = '✅ Datos completados desde CrossRef API.';
+  } catch (err) {
+    if (hint) hint.textContent = 'Error al buscar DOI. Completa los datos manualmente.';
   }
 }
 
@@ -228,20 +448,8 @@ function initCloudinaryUploadWidget(buttonId, statusId, previewId, urlFieldId, t
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// FIX: Deshabilitar campos de secciones OCULTAS antes de enviar el formulario
-// ─────────────────────────────────────────────────────────────────────────
-// El bug era: display:none NO evita que el navegador incluya los campos en el
-// POST. Cuando se seleccionaba Video+URL, llegaban DOS valores para
-// "archivo_tipo" (el del select de Lectura + el hidden de video-url-block),
-// y Express los concatenaba como "pdf,url", que Mongoose rechazaba.
-//
-// Solución: antes del submit, deshabilitamos todos los campos dentro de
-// secciones no visibles. El atributo `disabled` sí impide que se envíen.
-// ─────────────────────────────────────────────────────────────────────────
-
+// ── FIX: Deshabilitar campos de secciones OCULTAS antes de enviar el formulario ──
 function deshabilitarCamposOcultos() {
-  // Primero habilitamos TODO para partir de estado limpio
   document.querySelectorAll('input, select, textarea').forEach(function(el) {
     el.disabled = false;
   });
@@ -249,14 +457,15 @@ function deshabilitarCamposOcultos() {
   var contenido  = val('tipo_contenido');
   var naturaleza = val('tipo_naturaleza');
 
-  // Bloques que NO corresponden al tipo de contenido activo
   var bloquesInactivos = [];
 
-  if (contenido !== 'Lectura') bloquesInactivos.push('archivo-lectura-block');
+  if (contenido !== 'Lectura') {
+    bloquesInactivos.push('archivo-lectura-block');
+    bloquesInactivos.push('metadatos-dinamicos-container');
+  }
   if (contenido !== 'Audio')   bloquesInactivos.push('archivo-audio-block');
   if (contenido !== 'Video')   bloquesInactivos.push('archivo-video-block');
 
-  // Dentro del bloque de video, solo uno de los dos sub-bloques está activo
   if (contenido === 'Video') {
     var origenSel = document.getElementById('video-origen-select');
     if (origenSel) {
@@ -268,11 +477,9 @@ function deshabilitarCamposOcultos() {
     }
   }
 
-  // Sección digital completa si no aplica
   if (naturaleza === 'Físico') bloquesInactivos.push(document.getElementById('digital-section') ? 'digital-section' : 'panel-digital');
-  // Sección física completa si no aplica
   if (naturaleza === 'Digital') bloquesInactivos.push(document.getElementById('physical-section') ? 'physical-section' : 'panel-fisica');
-  // Licencia restringida si está oculta
+  
   var licSel = document.getElementById('licencia-select');
   if (licSel && licSel.value !== 'Restringida') bloquesInactivos.push('licencia-restringida-block');
 
@@ -292,6 +499,8 @@ document.addEventListener('DOMContentLoaded', function() {
   syncLicencia();
   syncSubcategories();
   syncVideoOrigen();
+  renderMetadatosDinamicos();
+  syncAutocompletarRow();
 
   initCloudinaryUploadWidget(
     'audio-upload-btn',
@@ -319,13 +528,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── Eventos ───────────────────────────────────────────────────────────────
 document.addEventListener('change', function(event) {
   var t = event.target;
-  if (t.id === 'tipo_contenido')       { syncMaterialOptions(); syncForm(); }
+  if (t.id === 'tipo_contenido')       { syncMaterialOptions(); syncForm(); renderMetadatosDinamicos(); syncAutocompletarRow(); }
+  if (t.id === 'tipo_material')        { renderMetadatosDinamicos(); syncAutocompletarRow(); }
   if (t.id === 'tipo_naturaleza')      { syncForm(); }
   if (t.id === 'licencia-select')      { syncLicencia(); }
   if (t.id === 'categoria-select')     { syncSubcategories(); }
   if (t.id === 'video-origen-select')  { syncVideoOrigen(); }
 
-  // Convertir HH:MM:SS a segundos en tiempo real
   if (t.id === 'duracion-hhmmss') {
     var seg = document.getElementById('duracion-segundos');
     if (seg) seg.value = hhmmssToSegundos(t.value);
@@ -333,12 +542,18 @@ document.addEventListener('change', function(event) {
 });
 
 document.addEventListener('click', function(event) {
-  if (event.target.id === 'isbn-search-btn') handleIsbnSearch();
+  var t = event.target;
+  var btn = t.closest('#isbn-search-btn');
+  if (btn) {
+    var material = val('tipo_material');
+    if (material === 'Libro') {
+      handleIsbnSearch();
+    } else if (material === 'Artículo') {
+      handleDoiSearch();
+    }
+  }
 });
 
-// Al enviar el formulario:
-// 1. Calcular duracion_segundos desde HH:MM:SS
-// 2. Deshabilitar campos ocultos para evitar envío de valores duplicados (FIX)
 document.addEventListener('submit', function() {
   var hhmmss = document.getElementById('duracion-hhmmss');
   var seg    = document.getElementById('duracion-segundos');
@@ -346,5 +561,5 @@ document.addEventListener('submit', function() {
     seg.value = hhmmssToSegundos(hhmmss.value);
   }
 
-  deshabilitarCamposOcultos(); // ← FIX principal: evita "pdf,url" y valores duplicados
+  deshabilitarCamposOcultos();
 });

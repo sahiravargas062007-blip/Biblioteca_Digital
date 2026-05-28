@@ -68,6 +68,7 @@ function parsearExcel(buffer, filename) {
         'Clasificación': 'tipo_material',
         'Fecha Publicación': 'fecha_publicacion',
         'Páginas': 'cantidad_paginas',
+        'paginas': 'paginas',
         'Idioma': 'idioma',
         'Duración': 'duracion_segundos',
         'Año': 'fecha_publicacion',
@@ -76,6 +77,22 @@ function parsearExcel(buffer, filename) {
         'Productora': 'productora',
         'URL de imagen': 'imagen_url',
         'Imagen URL': 'imagen_url',
+        // Campos dinámicos de metadatos
+        'Volumen': 'volumen',
+        'Número': 'numero',
+        'ISSN': 'issn',
+        'Revista': 'revista',
+        'DOI': 'doi',
+        'Universidad': 'universidad',
+        'Programa': 'programa',
+        'Tipo de Tesis': 'tipo_tesis',
+        'Número de Norma': 'numero_norma',
+        'Entidad Emisora': 'entidad_emisora',
+        'Diario Oficial': 'diario_oficial',
+        'Escala': 'escala',
+        'Región': 'region',
+        'Proyección': 'proyeccion',
+        'Año Cartográfico': 'año_cartografico'
       };
 
       let tieneAlgunCampo = false;
@@ -90,7 +107,8 @@ function parsearExcel(buffer, filename) {
           let valor = fila[colEncontrada];
 
           // Conversiones básicas
-          if (mongoField === 'cantidad_paginas' || mongoField === 'duracion_segundos') {
+          const camposNumericos = ['cantidad_paginas', 'duracion_segundos', 'paginas', 'volumen', 'numero', 'año_cartografico'];
+          if (camposNumericos.includes(mongoField)) {
             if (mongoField === 'duracion_segundos' && typeof valor === 'string' && valor.includes(':')) {
               // Convertir HH:MM:SS a segundos
               const partes = valor.split(':').map(Number);
@@ -106,7 +124,7 @@ function parsearExcel(buffer, filename) {
             }
             if (valor === null) {
               errores.push(
-                `Fila ${indice + 2} ("${nombreArchivo}"): "${mongoField}" debe ser numérico o en formato HH:MM:SS.`
+                `Fila ${indice + 2} ("${nombreArchivo}"): "${mongoField}" debe ser numérico.`
               );
               return;
             }

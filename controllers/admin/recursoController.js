@@ -209,6 +209,106 @@ async function sincronizarFisicoConEjemplares(recursoId) {
   });
 }
 
+function nombreBase(filename) {
+  const parts = String(filename || '').split('/');
+  const name = parts[parts.length - 1];
+  const dotIdx = name.lastIndexOf('.');
+  if (dotIdx === -1) return name;
+  return name.slice(0, dotIdx);
+}
+
+function tipoArchivoFromExt(ext) {
+  return String(ext || '').toLowerCase().trim();
+}
+
+function materialFromContenido(tipoContenido) {
+  if (tipoContenido === 'Audio') return 'Audiolibro';
+  if (tipoContenido === 'Video') return 'Video';
+  return 'Libro';
+}
+
+function analizarZip(zip, tipoContenido) {
+  const recursos = [];
+  const errores = [];
+  const grupos = new Map();
+
+  const entries = zip.getEntries();
+
+  // 1. Agrupar por carpeta o por nombre base
+  for (const entry of entries) {
+    if (entry.isDirectory) continue;
+
+    const parts = entry.entryName.split('/');
+    const filename = parts[parts.length - 1];
+    if (filename.startsWith('.') || filename.startsWith('__')) continue;
+
+    // Obtener nombre base y extensión
+    const dotIdx = filename.lastIndexOf('.');
+    if (dotIdx === -1) continue;
+
+    const ext = filename.slice(dotIdx + 1).toLowerCase();
+    const base = filename.slice(0, dotIdx);
+
+    // Determinar la clave de agrupación
+    let key = base;
+    if (entry.entryName.includes('/')) {
+      const entryParts = entry.entryName.split('/');
+      if (entryParts.length > 1) {
+        key = entryParts[entryParts.length - 2];
+      }
+    }
+
+    if (!grupos.has(key)) {
+      grupos.set(key, { main: null, portada: null, complemento: null });
+    }
+    const grupo = grupos.get(key);
+
+    // Identificar archivo principal según tipoContenido
+    if (tipoContenido === 'Lectura') {
+      if (['pdf', 'epub'].includes(ext)) {
+        grupo.main = entry;
+      }
+    } else if (tipoContenido === 'Audio') {
+      if (['mp3', 'wav', 'm4b', 'm4a', 'aac', 'ogg', 'flac'].includes(ext)) {
+        grupo.main = entry;
+      }
+    } else if (tipoContenido === 'Video') {
+      if (['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv'].includes(ext)) {
+        grupo.main = entry;
+      }
+    }
+
+    // Identificar portada y complemento
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+      grupo.portada = entry;
+    } else if (tipoContenido === 'Lectura' && ['mp3', 'wav', 'm4a'].includes(ext)) {
+      grupo.complemento = entry;
+    }
+  }
+
+  // 2. Construir lista de recursos
+  for (const [base, grupo] of grupos.entries()) {
+    if (!grupo.main && !grupo.portada && !grupo.complemento) continue;
+
+    if (!grupo.main) {
+      errores.push(`Archivo "${base}" no tiene archivo principal valido para "${tipoContenido}".`);
+      recursos.push({ titulo: base, tieneMain: false, tienePortada: !!grupo.portada });
+      continue;
+    }
+
+    recursos.push({
+      titulo:           base.replace(/_/g, ' ').replace(/-/g, ' '),
+      tieneMain:        true,
+      tienePortada:     !!grupo.portada,
+      mainEntry:        grupo.main,
+      portadaEntry:     grupo.portada     || null,
+      complementoEntry: grupo.complemento || null,
+    });
+  }
+
+  return { recursos, errores };
+}
+
 async function cargarCategoriasSeleccionadas(body) {
   const categoriaIds    = asArray(body.categoria_id);
   const subcategoriaIds = asArray(body.subcategoria_id);
@@ -381,6 +481,17 @@ async function buildRecursoPayload(req) {
     actualizado_en:    new Date(),
   };
 
+  if (req.body.tipo_contenido === 'Lectura') {
+    const { validarMetadatos } = require('../../validators/metadatos.validator');
+    const validation = validarMetadatos(req.body.tipo_material, req.body.metadatos || {});
+    if (!validation.valido) {
+      const err = new Error(validation.error);
+      err.isValidationError = true;
+      throw err;
+    }
+    payload.metadatos = validation.metadatos;
+  }
+
   if (mongoose.isValidObjectId(req.session?.adminId)) {
     payload.registrado_por = req.session.adminId;
   }
@@ -549,6 +660,29 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
         const nombreArchivo = String(registro.nombreArchivoOriginal || '').trim();
         const datosProcesados = { ...registro.datosProcesados };
 
+        // 1. Búsqueda por nombreArchivoOriginal (recurso previamente creado por ZIP - Escenario A)
+        let recursoBuscado = await Recurso.findOne({
+          nombreArchivoOriginal: { $regex: new RegExp("^" + escapeRegExp(nombreArchivo) + "$", "i") }
+        });
+
+        // 2. Búsqueda por Título o por ISBN para evitar duplicar recursos que ya existan en la base de datos
+        const tituloABuscar = datosProcesados.titulo || nombreArchivo;
+        const existentePorTitulo = await Recurso.findOne({
+          titulo: { $regex: new RegExp("^" + escapeRegExp(tituloABuscar) + "$", "i") }
+        });
+        const isbnABuscar = datosProcesados.isbn || (datosProcesados.metadatos ? datosProcesados.metadatos.isbn : null);
+        const existentePorIsbn = isbnABuscar
+          ? await Recurso.findOne({ isbn: isbnABuscar })
+          : null;
+
+        const existente = existentePorTitulo || existentePorIsbn;
+
+        // Si no se encuentra por nombre de archivo, pero sí existe por Título o ISBN:
+        // lo asociamos para evitar duplicidad y realizar la fusión (merge)
+        if (!recursoBuscado && existente) {
+          recursoBuscado = existente;
+        }
+
         if (datosProcesados.tipo_material) {
           const tipoMaterialNormalizado = normalizeTipoMaterial(datosProcesados.tipo_material);
           if (tipoMaterialNormalizado) {
@@ -558,14 +692,105 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
           }
         }
 
-        // Determinar tipo_contenido basado en campos presentes
+        // Determinar tipo_contenido basado en campos presentes o el recurso existente
         let tipoContenido = 'Lectura';
         if (datosProcesados.narrador) {
           tipoContenido = 'Audio';
         } else if (datosProcesados.director) {
           tipoContenido = 'Video';
+        } else if (recursoBuscado && recursoBuscado.tipo_contenido) {
+          tipoContenido = recursoBuscado.tipo_contenido;
         }
         datosProcesados.tipo_contenido = tipoContenido;
+
+        // Auto-detectar tipo_material para Lectura si no viene especificado explícitamente o en recurso existente
+        if (tipoContenido === 'Lectura' && !datosProcesados.tipo_material) {
+          if (recursoBuscado && recursoBuscado.tipo_material) {
+            datosProcesados.tipo_material = recursoBuscado.tipo_material;
+          } else if (datosProcesados.revista || datosProcesados.issn) {
+            datosProcesados.tipo_material = 'Revista';
+          } else if (datosProcesados.doi) {
+            datosProcesados.tipo_material = 'Artículo';
+          } else if (datosProcesados.universidad || datosProcesados.programa || datosProcesados.tipo_tesis) {
+            datosProcesados.tipo_material = 'Tesis';
+          } else if (datosProcesados.numero_norma || datosProcesados.entidad_emisora) {
+            datosProcesados.tipo_material = 'Ley y Normativa';
+          } else if (datosProcesados.escala || datosProcesados.region || datosProcesados.proyeccion) {
+            datosProcesados.tipo_material = 'Mapa';
+          } else {
+            datosProcesados.tipo_material = 'Libro';
+          }
+        }
+
+        // Agrupar campos dinámicos para Lectura
+        if (tipoContenido === 'Lectura') {
+          const tipoMat = datosProcesados.tipo_material || 'Libro';
+          const metaInputs = {};
+
+          if (datosProcesados.cantidad_paginas !== undefined) {
+            metaInputs.paginas = datosProcesados.cantidad_paginas;
+          }
+
+          const posiblesCampos = [
+            'editorial', 'paginas', 'isbn', 'volumen', 'numero', 'issn', 
+            'revista', 'doi', 'universidad', 'programa', 'tipo_tesis', 'director',
+            'numero_norma', 'entidad_emisora', 'diario_oficial', 'escala', 'region', 
+            'proyeccion', 'año_cartografico'
+          ];
+
+          posiblesCampos.forEach(c => {
+            if (datosProcesados[c] !== undefined && datosProcesados[c] !== null && String(datosProcesados[c]).trim() !== "") {
+              metaInputs[c] = datosProcesados[c];
+            }
+          });
+
+          const { METADATOS_SCHEMA } = require('../../validators/metadatos.validator');
+          const schema = METADATOS_SCHEMA[tipoMat];
+          if (schema) {
+            const permitidos = [...schema.requeridos, ...schema.opcionales];
+            const metadatosFiltrados = {};
+            for (const campo of permitidos) {
+              if (metaInputs[campo] !== undefined && metaInputs[campo] !== null && String(metaInputs[campo]).trim() !== "") {
+                if (["paginas", "volumen", "numero", "año_cartografico"].includes(campo)) {
+                  const num = Number(metaInputs[campo]);
+                  metadatosFiltrados[campo] = isNaN(num) ? metaInputs[campo] : num;
+                } else {
+                  metadatosFiltrados[campo] = metaInputs[campo];
+                }
+              }
+            }
+
+            // FUSIONAR METADATOS EXISTENTES
+            if (recursoBuscado && recursoBuscado.metadatos) {
+              let existingMeta = {};
+              if (typeof recursoBuscado.metadatos.toObject === 'function') {
+                existingMeta = recursoBuscado.metadatos.toObject();
+              } else if (recursoBuscado.metadatos instanceof Map) {
+                existingMeta = Object.fromEntries(recursoBuscado.metadatos);
+              } else {
+                existingMeta = { ...recursoBuscado.metadatos };
+              }
+              datosProcesados.metadatos = {
+                ...existingMeta,
+                ...metadatosFiltrados
+              };
+            } else {
+              datosProcesados.metadatos = metadatosFiltrados;
+            }
+          } else {
+            datosProcesados.metadatos = {};
+          }
+
+          const camposDinamicosParaLimpiar = [
+            'editorial', 'cantidad_paginas', 'paginas', 'volumen', 'numero', 'issn', 
+            'revista', 'doi', 'universidad', 'programa', 'tipo_tesis', 'director',
+            'numero_norma', 'entidad_emisora', 'diario_oficial', 'escala', 'region', 
+            'proyeccion', 'año_cartografico'
+          ];
+          camposDinamicosParaLimpiar.forEach(c => {
+            delete datosProcesados[c];
+          });
+        }
 
         // Manejar imagen_url
         let imagenUpdate = {};
@@ -580,37 +805,14 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
           delete datosProcesados.imagen_url;
         }
 
-        // 1. Búsqueda por nombreArchivoOriginal (recurso previamente creado por ZIP - Escenario A)
-        const recursoBuscado = await Recurso.findOne({
-          nombreArchivoOriginal: { $regex: new RegExp("^" + escapeRegExp(nombreArchivo) + "$", "i") }
-        });
-
-        // 2. Búsqueda por Título o por ISBN para evitar duplicar recursos que ya existan en la base de datos
-        const tituloABuscar = datosProcesados.titulo || nombreArchivo;
-        const existentePorTitulo = await Recurso.findOne({
-          titulo: { $regex: new RegExp("^" + escapeRegExp(tituloABuscar) + "$", "i") }
-        });
-        const existentePorIsbn = datosProcesados.isbn
-          ? await Recurso.findOne({ isbn: datosProcesados.isbn })
-          : null;
-
-        const existente = existentePorTitulo || existentePorIsbn;
-
-        // Si no se encuentra por nombre de archivo (nuevo escenario), pero sí existe por Título o ISBN:
-        // Se debe alertar al usuario y no crearlo para evitar duplicidad.
-        if (!recursoBuscado && existente) {
-          errores.push(`"${nombreArchivo}": El recurso ya se encuentra creado en el sistema con el título "${existente.titulo}".`);
-          continue;
-        }
-
         const datosMerged = { ...(recursoBuscado ? recursoBuscado.toObject() : {}), ...datosProcesados };
         
         // Campos obligatorios: titulo, autor, descripcion, tipo_material (Clasificación)
         const tieneObligatorios = datosMerged.titulo && datosMerged.autor && datosMerged.descripcion && datosMerged.tipo_material;
         const tieneArchivoFisico = (recursoBuscado?.digital?.archivos?.some(a => a.es_principal)) || false;
 
-        let nuevoEstado = 'Pendiente de configuración';
-        let seraPublicado = false;
+        let nuevoEstado = recursoBuscado?.estado || 'Pendiente de configuración';
+        let seraPublicado = recursoBuscado?.publicado !== undefined ? recursoBuscado.publicado : false;
         let publicadoEn = recursoBuscado?.publicado_en;
 
         if (req.body.auto_publicar === 'true' && tieneObligatorios && tieneArchivoFisico) {
@@ -670,6 +872,7 @@ exports.procesarExcelMetadatos = async (req, res, next) => {
             total_reservas: 0,
             creado_en: new Date(),
             actualizado_en: new Date(),
+            metadatos: datosProcesados.metadatos,
             ...(mongoose.isValidObjectId(req.session?.adminId)
               ? { registrado_por: req.session.adminId }
               : {}),
@@ -759,12 +962,32 @@ exports.previsualizarMasivo = async (req, res, next) => {
     const zip = new AdmZip(req.file.buffer);
     const { recursos, errores } = analizarZip(zip, tipoContenido);
 
+    // Enriquecer recursos con el estado de detección
+    const titulos = recursos.map(r => r.titulo);
+    const recursosExistentes = await Recurso.find({ titulo: { $in: titulos } });
+
+    for (const recurso of recursos) {
+      if (!recurso.tieneMain) {
+        recurso.estadoDeteccion = 'Error';
+      } else {
+        const existente = recursosExistentes.find(
+          e => e.titulo.toLowerCase().trim() === recurso.titulo.toLowerCase().trim()
+        );
+        if (existente) {
+          recurso.estadoDeteccion = 'Archivo pendiente encontrado';
+          recurso.existenteDoc = existente;
+        } else {
+          recurso.estadoDeteccion = 'Nuevo';
+        }
+      }
+    }
+
     const zipTempName = `recursos-masivo-${randomUUID()}.zip`;
     const zipTempPath = path.join(os.tmpdir(), zipTempName);
     await fs.writeFile(zipTempPath, req.file.buffer);
 
     return res.render('admin/recursos/masivo', {
-      title:         'Carga masiva â€” Vista previa',
+      title:         'Carga masiva ─ Vista previa',
       previsualizar: true,
       tipoContenido,
       recursos,
@@ -817,13 +1040,8 @@ exports.confirmarMasivo = async (req, res, next) => {
           e => e.titulo.toLowerCase().trim() === recurso.titulo.toLowerCase().trim()
         );
         if (existente) {
-          const tieneArchivoPrincipal = existente.digital?.archivos?.some(a => a.es_principal);
-          if (tieneArchivoPrincipal) {
-            recurso.estadoDeteccion = 'Ya existente con archivo';
-          } else {
-            recurso.estadoDeteccion = 'Archivo pendiente encontrado';
-            recurso.existenteDoc = existente;
-          }
+          recurso.estadoDeteccion = 'Archivo pendiente encontrado';
+          recurso.existenteDoc = existente;
         } else {
           recurso.estadoDeteccion = 'Nuevo';
         }
@@ -1043,6 +1261,10 @@ exports.crear = async (req, res, next) => {
     flash(req, 'success', 'Recurso creado correctamente.');
     return res.redirect(`/admin/recursos/${recurso._id}`);
   } catch (error) {
+    if (error.isValidationError === true) {
+      flash(req, 'error', error.message);
+      return res.redirect('/admin/recursos/nuevo');
+    }
     next(error);
   }
 };
@@ -1073,6 +1295,10 @@ exports.actualizar = async (req, res, next) => {
     flash(req, 'success', 'Recurso actualizado correctamente.');
     return res.redirect(`/admin/recursos/${req.params.id}`);
   } catch (error) {
+    if (error.isValidationError === true) {
+      flash(req, 'error', error.message);
+      return res.redirect(`/admin/recursos/${req.params.id}/editar`);
+    }
     next(error);
   }
 };
@@ -1094,6 +1320,17 @@ exports.buscarIsbn = async (req, res, next) => {
   try {
     const isbnService = require('../../services/isbnService');
     const data = await isbnService.buscarPorIsbn(req.params.isbn);
+    res.json(data || {});
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.buscarDoi = async (req, res, next) => {
+  try {
+    const doiService = require('../../services/doiService');
+    const doi = req.params[0]; // Capturar todo después de /doi/
+    const data = await doiService.buscarPorDoi(doi);
     res.json(data || {});
   } catch (error) {
     next(error);

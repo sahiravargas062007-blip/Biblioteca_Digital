@@ -13,6 +13,7 @@ router.get('/masivo',        controller.masivo);
 router.get('/excel-metadatos', controller.excelMetadatos);
 router.post('/excel-metadatos/procesar', uploadExcel.single('excel'), controller.procesarExcelMetadatos);
 router.get('/isbn/:isbn',    controller.buscarIsbn);
+router.get('/doi/*',           controller.buscarDoi);
 
 // ── Subida anticipada con barra de progreso (AJAX desde upload-progress.js)
 router.post(
