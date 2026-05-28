@@ -12,6 +12,15 @@
       <p><strong>Documento:</strong> <%= prestamo.usuario_documento %></p>
       <p><strong>Estado general:</strong> <span class="badge <%= prestamo.estado === 'Devuelto' ? 'badge-disponible' : prestamo.estado === 'Vencido' ? 'badge-danado' : 'badge-prestado' %>"><%= prestamo.estado %></span></p>
       <p><strong>Registrado:</strong> <%= new Date(prestamo.creado_en).toLocaleString('es-CO') %></p>
+      
+      <% if (prestamo.estado === 'Pendiente de reposición') { %>
+        <div style="margin-top: 1rem; padding: 1rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 0.5rem; background-color: var(--background-secondary, #f8fafc);">
+          <p style="margin-bottom: 0.5rem;"><strong style="color: #c53030;">El usuario reportó un ejemplar perdido y se encuentra bloqueado disciplinariamente.</strong></p>
+          <form method="post" action="/admin/prestamos/<%= prestamo._id %>/confirmar-reposicion">
+            <button type="submit" style="background-color: #2b6cb0; color: white; font-weight: 600; padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; cursor: pointer;">Confirmar reposición de material</button>
+          </form>
+        </div>
+      <% } %>
     </section>
 
     <section class="loan-item-grid">
@@ -52,7 +61,7 @@
               </form>
             <% } %>
 
-            <details class="sanction-box">
+            <details class="sanction-box" id="details_box_<%= item._id %>">
               <summary>Registrar sanción</summary>
               <form class="form-stack" method="post" action="/admin/sanciones">
                 <input type="hidden" name="redirect_to" value="/admin/prestamos/<%= prestamo._id %>">
@@ -63,15 +72,15 @@
                 <input type="hidden" name="ejemplar_codigo" value="<%= item.codigo_inventario %>">
                 <label>
                   Incidencia
-                  <select name="tipo_incidencia">
+                  <select name="tipo_incidencia" class="select-incidencia" data-item-id="<%= item._id %>" id="incidencia_<%= item._id %>">
                     <option value="Retraso">Retraso</option>
                     <option value="Daño">Daño</option>
                     <option value="Pérdida">Pérdida</option>
                   </select>
                 </label>
-                <label>
+                <label id="lbl_gravedad_<%= item._id %>">
                   Gravedad
-                  <select name="gravedad">
+                  <select name="gravedad" class="select-gravedad" data-item-id="<%= item._id %>" id="gravedad_<%= item._id %>">
                     <option value="Leve">Leve</option>
                     <option value="Moderada">Moderada</option>
                     <option value="Grave">Grave</option>
@@ -79,17 +88,25 @@
                 </label>
                 <label>
                   Tipo de sanción
-                  <select name="tipo_sancion">
-                    <option value="">Sugerida por configuración</option>
+                  <select name="tipo_sancion" class="select-sancion-tipo" data-item-id="<%= item._id %>" id="sancion_tipo_<%= item._id %>">
                     <option value="Advertencia">Advertencia</option>
                     <option value="Suspensión">Suspensión</option>
                     <option value="Reposición">Reposición</option>
                   </select>
                 </label>
-                <label>
-                  Días suspensión
-                  <input type="number" name="dias_suspension" min="0">
-                </label>
+
+                <div class="checkbox-container-add" id="repo_add_container_<%= item._id %>" style="display: none; margin-bottom: 0.5rem;">
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="chk_add_<%= item._id %>" class="chk-sancion-add" data-item-id="<%= item._id %>" name="suspension_adicional">
+                    <small>Suspensión adicional</small>
+                  </label>
+                </div>
+
+                <div class="days-container" id="sancion_dias_container_<%= item._id %>" style="display: none; margin-bottom: 0.5rem;">
+                  <label id="days_label_<%= item._id %>"><small>Días:</small></label>
+                  <input type="number" name="dias_suspension" id="sancion_dias_<%= item._id %>" min="1" value="0">
+                </div>
+
                 <label>
                   Observaciones
                   <textarea name="observaciones" rows="2"></textarea>
@@ -104,3 +121,97 @@
         </article>
       <% }) %>
     </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. Selector e interactividad en cada formulario de sanción individual
+    const incSelects = document.querySelectorAll('.select-incidencia');
+    
+    async function actualizarSugerencia(itemId) {
+      const incSelect = document.getElementById(`incidencia_${itemId}`);
+      const gravSelect = document.getElementById(`gravedad_${itemId}`);
+      const typeSelect = document.getElementById(`sancion_tipo_${itemId}`);
+      const daysInput = document.getElementById(`sancion_dias_${itemId}`);
+      const chkAdd = document.getElementById(`chk_add_${itemId}`);
+      const labelDoi = document.getElementById(`days_label_${itemId}`);
+      const daysContainer = document.getElementById(`sancion_dias_container_${itemId}`);
+      const chkContainer = document.getElementById(`repo_add_container_${itemId}`);
+      const lblGravedad = document.getElementById(`lbl_gravedad_${itemId}`);
+
+      if (!incSelect) return;
+
+      const inc = incSelect.value;
+      const grav = gravSelect.value;
+
+      // RN7: Pérdida no tiene niveles de gravedad seleccionables
+      if (inc === 'Pérdida') {
+        lblGravedad.style.display = 'none';
+      } else {
+        lblGravedad.style.display = 'block';
+      }
+
+      try {
+        const response = await fetch(`/admin/sanciones/sugerir?tipo_incidencia=${inc}&gravedad=${grav}`);
+        const sugerida = await response.json();
+
+        typeSelect.value = sugerida.tipo_sancion || 'Advertencia';
+        daysInput.value = sugerida.dias_suspension || 0;
+        chkAdd.checked = sugerida.suspension_adicional || false;
+
+        // Disparar cambio manual para actualizar visibilidad de divs
+        typeSelect.dispatchEvent(new Event('change'));
+      } catch (err) {
+        console.error('Error al cargar la sugerencia:', err);
+      }
+    }
+
+    function toggleCampos(itemId) {
+      const typeSelect = document.getElementById(`sancion_tipo_${itemId}`);
+      const val = typeSelect.value;
+      const daysContainer = document.getElementById(`sancion_dias_container_${itemId}`);
+      const chkContainer = document.getElementById(`repo_add_container_${itemId}`);
+      const chkAdd = document.getElementById(`chk_add_${itemId}`);
+      const labelDoi = document.getElementById(`days_label_${itemId}`);
+
+      if (val === 'Advertencia') {
+        daysContainer.style.display = 'none';
+        chkContainer.style.display = 'none';
+      } else if (val === 'Suspensión') {
+        daysContainer.style.display = 'block';
+        chkContainer.style.display = 'none';
+        labelDoi.textContent = 'Días de suspensión:';
+      } else if (val === 'Reposición') {
+        chkContainer.style.display = 'block';
+        labelDoi.textContent = 'Días adicionales:';
+        if (chkAdd.checked) {
+          daysContainer.style.display = 'block';
+        } else {
+          daysContainer.style.display = 'none';
+        }
+      }
+    }
+
+    incSelects.forEach(sel => {
+      const itemId = sel.getAttribute('data-item-id');
+      const gravSelect = document.getElementById(`gravedad_${itemId}`);
+      const typeSelect = document.getElementById(`sancion_tipo_${itemId}`);
+      const chkAdd = document.getElementById(`chk_add_${itemId}`);
+
+      if (sel) {
+        sel.addEventListener('change', () => actualizarSugerencia(itemId));
+      }
+      if (gravSelect) {
+        gravSelect.addEventListener('change', () => actualizarSugerencia(itemId));
+      }
+      if (typeSelect) {
+        typeSelect.addEventListener('change', () => toggleCampos(itemId));
+      }
+      if (chkAdd) {
+        chkAdd.addEventListener('change', () => toggleCampos(itemId));
+      }
+
+      // Carga inicial sugerida para cada ítem
+      actualizarSugerencia(itemId);
+    });
+  });
+</script>

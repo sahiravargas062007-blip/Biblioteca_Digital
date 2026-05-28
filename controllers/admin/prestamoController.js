@@ -156,8 +156,18 @@ exports.crear = async (req, res, next) => {
       return res.redirect('/admin/prestamos/nuevo');
     }
 
-    const sancionActiva = await Sancion.exists({ usuario_id: usuario._id, estado: 'Activa' });
-    if (sancionActiva) {
+    const now = new Date();
+    const tieneSancionBloqueante = await Sancion.exists({
+      usuario_id: usuario._id,
+      estado: 'Activa',
+      tipo_sancion: { $ne: 'Advertencia' },
+      $or: [
+        { tipo_sancion: 'Suspensión', fecha_fin: { $gt: now } },
+        { tipo_sancion: 'Reposición', reposicion_confirmada: { $ne: true } },
+        { tipo_sancion: 'Reposición', reposicion_confirmada: true, fecha_fin: { $gt: now } }
+      ]
+    });
+    if (tieneSancionBloqueante) {
       flash(req, 'error', 'El usuario tiene sanciones activas.');
       return res.redirect('/admin/prestamos/nuevo');
     }
@@ -195,7 +205,6 @@ exports.crear = async (req, res, next) => {
 
     const recursos = await Recurso.find({ _id: { $in: ejemplares.map((ejemplar) => ejemplar.recurso_id) } }).lean();
     const recursoMap = new Map(recursos.map((recurso) => [String(recurso._id), recurso]));
-    const now = new Date();
     const diasTolerancia = config?.prestamos_fisicos?.dias_tolerancia || 0;
 
     const items = ejemplares.map((ejemplar) => {
@@ -294,6 +303,109 @@ exports.renovar = async (req, res, next) => {
     await prestamo.save();
 
     flash(req, 'success', 'Renovación registrada.');
+    return res.redirect(`/admin/prestamos/${prestamo._id}`);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.confirmarReposicion = async (req, res, next) => {
+  try {
+    const Administrador = require('../../models/Administrador');
+    const prestamo = await Prestamo.findById(req.params.id);
+    if (!prestamo) {
+      flash(req, 'error', 'El préstamo no existe.');
+      return res.redirect('/admin/prestamos');
+    }
+
+    const now = new Date();
+    let repuestosCount = 0;
+
+    // 1. Marcar ítems perdidos como devueltos
+    for (const item of prestamo.items) {
+      if (item.estado === 'Perdido') {
+        item.estado = 'Devuelto';
+        item.fecha_devolucion_real = now;
+        repuestosCount++;
+
+        // 2. Dar de alta el ejemplar en inventario
+        const ejemplar = await Ejemplar.findById(item.ejemplar_id);
+        if (ejemplar) {
+          ejemplar.historial_estados.push({
+            estado_anterior: ejemplar.estado,
+            estado_nuevo: 'Disponible',
+            cambiado_por: req.session.adminId,
+            cambiado_en: now,
+            observacion: 'Reposición confirmada por administrador. Ejemplar habilitado.'
+          });
+          ejemplar.estado = 'Disponible';
+          ejemplar.actualizado_en = now;
+          await ejemplar.save();
+        }
+
+        // 3. Incrementar ejemplares disponibles del Recurso
+        await Recurso.findByIdAndUpdate(item.recurso_id, {
+          $inc: { 'fisico.ejemplares_disponibles': 1 },
+          actualizado_en: now
+        });
+      }
+    }
+
+    if (repuestosCount === 0) {
+      flash(req, 'error', 'No se encontraron ítems pendientes de reposición en este préstamo.');
+      return res.redirect(`/admin/prestamos/${prestamo._id}`);
+    }
+
+    // 4. Actualizar estado del préstamo
+    prestamo.estado = estadoGeneral(prestamo.items);
+    prestamo.actualizado_en = now;
+    await prestamo.save();
+
+    // 5. Levantar o actualizar la sanción del usuario
+    const sancion = await Sancion.findOne({
+      prestamo_id: prestamo._id,
+      tipo_sancion: 'Reposición',
+      estado: 'Activa'
+    });
+
+    if (sancion) {
+      sancion.reposicion_confirmada = true;
+      sancion.actualizado_en = now;
+
+      // Verificar si hay suspensión adicional pendiente
+      const tieneSuspensionActiva = sancion.fecha_fin && new Date(sancion.fecha_fin) > now;
+      if (!tieneSuspensionActiva) {
+        // Levantar la sanción si no hay suspensión adicional pendiente
+        sancion.estado = 'Levantada';
+        sancion.fecha_levantamiento = now;
+        sancion.motivo_levantamiento = 'Reposición de material confirmada';
+        sancion.levantada_por = req.session.adminId;
+        const admin = await Administrador.findById(req.session.adminId).lean();
+        sancion.levantada_por_nombre = admin?.nombre || 'Administrador';
+      }
+      await sancion.save();
+    }
+
+    // 6. Verificar y actualizar estado del usuario
+    const usuario = await Usuario.findById(prestamo.usuario_id);
+    if (usuario) {
+      const tieneBloqueante = await Sancion.exists({
+        usuario_id: usuario._id,
+        estado: 'Activa',
+        tipo_sancion: { $ne: 'Advertencia' },
+        $or: [
+          { tipo_sancion: 'Suspensión', fecha_fin: { $gt: now } },
+          { tipo_sancion: 'Reposición', reposicion_confirmada: { $ne: true } },
+          { tipo_sancion: 'Reposición', reposicion_confirmada: true, fecha_fin: { $gt: now } }
+        ]
+      });
+
+      usuario.estado = tieneBloqueante ? 'Sancionado' : 'Activo';
+      usuario.actualizado_en = now;
+      await usuario.save();
+    }
+
+    flash(req, 'success', 'Reposición confirmada correctamente. El ejemplar se ha habilitado y la sanción se ha actualizado.');
     return res.redirect(`/admin/prestamos/${prestamo._id}`);
   } catch (error) {
     next(error);

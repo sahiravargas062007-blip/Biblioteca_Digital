@@ -87,8 +87,18 @@ exports.crear = async (req, res, next) => {
       return res.redirect('/admin/reservas/nueva');
     }
 
-    const sancionActiva = await Sancion.exists({ usuario_id: usuario._id, estado: 'Activa' });
-    if (sancionActiva) {
+    const now = new Date();
+    const tieneSancionBloqueante = await Sancion.exists({
+      usuario_id: usuario._id,
+      estado: 'Activa',
+      tipo_sancion: { $ne: 'Advertencia' },
+      $or: [
+        { tipo_sancion: 'Suspensión', fecha_fin: { $gt: now } },
+        { tipo_sancion: 'Reposición', reposicion_confirmada: { $ne: true } },
+        { tipo_sancion: 'Reposición', reposicion_confirmada: true, fecha_fin: { $gt: now } }
+      ]
+    });
+    if (tieneSancionBloqueante) {
       flash(req, 'error', 'El usuario tiene sanciones activas.');
       return res.redirect('/admin/reservas/nueva');
     }

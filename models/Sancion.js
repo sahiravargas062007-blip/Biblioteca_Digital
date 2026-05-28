@@ -25,6 +25,7 @@ const sancionSchema = new mongoose.Schema({
   },
   observaciones: String,
   dias_suspension: { type: Number, default: 0 },
+  reposicion_confirmada: { type: Boolean, default: false },
   fecha_inicio: { type: Date, default: Date.now },
   fecha_fin: Date,
   incluye_multa: { type: Boolean, default: false },

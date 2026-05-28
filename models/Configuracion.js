@@ -31,6 +31,9 @@ const configuracionSchema = new mongoose.Schema({
   },
   sanciones: {
     incluir_multas: { type: Boolean, default: false },
+    multa_valor_dia: { type: Number, default: 100 },
+    retraso_leve_max_dias: { type: Number, default: 3 },
+    retraso_moderada_max_dias: { type: Number, default: 7 },
     reglas: [{
       tipo_incidencia: {
         type: String,
@@ -44,7 +47,8 @@ const configuracionSchema = new mongoose.Schema({
         type: String,
         enum: ['Advertencia', 'Suspensión', 'Reposición']
       },
-      dias_suspension: { type: Number, default: 0 }
+      dias_suspension: { type: Number, default: 0 },
+      suspension_adicional: { type: Boolean, default: false }
     }]
   },
   actualizado_por: { type: mongoose.Schema.Types.ObjectId, ref: 'Administrador' },

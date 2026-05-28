@@ -10,5 +10,6 @@ router.get('/nuevo', controller.nuevo);
 router.post('/', validarPrestamo, controller.crear);
 router.get('/:id', controller.detalle);
 router.post('/:id/renovar', controller.renovar);
+router.post('/:id/confirmar-reposicion', controller.confirmarReposicion);
 
 module.exports = router;

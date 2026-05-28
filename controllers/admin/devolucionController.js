@@ -5,6 +5,7 @@ const Prestamo = require('../../models/Prestamo');
 const Recurso = require('../../models/Recurso');
 const Reserva = require('../../models/Reserva');
 const Usuario = require('../../models/Usuario');
+const Configuracion = require('../../models/Configuracion');
 const sancionController = require('./sancionController');
 const reservaService = require('../../services/reservaService');
 
@@ -12,6 +13,12 @@ const TIPO_FISICO = 'F\u00edsico';
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
+}
+
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + Number(days || 0));
+  return result;
 }
 
 function estadoGeneral(items) {
@@ -99,7 +106,69 @@ exports.crear = async (req, res, next) => {
         tipo_sancion: sugerida.tipo_sancion || 'Reposición',
         dias_suspension: sugerida.dias_suspension || 0,
         observaciones: req.body.observaciones || 'Ejemplar reportado como perdido en devolución.',
-        incluye_multa: sugerida.incluye_multa
+        incluye_multa: false,
+        valor_multa: 0
+      });
+    }
+
+    // ── Detección de retraso
+    const config = await Configuracion.findOne().lean();
+    const limiteConTolerancia = addDays(item.fecha_limite, item.dias_tolerancia || 0);
+    const esRetraso = now > limiteConTolerancia;
+
+    if (esRetraso) {
+      const msDiff = now.getTime() - item.fecha_limite.getTime();
+      const diasRetraso = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
+
+      if (diasRetraso > 0) {
+        // Determinar gravedad según rangos
+        const leveMax = config?.sanciones?.retraso_leve_max_dias || 3;
+        const modMax = config?.sanciones?.retraso_moderada_max_dias || 7;
+
+        let gravedad = 'Leve';
+        if (diasRetraso <= leveMax) {
+          gravedad = 'Leve';
+        } else if (diasRetraso <= modMax) {
+          gravedad = 'Moderada';
+        } else {
+          gravedad = 'Grave';
+        }
+
+        // Buscar regla sugerida
+        const sugerida = await sancionController._sugerirSancion('Retraso', gravedad);
+
+        await sancionController._crearSancionDesdePayload(req, {
+          usuario_id: prestamo.usuario_id,
+          prestamo_id: prestamo._id,
+          item_prestamo_id: item._id,
+          recurso_titulo: item.recurso_titulo,
+          ejemplar_codigo: item.codigo_inventario,
+          tipo_incidencia: 'Retraso',
+          gravedad: gravedad,
+          tipo_sancion: sugerida.tipo_sancion || 'Advertencia',
+          dias_suspension: sugerida.dias_suspension || 0,
+          observaciones: req.body.observaciones || `Devolución retrasada por ${diasRetraso} día(s).`,
+          incluye_multa: false,
+          valor_multa: 0
+        });
+      }
+    }
+
+    if (estadoDevolucion === 'Dañado') {
+      const sugerida = await sancionController._sugerirSancion('Daño', 'Moderada');
+      await sancionController._crearSancionDesdePayload(req, {
+        usuario_id: prestamo.usuario_id,
+        prestamo_id: prestamo._id,
+        item_prestamo_id: item._id,
+        recurso_titulo: item.recurso_titulo,
+        ejemplar_codigo: item.codigo_inventario,
+        tipo_incidencia: 'Daño',
+        gravedad: 'Moderada',
+        tipo_sancion: sugerida.tipo_sancion || 'Suspensión',
+        dias_suspension: sugerida.dias_suspension || 0,
+        observaciones: req.body.observaciones || 'Ejemplar reportado como dañado en devolución.',
+        incluye_multa: false,
+        valor_multa: 0
       });
     }
 

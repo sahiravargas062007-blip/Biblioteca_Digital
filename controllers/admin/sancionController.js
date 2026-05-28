@@ -14,17 +14,21 @@ function addDays(date, days) {
   result.setDate(result.getDate() + Number(days || 0));
   return result;
 }
-
 async function sugerirSancion(tipoIncidencia, gravedad) {
   const config = await Configuracion.findOne().lean();
+  
+  // Si tipoIncidencia es Pérdida, la gravedad siempre es Grave (RN7)
+  const buscaGravedad = tipoIncidencia === 'Pérdida' ? 'Grave' : gravedad;
+
   const regla = config?.sanciones?.reglas?.find((item) => (
-    item.tipo_incidencia === tipoIncidencia && item.gravedad === gravedad
+    item.tipo_incidencia === tipoIncidencia && item.gravedad === buscaGravedad
   ));
 
   return {
-    tipo_sancion: regla?.tipo_sancion || 'Advertencia',
+    tipo_sancion: regla?.tipo_sancion || (tipoIncidencia === 'Pérdida' ? 'Reposición' : 'Advertencia'),
     dias_suspension: regla?.dias_suspension || 0,
-    incluye_multa: Boolean(config?.sanciones?.incluir_multas)
+    suspension_adicional: regla?.suspension_adicional || false,
+    incluye_multa: false
   };
 }
 
@@ -44,14 +48,17 @@ async function crearSancionDesdePayload(req, payload) {
     recurso_titulo: payload.recurso_titulo || '',
     ejemplar_codigo: payload.ejemplar_codigo || '',
     tipo_incidencia: payload.tipo_incidencia,
-    gravedad: payload.gravedad,
+    gravedad: payload.tipo_incidencia === 'Pérdida' ? 'Grave' : payload.gravedad,
     tipo_sancion: payload.tipo_sancion,
     observaciones: payload.observaciones || '',
     dias_suspension: diasSuspension,
+    reposicion_confirmada: false,
     fecha_inicio: now,
-    fecha_fin: payload.tipo_sancion === 'Suspensión' ? addDays(now, diasSuspension) : undefined,
-    incluye_multa: payload.incluye_multa === 'true' || payload.incluye_multa === true,
-    valor_multa: Number(payload.valor_multa || 0),
+    fecha_fin: (payload.tipo_sancion === 'Suspensión' || (payload.tipo_sancion === 'Reposición' && diasSuspension > 0)) 
+      ? addDays(now, diasSuspension) 
+      : undefined,
+    incluye_multa: false,
+    valor_multa: 0,
     estado: 'Activa',
     registrada_por: req.session.adminId,
     registrada_por_nombre: admin?.nombre || 'Administrador',
