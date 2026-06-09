@@ -354,9 +354,25 @@ exports.prestar = async (req, res, next) => {
       return res.redirect(`/catalogo/${req.params.id}`);
     }
 
-    const duracionDias = licencia?.duracion_prestamo
-      || config?.prestamos_digitales?.duracion_defecto_dias
-      || 7;
+    let duracionDias = licencia?.duracion_prestamo;
+    if (!duracionDias) {
+      const categoria = recurso.categorias?.[0];
+      if (categoria) {
+        const fisicos = config?.prestamos_fisicos || {};
+        const categoriaConfig = (fisicos.tiempos_por_categoria || []).find((item) => (
+          String(item.categoria_id) === String(categoria.categoria_id)
+        ));
+        if (categoriaConfig) {
+          const subConfig = (categoriaConfig.subcategorias || []).find((item) => (
+            String(item.subcategoria_id) === String(categoria.subcategoria_id)
+          ));
+          duracionDias = subConfig?.dias || categoriaConfig.dias;
+        }
+      }
+    }
+    if (!duracionDias) {
+      duracionDias = config?.prestamos_digitales?.duracion_defecto_dias || 7;
+    }
 
     const fechaInicio = new Date();
     const fechaLimite = new Date();

@@ -1,310 +1,679 @@
-
+<% layout = 'layouts/adminLayout' %>
   <section class="panel page-title-panel">
     <p class="eyebrow">Sistema</p>
-    <h1>Configuración</h1>
-    <p class="muted">Ajusta los parámetros de préstamos, reservas y sanciones del sistema.</p>
+    <h1>Configuración global</h1>
+    <p class="muted">Ajusta los parámetros de préstamos, reservas, sanciones y licencias de la plataforma.</p>
   </section>
 
-  <section class="panel">
-    <h2>Préstamos físicos</h2>
-    <form method="post" action="/admin/configuracion?_method=PUT" class="form-stack">
-      <label>
-        Máximo de préstamos activos por usuario
-        <input type="number" name="max_prestamos_fisicos" value="<%= config.prestamos_fisicos.max_recursos_por_usuario %>" min="1" max="20">
-      </label>
-      <label>
-        Días de préstamo (defecto)
-        <input type="number" name="dias_prestamo" value="<%= config.prestamos_fisicos.dias_prestamo_defecto %>" min="1" max="60">
-      </label>
-      <label>
-        Días de renovación
-        <input type="number" name="dias_renovacion" value="<%= config.prestamos_fisicos.dias_renovacion %>" min="1" max="30">
-      </label>
-      <label>
-        Máximo de renovaciones por préstamo
-        <input type="number" name="max_renovaciones" value="<%= config.prestamos_fisicos.max_renovaciones %>" min="0" max="5">
-      </label>
-      <label>
-        Días de tolerancia para vencimiento
-        <input type="number" name="dias_tolerancia" value="<%= config.prestamos_fisicos.dias_tolerancia %>" min="0" max="10">
-      </label>
+  <form method="post" action="/admin/configuracion?_method=PUT" class="config-form-wrap" id="config-form">
+    <div class="config-layout">
+      <!-- ── BARRA LATERAL (TABS) ── -->
+      <aside class="config-sidebar">
+        <p class="config-sidebar__title">Secciones</p>
+        <nav class="config-sidebar__nav">
+          <button type="button" class="config-sidebar__link is-active" data-tab-target="tab-prestamos-fisicos">
+            Préstamos físicos
+            <small>Políticas y tiempos de material</small>
+          </button>
+          <button type="button" class="config-sidebar__link" data-tab-target="tab-prestamos-digitales">
+            Préstamos digitales
+            <small>Límites y licencias por defecto</small>
+          </button>
+          <button type="button" class="config-sidebar__link" data-tab-target="tab-reservas">
+            Reservas
+            <small>Reglas de cola y reclamos</small>
+          </button>
+          <button type="button" class="config-sidebar__link" data-tab-target="tab-sanciones">
+            Sanciones
+            <small>Matriz de reglas e incidencias</small>
+          </button>
+        </nav>
 
-      <hr>
+        <div class="config-sidebar__info-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <p>Los cambios realizados se aplicarán de inmediato y en tiempo real para todos los módulos de la plataforma.</p>
+        </div>
+      </aside>
 
-      <h2>Préstamos digitales</h2>
-      <label>
-        Máximo de préstamos digitales por usuario
-        <input type="number" name="max_prestamos_digitales" value="<%= config.prestamos_digitales.max_prestamos_por_usuario %>" min="1" max="50">
-      </label>
-      <label>
-        Duración defecto (días)
-        <input type="number" name="duracion_digital" value="<%= config.prestamos_digitales.duracion_defecto_dias %>" min="1" max="60">
-      </label>
-      <label>
-        Renovaciones permitidas
-        <input type="number" name="renovaciones_digitales" value="<%= config.prestamos_digitales.renovaciones_permitidas %>" min="0" max="5">
-      </label>
+      <!-- ── CONTENIDO DE LAS CONFIGURACIONES ── -->
+      <main class="config-content">
+        
+        <!-- Tab: Préstamos Físicos -->
+        <section class="config-section is-active" id="tab-prestamos-fisicos">
+          <h2 class="config-section__title">Configuración de préstamos físicos</h2>
+          <p class="config-section__subtitle">Define las reglas de circulación para los materiales físicos de la biblioteca.</p>
+          
+          <div class="config-grid-2cols">
+            <!-- Columna Izquierda: Parámetros Generales -->
+            <div class="config-params-col">
+              <div class="config-card">
+                <p class="config-card__title">Reglas de préstamo físico</p>
 
-      <hr>
+                <div class="config-input-group">
+                  <label for="max_prestamos_fisicos">Máximo de préstamos activos por usuario</label>
+                  <input type="number" id="max_prestamos_fisicos" name="max_prestamos_fisicos" value="<%= config.prestamos_fisicos.max_recursos_por_usuario %>" min="1" max="20" required>
+                  <small>Cantidad máxima de materiales físicos que un usuario puede tener prestados simultáneamente.</small>
+                </div>
 
-      <h2>Reservas</h2>
-      <label>
-        Máximo de reservas por usuario
-        <input type="number" name="max_reservas" value="<%= config.reservas.max_reservas_por_usuario %>" min="1" max="10">
-      </label>
-      <label>
-        Tiempo máximo de reclamo (horas)
-        <input type="number" name="tiempo_reclamo_horas" value="<%= config.reservas.tiempo_max_reclamo_horas %>" min="1" max="72">
-      </label>
+                <div class="config-input-group">
+                  <label for="dias_prestamo">Días de préstamo (por defecto)</label>
+                  <input type="number" id="dias_prestamo" name="dias_prestamo" value="<%= config.prestamos_fisicos.dias_prestamo_defecto %>" min="1" max="60" required>
+                  <small>Días estándar para recursos que no cuentan con tiempo específico por categoría.</small>
+                </div>
 
-      <hr>
+                <div class="config-input-group">
+                  <label for="dias_renovacion">Días de renovación</label>
+                  <input type="number" id="dias_renovacion" name="dias_renovacion" value="<%= config.prestamos_fisicos.dias_renovacion %>" min="1" max="30" required>
+                  <small>Cantidad de días adicionales agregados al realizar una renovación.</small>
+                </div>
 
-      <h2>Sanciones disciplinarias (Matriz de reglas)</h2>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-        <label>
-          Días máximo retraso Leve
-          <input type="number" name="retraso_leve_max_dias" value="<%= config.sanciones?.retraso_leve_max_dias !== undefined ? config.sanciones.retraso_leve_max_dias : 3 %>" min="1" max="15" placeholder="Por defecto: 3">
-          <small class="muted" style="font-size: 0.75rem;">(Por defecto: 1-3 días. Leve)</small>
-        </label>
-        <label>
-          Días máximo retraso Moderada
-          <input type="number" name="retraso_moderada_max_dias" value="<%= config.sanciones?.retraso_moderada_max_dias !== undefined ? config.sanciones.retraso_moderada_max_dias : 7 %>" min="1" max="30" placeholder="Por defecto: 7">
-          <small class="muted" style="font-size: 0.75rem;">(Por defecto: 4-7 días. Moderada. 8+ Grave)</small>
-        </label>
-      </div>
+                <div class="config-input-group">
+                  <label for="max_renovaciones">Máximo de renovaciones por préstamo</label>
+                  <input type="number" id="max_renovaciones" name="max_renovaciones" value="<%= config.prestamos_fisicos.max_renovaciones %>" min="0" max="5" required>
+                  <small>Número máximo de veces que se permite renovar un préstamo físico.</small>
+                </div>
 
-      <%
-      const combos = [
-        { idx: 0, tipo: 'Retraso', gravedad: 'Leve' },
-        { idx: 1, tipo: 'Retraso', gravedad: 'Moderada' },
-        { idx: 2, tipo: 'Retraso', gravedad: 'Grave' },
-        { idx: 3, tipo: 'Daño',    gravedad: 'Leve' },
-        { idx: 4, tipo: 'Daño',    gravedad: 'Moderada' },
-        { idx: 5, tipo: 'Daño',    gravedad: 'Grave' },
-        { idx: 6, tipo: 'Pérdida', gravedad: 'Grave' }
-      ];
-      function findRegla(tipo, gravedad) {
-        return (config.sanciones?.reglas || []).find(r => r.tipo_incidencia === tipo && r.gravedad === gravedad) || {
-          tipo_incidencia: tipo,
-          gravedad: gravedad,
-          tipo_sancion: 'Advertencia',
-          dias_suspension: 0,
-          suspension_adicional: false
-        };
-      }
-      %>
+                <div class="config-input-group">
+                  <label for="dias_tolerancia">Días de tolerancia para vencimiento</label>
+                  <input type="number" id="dias_tolerancia" name="dias_tolerancia" value="<%= config.prestamos_fisicos.dias_tolerancia %>" min="0" max="10" required>
+                  <small>Días de gracia concedidos tras el vencimiento antes de marcar como mora o sancionar.</small>
+                </div>
+              </div>
+            </div>
 
-      <div class="table-wrap">
-        <table class="matrix-table">
-          <thead>
-            <tr>
-              <th>Incidencia</th>
-              <th>Leve</th>
-              <th>Moderada</th>
-              <th>Grave</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Retraso</strong></td>
-              <% [0, 1, 2].forEach(idx => {
-                const item = combos[idx];
-                const regla = findRegla(item.tipo, item.gravedad);
-              %>
-                <td>
-                  <div class="matrix-cell">
-                    <input type="hidden" name="reglas[<%= item.idx %>][tipo_incidencia]" value="<%= item.tipo %>">
-                    <input type="hidden" name="reglas[<%= item.idx %>][gravedad]" value="<%= item.gravedad %>">
-                    
-                    <select name="reglas[<%= item.idx %>][tipo_sancion]" id="tipo_sancion_<%= item.idx %>">
-                      <option value="Advertencia" <%= regla.tipo_sancion === 'Advertencia' ? 'selected' : '' %>>Advertencia</option>
-                      <option value="Suspensión" <%= regla.tipo_sancion === 'Suspensión' ? 'selected' : '' %>>Suspensión</option>
-                      <option value="Reposición" <%= regla.tipo_sancion === 'Reposición' ? 'selected' : '' %>>Reposición</option>
-                    </select>
+            <!-- Columna Derecha: Tiempos por Categoría -->
+            <div class="config-tree-col">
+              <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0 0 4px; color: var(--conf-text);">Tiempos por categoría</h3>
+              <p style="font-size: 0.78rem; color: var(--conf-muted); margin: 0 0 12px;">Establece diferentes tiempos de préstamo según la categoría y subcategoría del material.</p>
+              
+              <div class="category-tree-card">
+                <div class="category-tree-search">
+                  <input type="text" id="tree-search" placeholder="Buscar categoría o subcategoría..." autocomplete="off">
+                </div>
+                
+                <div class="category-tree-content" id="tree-container">
+                  <% if (typeof categorias !== 'undefined' && categorias.length > 0) { %>
+                    <% categorias.forEach((cat, catIdx) => { 
+                      const catConfig = (config.prestamos_fisicos.tiempos_por_categoria || []).find(c => String(c.categoria_id) === String(cat._id));
+                      const catHasConfig = !!catConfig;
+                      const catDias = catConfig ? catConfig.dias : config.prestamos_fisicos.dias_prestamo_defecto;
+                    %>
+                      <div class="category-node" data-category-name="<%= cat.nombre %>">
+                        <div class="category-row">
+                          <span class="category-row__toggle <%= cat.subcategorias.length === 0 ? 'is-empty' : '' %>" data-cat-id="<%= cat._id %>">
+                            <% if (cat.subcategorias.length > 0) { %>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+                            <% } %>
+                          </span>
+                          <input type="checkbox" name="tiempos_por_categoria[<%= catIdx %>][habilitado]" class="category-row__checkbox cat-chk" id="chk-cat-<%= cat._id %>" data-cat-id="<%= cat._id %>" <%= catHasConfig ? 'checked' : '' %>>
+                          <input type="hidden" name="tiempos_por_categoria[<%= catIdx %>][categoria_id]" value="<%= cat._id %>">
+                          <input type="hidden" name="tiempos_por_categoria[<%= catIdx %>][categoria_nombre]" value="<%= cat.nombre %>">
+                          <span class="category-row__label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                            <%= cat.nombre %>
+                          </span>
+                          <select name="tiempos_por_categoria[<%= catIdx %>][dias]" class="category-row__select cat-select" id="select-cat-<%= cat._id %>" <%= catHasConfig ? '' : 'disabled' %>>
+                            <% [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30, 45, 60].forEach(d => { %>
+                              <option value="<%= d %>" <%= Number(catDias) === d ? 'selected' : '' %>><%= d %> días</option>
+                            <% }) %>
+                          </select>
+                        </div>
 
-                    <div class="checkbox-container-add" id="checkbox-container-add-<%= item.idx %>" style="display: none;">
-                      <label class="checkbox-inline">
-                        <input type="checkbox" name="reglas[<%= item.idx %>][suspension_adicional]" id="chk-add-<%= item.idx %>" <%= regla.suspension_adicional ? 'checked' : '' %>>
-                        <small>Suspensión adicional</small>
-                      </label>
-                    </div>
-
-                    <div class="days-container" id="days-container-<%= item.idx %>" style="display: none;">
-                      <label id="days-label-<%= item.idx %>"><small>Días:</small></label>
-                      <input type="number" name="reglas[<%= item.idx %>][dias_suspension]" id="days-input-<%= item.idx %>" value="<%= regla.dias_suspension %>" min="1">
-                    </div>
-                  </div>
-                </td>
-              <% }) %>
-            </tr>
-
-            <tr>
-              <td><strong>Daño</strong></td>
-              <% [3, 4, 5].forEach(idx => {
-                const item = combos[idx];
-                const regla = findRegla(item.tipo, item.gravedad);
-              %>
-                <td>
-                  <div class="matrix-cell">
-                    <input type="hidden" name="reglas[<%= item.idx %>][tipo_incidencia]" value="<%= item.tipo %>">
-                    <input type="hidden" name="reglas[<%= item.idx %>][gravedad]" value="<%= item.gravedad %>">
-                    
-                    <select name="reglas[<%= item.idx %>][tipo_sancion]" id="tipo_sancion_<%= item.idx %>">
-                      <option value="Advertencia" <%= regla.tipo_sancion === 'Advertencia' ? 'selected' : '' %>>Advertencia</option>
-                      <option value="Suspensión" <%= regla.tipo_sancion === 'Suspensión' ? 'selected' : '' %>>Suspensión</option>
-                      <option value="Reposición" <%= regla.tipo_sancion === 'Reposición' ? 'selected' : '' %>>Reposición</option>
-                    </select>
-
-                    <div class="checkbox-container-add" id="checkbox-container-add-<%= item.idx %>" style="display: none;">
-                      <label class="checkbox-inline">
-                        <input type="checkbox" name="reglas[<%= item.idx %>][suspension_adicional]" id="chk-add-<%= item.idx %>" <%= regla.suspension_adicional ? 'checked' : '' %>>
-                        <small>Suspensión adicional</small>
-                      </label>
-                    </div>
-
-                    <div class="days-container" id="days-container-<%= item.idx %>" style="display: none;">
-                      <label id="days-label-<%= item.idx %>"><small>Días:</small></label>
-                      <input type="number" name="reglas[<%= item.idx %>][dias_suspension]" id="days-input-<%= item.idx %>" value="<%= regla.dias_suspension %>" min="1">
-                    </div>
-                  </div>
-                </td>
-              <% }) %>
-            </tr>
-
-            <tr>
-              <td><strong>Pérdida</strong></td>
-              <% 
-                const itemPerdida = combos[6];
-                const reglaPerdida = findRegla(itemPerdida.tipo, itemPerdida.gravedad);
-              %>
-              <td colspan="3">
-                <div class="matrix-cell" style="max-width: 320px;">
-                  <input type="hidden" name="reglas[<%= itemPerdida.idx %>][tipo_incidencia]" value="<%= itemPerdida.tipo %>">
-                  <input type="hidden" name="reglas[<%= itemPerdida.idx %>][gravedad]" value="<%= itemPerdida.gravedad %>">
+                        <% if (cat.subcategorias.length > 0) { %>
+                          <div class="subcategory-list" id="sublist-<%= cat._id %>">
+                            <% cat.subcategorias.forEach((sub, subIdx) => {
+                              const subConfig = catConfig ? (catConfig.subcategorias || []).find(s => String(s.subcategoria_id) === String(sub._id)) : null;
+                              const subHasConfig = !!subConfig;
+                              const subDias = subConfig ? subConfig.dias : catDias;
+                            %>
+                              <div class="subcategory-row" data-sub-name="<%= sub.nombre %>">
+                                <input type="checkbox" name="tiempos_por_categoria[<%= catIdx %>][subcategorias][<%= subIdx %>][habilitado]" class="subcategory-row__checkbox sub-chk" id="chk-sub-<%= sub._id %>" data-parent-id="<%= cat._id %>" data-sub-id="<%= sub._id %>" <%= subHasConfig ? 'checked' : '' %>>
+                                <input type="hidden" name="tiempos_por_categoria[<%= catIdx %>][subcategorias][<%= subIdx %>][subcategoria_id]" value="<%= sub._id %>">
+                                <input type="hidden" name="tiempos_por_categoria[<%= catIdx %>][subcategorias][<%= subIdx %>][subcategoria_nombre]" value="<%= sub.nombre %>">
+                                <span class="subcategory-row__label"><%= sub.nombre %></span>
+                                <select name="tiempos_por_categoria[<%= catIdx %>][subcategorias][<%= subIdx %>][dias]" class="subcategory-row__select sub-select" id="select-sub-<%= sub._id %>" <%= subHasConfig ? '' : 'disabled' %>>
+                                  <% [1, 2, 3, 5, 7, 10, 12, 15, 20, 25, 30, 45, 60].forEach(d => { %>
+                                    <option value="<%= d %>" <%= Number(subDias) === d ? 'selected' : '' %>><%= d %> días</option>
+                                  <% }) %>
+                                </select>
+                              </div>
+                            <% }) %>
+                          </div>
+                        <% } %>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <p class="muted" style="text-align:center; padding: 12px 0;">No hay categorías activas cargadas.</p>
+                  <% } %>
                   
-                  <select name="reglas[<%= itemPerdida.idx %>][tipo_sancion]" id="tipo_sancion_<%= itemPerdida.idx %>">
-                    <option value="Advertencia" <%= reglaPerdida.tipo_sancion === 'Advertencia' ? 'selected' : '' %>>Advertencia</option>
-                    <option value="Suspensión" <%= reglaPerdida.tipo_sancion === 'Suspensión' ? 'selected' : '' %>>Suspensión</option>
-                    <option value="Reposición" <%= reglaPerdida.tipo_sancion === 'Reposición' ? 'selected' : '' %>>Reposición</option>
-                  </select>
-
-                  <div class="checkbox-container-add" id="checkbox-container-add-<%= itemPerdida.idx %>" style="display: none;">
-                    <label class="checkbox-inline">
-                      <input type="checkbox" name="reglas[<%= itemPerdida.idx %>][suspension_adicional]" id="chk-add-<%= itemPerdida.idx %>" <%= reglaPerdida.suspension_adicional ? 'checked' : '' %>>
-                      <small>Suspensión adicional</small>
-                    </label>
-                  </div>
-
-                  <div class="days-container" id="days-container-<%= itemPerdida.idx %>" style="display: none;">
-                    <label id="days-label-<%= itemPerdida.idx %>"><small>Días:</small></label>
-                    <input type="number" name="reglas[<%= itemPerdida.idx %>][dias_suspension]" id="days-input-<%= itemPerdida.idx %>" value="<%= reglaPerdida.dias_suspension %>" min="1">
+                  <div class="category-tree-empty" id="tree-empty">
+                    No se encontraron categorías o subcategorías que coincidan con la búsqueda.
                   </div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
-      <style>
-        .matrix-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 1.5rem 0;
-        }
-        .matrix-table th, .matrix-table td {
-          padding: 0.75rem;
-          border: 1px solid var(--border-color, #e2e8f0);
-          text-align: left;
-          vertical-align: top;
-        }
-        .matrix-table th {
-          background-color: var(--background-secondary, #f8fafc);
-          font-weight: 600;
-        }
-        .matrix-cell {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .matrix-cell select, .matrix-cell input[type="number"] {
-          width: 100%;
-          padding: 0.35rem 0.5rem;
-          border: 1px solid var(--border-color, #e2e8f0);
-          border-radius: 0.25rem;
-          font-size: 0.875rem;
-        }
-        .checkbox-inline {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: 0.85rem;
-          cursor: pointer;
-        }
-        .checkbox-inline input {
-          margin: 0;
-          cursor: pointer;
-        }
-        .days-container {
-          margin-top: 0.25rem;
-        }
-        .days-container label {
-          display: block;
-          margin-bottom: 0.15rem;
-          font-size: 0.75rem;
-          color: var(--text-muted, #718096);
-        }
-      </style>
+                <div class="category-tree-footer">
+                  <a href="/admin/categorias" class="category-tree-footer__btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Gestionar categorías personalizadas
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const combos = [0, 1, 2, 3, 4, 5, 6];
-          
-          function updateCell(idx) {
-            const select = document.getElementById(`tipo_sancion_${idx}`);
-            const val = select.value;
-            const daysContainer = document.getElementById(`days-container-${idx}`);
-            const chkContainer = document.getElementById(`checkbox-container-add-${idx}`);
-            const chk = document.getElementById(`chk-add-${idx}`);
-            const label = document.getElementById(`days-label-${idx}`);
-            
-            if (val === 'Advertencia') {
-              daysContainer.style.display = 'none';
-              chkContainer.style.display = 'none';
-            } else if (val === 'Suspensión') {
-              daysContainer.style.display = 'block';
-              chkContainer.style.display = 'none';
-              label.textContent = 'Días de suspensión:';
-            } else if (val === 'Reposición') {
-              chkContainer.style.display = 'block';
-              label.textContent = 'Días adicionales:';
-              if (chk.checked) {
-                daysContainer.style.display = 'block';
-              } else {
-                daysContainer.style.display = 'none';
-              }
-            }
+        <!-- Tab: Préstamos Digitales -->
+        <section class="config-section" id="tab-prestamos-digitales">
+          <h2 class="config-section__title">Configuración de préstamos digitales</h2>
+          <p class="config-section__subtitle">Define límites y valores predeterminados para recursos y licencias digitales.</p>
+
+          <div class="config-card">
+            <p class="config-card__title">Reglas generales y licencias</p>
+
+            <div class="config-input-group">
+              <label for="max_prestamos_digitales">Límite máximo de préstamos activos por usuario</label>
+              <input type="number" id="max_prestamos_digitales" name="max_prestamos_digitales" value="<%= config.prestamos_digitales.max_prestamos_por_usuario %>" min="1" max="50" required>
+              <small>Límite acumulado de recursos digitales restringidos que un usuario puede tener asignados.</small>
+            </div>
+
+            <div class="config-input-group">
+              <label for="duracion_digital">Duración de préstamo digital predeterminada (en días)</label>
+              <input type="number" id="duracion_digital" name="duracion_digital" value="<%= config.prestamos_digitales.duracion_defecto_dias %>" min="1" max="60" required>
+              <small>Tiempo de préstamo asignado por defecto para los recursos digitales restringidos.</small>
+            </div>
+
+            <div class="config-input-group" style="opacity: 0.6; pointer-events: none;">
+              <label for="renovaciones_digitales">Renovaciones permitidas</label>
+              <input type="number" id="renovaciones_digitales" name="renovaciones_digitales" value="0" min="0" max="0" readonly>
+              <small>Las renovaciones no aplican para préstamos digitales (Bloqueado por regla de negocio RN4).</small>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--conf-border); margin: 10px 0;">
+            <p style="font-size: 0.85rem; font-weight: 700; color: var(--conf-text); margin: 4px 0 0 0;">Parámetros predeterminados de licencia restringida (RN5)</p>
+            <p style="font-size: 0.75rem; color: var(--conf-muted); margin: 0 0 10px;">Valores aplicados automáticamente al registrar un nuevo recurso digital restringido.</p>
+
+            <div class="config-input-group">
+              <label for="usuarios_simultaneos_digital">Usuarios simultáneos predeterminados</label>
+              <input type="number" id="usuarios_simultaneos_digital" name="usuarios_simultaneos_digital" value="<%= config.prestamos_digitales.usuarios_simultaneos || 1 %>" min="1" max="1000" required>
+              <small>Número máximo de personas que pueden leer o reproducir el mismo recurso digital a la vez.</small>
+            </div>
+
+            <div class="config-input-group">
+              <label for="unidad_duracion_digital">Unidad de duración predeterminada</label>
+              <select id="unidad_duracion_digital" name="unidad_duracion_digital">
+                <% ['horas', 'dias', 'semanas'].forEach(unit => { %>
+                  <option value="<%= unit %>" <%= (config.prestamos_digitales.unidad_duracion || 'dias') === unit ? 'selected' : '' %>>
+                    <%= unit.charAt(0).toUpperCase() + unit.slice(1) %>
+                  </option>
+                <% }) %>
+              </select>
+              <small>Unidad temporal en la que se calcula el préstamo de licencias al crear un recurso.</small>
+            </div>
+
+            <div class="config-input-group">
+              <label for="cola_reservas_habilitada_digital">Cola de reservas digitales habilitada</label>
+              <select id="cola_reservas_habilitada_digital" name="cola_reservas_habilitada_digital">
+                <option value="true" <%= config.prestamos_digitales.reservas_habilitadas ? 'selected' : '' %>>Habilitada (Sí)</option>
+                <option value="false" <%= !config.prestamos_digitales.reservas_habilitadas ? 'selected' : '' %>>Deshabilitada (No)</option>
+              </select>
+              <small>Permitir cola de espera de reservas cuando todas las licencias del recurso están en uso.</small>
+            </div>
+
+            <div class="config-input-group">
+              <label for="tiempo_max_espera_cola_dias_digital">Tiempo máximo de espera en cola (en días)</label>
+              <input type="number" id="tiempo_max_espera_cola_dias_digital" name="tiempo_max_espera_cola_dias_digital" value="<%= config.prestamos_digitales.tiempo_max_espera_cola_dias || 30 %>" min="1" max="120" required>
+              <small>Días que una reserva puede esperar en cola antes de expirar si no se libera una licencia.</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Reservas -->
+        <section class="config-section" id="tab-reservas">
+          <h2 class="config-section__title">Configuración de reservas</h2>
+          <p class="config-section__subtitle">Define las reglas para colas de espera y reclamos de materiales físicos.</p>
+
+          <div class="config-card">
+            <p class="config-card__title">Reglas de reserva</p>
+
+            <div class="config-input-group">
+              <label for="max_reservas">Máximo de reservas activas por usuario</label>
+              <input type="number" id="max_reservas" name="max_reservas" value="<%= config.reservas.max_reservas_por_usuario %>" min="1" max="10" required>
+              <small>Cantidad máxima de recursos que un usuario puede tener reservados simultáneamente.</small>
+            </div>
+
+            <div class="config-input-group">
+              <label for="tiempo_reclamo_horas">Tiempo máximo de reclamo (horas)</label>
+              <input type="number" id="tiempo_reclamo_horas" name="tiempo_reclamo_horas" value="<%= config.reservas.tiempo_max_reclamo_horas %>" min="1" max="72" required>
+              <small>Plazo de gracia en horas para que el usuario recoja el material físico tras ser notificado de su disponibilidad.</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Sanciones -->
+        <section class="config-section" id="tab-sanciones">
+          <h2 class="config-section__title">Sanciones disciplinarias (Matriz de reglas)</h2>
+          <p class="config-section__subtitle">Configura los límites máximos de mora leve/moderada y la matriz automatizada de penalizaciones (CA4).</p>
+
+          <div class="config-card">
+            <p class="config-card__title">Rangos de retraso (en días)</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="config-input-group">
+                <label for="retraso_leve_max_dias">Días máximo retraso Leve</label>
+                <input type="number" id="retraso_leve_max_dias" name="retraso_leve_max_dias" value="<%= config.sanciones?.retraso_leve_max_dias !== undefined ? config.sanciones.retraso_leve_max_dias : 3 %>" min="1" max="15" required>
+                <small>Ejemplo: 1 a 3 días. Rango considerado como retraso de menor impacto.</small>
+              </div>
+              <div class="config-input-group">
+                <label for="retraso_moderada_max_dias">Días máximo retraso Moderada</label>
+                <input type="number" id="retraso_moderada_max_dias" name="retraso_moderada_max_dias" value="<%= config.sanciones?.retraso_moderada_max_dias !== undefined ? config.sanciones.retraso_moderada_max_dias : 7 %>" min="1" max="30" required>
+                <small>Ejemplo: 4 a 7 días. Mayor a este valor se considerará retraso Grave.</small>
+              </div>
+            </div>
+          </div>
+
+          <%
+          const combos = [
+            { idx: 0, tipo: 'Retraso', gravedad: 'Leve' },
+            { idx: 1, tipo: 'Retraso', gravedad: 'Moderada' },
+            { idx: 2, tipo: 'Retraso', gravedad: 'Grave' },
+            { idx: 3, tipo: 'Daño',    gravedad: 'Leve' },
+            { idx: 4, tipo: 'Daño',    gravedad: 'Moderada' },
+            { idx: 5, tipo: 'Daño',    gravedad: 'Grave' },
+            { idx: 6, tipo: 'Pérdida', gravedad: 'Grave' }
+          ];
+          function findRegla(tipo, gravedad) {
+            return (config.sanciones?.reglas || []).find(r => r.tipo_incidencia === tipo && r.gravedad === gravedad) || {
+              tipo_incidencia: tipo,
+              gravedad: gravedad,
+              tipo_sancion: 'Advertencia',
+              dias_suspension: 0,
+              suspension_adicional: false
+            };
           }
+          %>
 
-          combos.forEach(idx => {
-            const select = document.getElementById(`tipo_sancion_${idx}`);
-            const chk = document.getElementById(`chk-add-${idx}`);
-            
-            if (select) {
-              select.addEventListener('change', () => updateCell(idx));
+          <div class="matrix-container">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th>Incidencia</th>
+                  <th>Leve</th>
+                  <th>Moderada</th>
+                  <th>Grave</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Retraso</strong></td>
+                  <% [0, 1, 2].forEach(idx => {
+                    const item = combos[idx];
+                    const regla = findRegla(item.tipo, item.gravedad);
+                  %>
+                    <td>
+                      <div class="matrix-cell">
+                        <input type="hidden" name="reglas[<%= item.idx %>][tipo_incidencia]" value="<%= item.tipo %>">
+                        <input type="hidden" name="reglas[<%= item.idx %>][gravedad]" value="<%= item.gravedad %>">
+                        
+                        <select name="reglas[<%= item.idx %>][tipo_sancion]" id="tipo_sancion_<%= item.idx %>">
+                          <option value="Advertencia" <%= regla.tipo_sancion === 'Advertencia' ? 'selected' : '' %>>Advertencia</option>
+                          <option value="Suspensión" <%= regla.tipo_sancion === 'Suspensión' ? 'selected' : '' %>>Suspensión</option>
+                          <option value="Reposición" <%= regla.tipo_sancion === 'Reposición' ? 'selected' : '' %>>Reposición</option>
+                        </select>
+
+                        <div class="checkbox-container-add" id="checkbox-container-add-<%= item.idx %>" style="display: none;">
+                          <label class="checkbox-inline">
+                            <input type="checkbox" name="reglas[<%= item.idx %>][suspension_adicional]" id="chk-add-<%= item.idx %>" <%= regla.suspension_adicional ? 'checked' : '' %>>
+                            <small>Suspensión adicional</small>
+                          </label>
+                        </div>
+
+                        <div class="days-container" id="days-container-<%= item.idx %>" style="display: none;">
+                          <label id="days-label-<%= item.idx %>"><small>Días:</small></label>
+                          <input type="number" name="reglas[<%= item.idx %>][dias_suspension]" id="days-input-<%= item.idx %>" value="<%= regla.dias_suspension %>" min="1">
+                        </div>
+                      </div>
+                    </td>
+                  <% }) %>
+                </tr>
+
+                <tr>
+                  <td><strong>Daño</strong></td>
+                  <% [3, 4, 5].forEach(idx => {
+                    const item = combos[idx];
+                    const regla = findRegla(item.tipo, item.gravedad);
+                  %>
+                    <td>
+                      <div class="matrix-cell">
+                        <input type="hidden" name="reglas[<%= item.idx %>][tipo_incidencia]" value="<%= item.tipo %>">
+                        <input type="hidden" name="reglas[<%= item.idx %>][gravedad]" value="<%= item.gravedad %>">
+                        
+                        <select name="reglas[<%= item.idx %>][tipo_sancion]" id="tipo_sancion_<%= item.idx %>">
+                          <option value="Advertencia" <%= regla.tipo_sancion === 'Advertencia' ? 'selected' : '' %>>Advertencia</option>
+                          <option value="Suspensión" <%= regla.tipo_sancion === 'Suspensión' ? 'selected' : '' %>>Suspensión</option>
+                          <option value="Reposición" <%= regla.tipo_sancion === 'Reposición' ? 'selected' : '' %>>Reposición</option>
+                        </select>
+
+                        <div class="checkbox-container-add" id="checkbox-container-add-<%= item.idx %>" style="display: none;">
+                          <label class="checkbox-inline">
+                            <input type="checkbox" name="reglas[<%= item.idx %>][suspension_adicional]" id="chk-add-<%= item.idx %>" <%= regla.suspension_adicional ? 'checked' : '' %>>
+                            <small>Suspensión adicional</small>
+                          </label>
+                        </div>
+
+                        <div class="days-container" id="days-container-<%= item.idx %>" style="display: none;">
+                          <label id="days-label-<%= item.idx %>"><small>Días:</small></label>
+                          <input type="number" name="reglas[<%= item.idx %>][dias_suspension]" id="days-input-<%= item.idx %>" value="<%= regla.dias_suspension %>" min="1">
+                        </div>
+                      </div>
+                    </td>
+                  <% }) %>
+                </tr>
+
+                <tr>
+                  <td><strong>Pérdida</strong></td>
+                  <% 
+                    const itemPerdida = combos[6];
+                    const reglaPerdida = findRegla(itemPerdida.tipo, itemPerdida.gravedad);
+                  %>
+                  <td colspan="3">
+                    <div class="matrix-cell" style="max-width: 320px;">
+                      <input type="hidden" name="reglas[<%= itemPerdida.idx %>][tipo_incidencia]" value="<%= itemPerdida.tipo %>">
+                      <input type="hidden" name="reglas[<%= itemPerdida.idx %>][gravedad]" value="<%= itemPerdida.gravedad %>">
+                      
+                      <select name="reglas[<%= itemPerdida.idx %>][tipo_sancion]" id="tipo_sancion_<%= itemPerdida.idx %>">
+                        <option value="Advertencia" <%= reglaPerdida.tipo_sancion === 'Advertencia' ? 'selected' : '' %>>Advertencia</option>
+                        <option value="Suspensión" <%= reglaPerdida.tipo_sancion === 'Suspensión' ? 'selected' : '' %>>Suspensión</option>
+                        <option value="Reposición" <%= reglaPerdida.tipo_sancion === 'Reposición' ? 'selected' : '' %>>Reposición</option>
+                      </select>
+
+                      <div class="checkbox-container-add" id="checkbox-container-add-<%= itemPerdida.idx %>" style="display: none;">
+                        <label class="checkbox-inline">
+                          <input type="checkbox" name="reglas[<%= itemPerdida.idx %>][suspension_adicional]" id="chk-add-<%= itemPerdida.idx %>" <%= reglaPerdida.suspension_adicional ? 'checked' : '' %>>
+                          <small>Suspensión adicional</small>
+                        </label>
+                      </div>
+
+                      <div class="days-container" id="days-container-<%= itemPerdida.idx %>" style="display: none;">
+                        <label id="days-label-<%= itemPerdida.idx %>"><small>Días:</small></label>
+                        <input type="number" name="reglas[<%= itemPerdida.idx %>][dias_suspension]" id="days-input-<%= itemPerdida.idx %>" value="<%= reglaPerdida.dias_suspension %>" min="1">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ── BARRA DE ACCIONES FIJA INFERIOR ── -->
+    <div class="config-footer">
+      <p class="config-footer__text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+          <path d="M12 8v4"/><path d="M12 16h.01"/>
+        </svg>
+        Estas configuraciones se aplican automáticamente a todo el catálogo y a nuevos movimientos.
+      </p>
+      <div class="config-footer__actions">
+        <button type="reset" class="btn-secondary" id="btn-reset">Restablecer valores</button>
+        <button type="submit" class="btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      /* ── 1. CLIENT-SIDE TABS SYSTEM ── */
+      const links = document.querySelectorAll('.config-sidebar__link');
+      const sections = document.querySelectorAll('.config-section');
+
+      links.forEach(link => {
+        link.addEventListener('click', function() {
+          const targetId = this.getAttribute('data-tab-target');
+          
+          links.forEach(l => l.classList.remove('is-active'));
+          sections.forEach(s => s.classList.remove('is-active'));
+          
+          this.classList.add('is-active');
+          const targetSection = document.getElementById(targetId);
+          if (targetSection) {
+            targetSection.classList.add('is-active');
+          }
+        });
+      });
+
+      /* ── 2. ÁRBOL DE CATEGORÍAS COLLAPSE/EXPAND ── */
+      const toggles = document.querySelectorAll('.category-row__toggle');
+      toggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const catId = this.getAttribute('data-cat-id');
+          const sublist = document.getElementById(`sublist-${catId}`);
+          if (sublist) {
+            const isHidden = sublist.classList.toggle('is-hidden');
+            this.classList.toggle('is-collapsed', isHidden);
+          }
+        });
+      });
+      
+      /* ── 3. ACTIVAR Y SINCRONIZAR SELECTS DE TIEMPO SEGÚN CHECKBOX Y DÍA POR DEFECTO ── */
+      const diasPrestamoInput = document.getElementById('dias_prestamo');
+
+      function syncSelectToDefault(select) {
+        if (!diasPrestamoInput || !select) return;
+        const val = Number(diasPrestamoInput.value) || 15;
+        let hasOption = false;
+        for (let i = 0; i < select.options.length; i++) {
+          if (Number(select.options[i].value) === val) {
+            hasOption = true;
+            break;
+          }
+        }
+        if (!hasOption) {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = `${val} días`;
+          select.appendChild(opt);
+        }
+        select.value = val;
+      }
+
+      if (diasPrestamoInput) {
+        diasPrestamoInput.addEventListener('input', function() {
+          const selects = document.querySelectorAll('.cat-select, .sub-select');
+          selects.forEach(select => {
+            const row = select.closest('.category-row, .subcategory-row');
+            const chk = row ? row.querySelector('.cat-chk, .sub-chk') : null;
+            if (chk && !chk.checked) {
+              syncSelectToDefault(select);
             }
-            if (chk) {
-              chk.addEventListener('change', () => updateCell(idx));
-            }
-            
-            // Inicializar
-            updateCell(idx);
           });
         });
-      </script>
+      }
 
-      <button type="submit">Guardar configuración</button>
-    </form>
-  </section>
+      const catChks = document.querySelectorAll('.cat-chk');
+      catChks.forEach(chk => {
+        chk.addEventListener('change', function() {
+          const catId = this.getAttribute('data-cat-id');
+          const select = document.getElementById(`select-cat-${catId}`);
+          if (select) {
+            select.disabled = !this.checked;
+            if (!this.checked) {
+              syncSelectToDefault(select);
+            }
+          }
+          
+          // Si se desmarca, desmarcar y deshabilitar sus subcategorías
+          if (!this.checked) {
+            const subs = document.querySelectorAll(`.sub-chk[data-parent-id="${catId}"]`);
+            subs.forEach(sub => {
+              sub.checked = false;
+              sub.dispatchEvent(new Event('change'));
+            });
+          }
+        });
+      });
 
+      const subChks = document.querySelectorAll('.sub-chk');
+      subChks.forEach(chk => {
+        chk.addEventListener('change', function() {
+          const subId = this.getAttribute('data-sub-id');
+          const select = document.getElementById(`select-sub-${subId}`);
+          if (select) {
+            select.disabled = !this.checked;
+            if (!this.checked) {
+              syncSelectToDefault(select);
+            }
+          }
+          
+          // Si se marca, asegurar que la categoría padre esté marcada
+          if (this.checked) {
+            const parentId = this.getAttribute('data-parent-id');
+            const parentChk = document.getElementById(`chk-cat-${parentId}`);
+            if (parentChk && !parentChk.checked) {
+              parentChk.checked = true;
+              parentChk.dispatchEvent(new Event('change'));
+            }
+          }
+        });
+      });
+
+      /* ── 4. FILTRADO/BÚSQUEDA DE CATEGORÍAS ── */
+      const searchInput = document.getElementById('tree-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          const query = this.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+          const nodes = document.querySelectorAll('.category-node');
+          let hasResults = false;
+
+          nodes.forEach(node => {
+            const catName = node.getAttribute('data-category-name').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const subRows = node.querySelectorAll('.subcategory-row');
+            
+            let catMatch = catName.includes(query);
+            let anySubMatch = false;
+
+            subRows.forEach(subRow => {
+              const subName = subRow.getAttribute('data-sub-name').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+              if (subName.includes(query)) {
+                subRow.style.display = '';
+                anySubMatch = true;
+              } else {
+                subRow.style.display = 'none';
+              }
+            });
+
+            if (catMatch || anySubMatch) {
+              node.style.display = '';
+              hasResults = true;
+              
+              // Si hay búsqueda, expandir automáticamente la lista de subcategorías
+              const sublist = node.querySelector('.subcategory-list');
+              const toggle = node.querySelector('.category-row__toggle');
+              if (sublist && query) {
+                sublist.classList.remove('is-hidden');
+                if (toggle) toggle.classList.remove('is-collapsed');
+              }
+            } else {
+              node.style.display = 'none';
+            }
+          });
+
+          const emptyMsg = document.getElementById('tree-empty');
+          if (emptyMsg) {
+            emptyMsg.style.display = hasResults ? 'none' : 'block';
+          }
+        });
+      }
+
+      /* ── 5. FORMULARIO DE SANCIONES (MATRIZ INTERACTIVA) ── */
+      const combos = [0, 1, 2, 3, 4, 5, 6];
+      
+      function updateCell(idx) {
+        const select = document.getElementById(`tipo_sancion_${idx}`);
+        if (!select) return;
+        const val = select.value;
+        const daysContainer = document.getElementById(`days-container-${idx}`);
+        const chkContainer = document.getElementById(`checkbox-container-add-${idx}`);
+        const chk = document.getElementById(`chk-add-${idx}`);
+        const label = document.getElementById(`days-label-${idx}`);
+        const daysInput = document.getElementById(`days-input-${idx}`);
+        
+        if (val === 'Advertencia') {
+          daysContainer.style.display = 'none';
+          chkContainer.style.display = 'none';
+          if (daysInput) {
+            daysInput.disabled = true;
+            daysInput.removeAttribute('required');
+          }
+        } else if (val === 'Suspensión') {
+          daysContainer.style.display = 'block';
+          chkContainer.style.display = 'none';
+          if (label) label.textContent = 'Días de suspensión:';
+          if (daysInput) {
+            daysInput.disabled = false;
+            daysInput.setAttribute('required', 'required');
+            if (Number(daysInput.value) <= 0) {
+              daysInput.value = 1;
+            }
+          }
+        } else if (val === 'Reposición') {
+          chkContainer.style.display = 'block';
+          if (label) label.textContent = 'Días adicionales:';
+          if (chk && chk.checked) {
+            daysContainer.style.display = 'block';
+            if (daysInput) {
+              daysInput.disabled = false;
+              daysInput.setAttribute('required', 'required');
+              if (Number(daysInput.value) <= 0) {
+                daysInput.value = 1;
+              }
+            }
+          } else {
+            daysContainer.style.display = 'none';
+            if (daysInput) {
+              daysInput.disabled = true;
+              daysInput.removeAttribute('required');
+            }
+          }
+        }
+      }
+
+      combos.forEach(idx => {
+        const select = document.getElementById(`tipo_sancion_${idx}`);
+        const chk = document.getElementById(`chk-add-${idx}`);
+        
+        if (select) {
+          select.addEventListener('change', () => updateCell(idx));
+        }
+        if (chk) {
+          chk.addEventListener('change', () => updateCell(idx));
+        }
+        
+        // Inicializar
+        updateCell(idx);
+      });
+
+      /* Restablecer formulario recarga la página para deshacer cambios del DOM */
+      const btnReset = document.getElementById('btn-reset');
+      if (btnReset) {
+        btnReset.addEventListener('click', function(e) {
+          e.preventDefault();
+          window.location.reload();
+        });
+      }
+    });
+  </script>

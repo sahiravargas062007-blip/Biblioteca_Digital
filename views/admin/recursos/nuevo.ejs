@@ -414,26 +414,34 @@
           </select>
         </label>
         <div id="licencia-restringida-block" style="display:none; margin-top:14px">
+          <%
+          const defSimultaneos = (recurso?.digital?.licencia?.usuarios_simultaneos !== undefined) ? recurso.digital.licencia.usuarios_simultaneos : (config?.prestamos_digitales?.usuarios_simultaneos || 1);
+          const defDuracion = (recurso?.digital?.licencia?.duracion_prestamo !== undefined) ? recurso.digital.licencia.duracion_prestamo : (config?.prestamos_digitales?.duracion_defecto_dias || 7);
+          const defUnidad = (recurso?.digital?.licencia?.unidad_duracion !== undefined) ? recurso.digital.licencia.unidad_duracion : (config?.prestamos_digitales?.unidad_duracion || 'dias');
+          const defMaxPrestamos = (recurso?.digital?.licencia?.max_prestamos_por_usuario !== undefined) ? recurso.digital.licencia.max_prestamos_por_usuario : (config?.prestamos_digitales?.max_prestamos_por_usuario || 1);
+          const defColaHabilitada = (recurso?.digital?.licencia?.cola_reservas_habilitada !== undefined) ? recurso.digital.licencia.cola_reservas_habilitada : (config?.prestamos_digitales?.reservas_habilitadas !== undefined ? config.prestamos_digitales.reservas_habilitadas : true);
+          const defTiempoCola = (recurso?.digital?.licencia?.tiempo_max_espera_cola_dias !== undefined) ? recurso.digital.licencia.tiempo_max_espera_cola_dias : (config?.prestamos_digitales?.tiempo_max_espera_cola_dias || 30);
+          %>
           <div class="af-grid-4">
-            <label class="af-label"><span>Usuarios simultáneos</span><input type="number" min="1" name="usuarios_simultaneos" value="<%= recurso?.digital?.licencia?.usuarios_simultaneos || 1 %>"></label>
-            <label class="af-label"><span>Duración préstamo</span><input type="number" min="1" name="duracion_prestamo" value="<%= recurso?.digital?.licencia?.duracion_prestamo || 7 %>"></label>
+            <label class="af-label"><span>Usuarios simultáneos</span><input type="number" min="1" name="usuarios_simultaneos" value="<%= defSimultaneos %>"></label>
+            <label class="af-label"><span>Duración préstamo</span><input type="number" min="1" name="duracion_prestamo" value="<%= defDuracion %>"></label>
             <label class="af-label"><span>Unidad</span>
               <select name="unidad_duracion">
                 <% ['horas','dias','semanas'].forEach(function(u){ %>
-                  <option value="<%= u %>" <%= (recurso?.digital?.licencia?.unidad_duracion || 'dias') === u ? 'selected' : '' %>><%= u %></option>
+                  <option value="<%= u %>" <%= defUnidad === u ? 'selected' : '' %>><%= u %></option>
                 <% }); %>
               </select>
             </label>
-            <label class="af-label"><span>Máx. préstamos/usuario</span><input type="number" min="1" name="max_prestamos_por_usuario" value="<%= recurso?.digital?.licencia?.max_prestamos_por_usuario || 1 %>"></label>
+            <label class="af-label"><span>Máx. préstamos/usuario</span><input type="number" min="1" name="max_prestamos_por_usuario" value="<%= defMaxPrestamos %>"></label>
           </div>
           <div class="af-grid-3" style="margin-top:12px">
             <label class="af-label"><span>Reservas digitales</span>
               <select name="cola_reservas_habilitada">
-                <option value="true"  <%= recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>Sí</option>
-                <option value="false" <%= !recurso?.digital?.licencia?.cola_reservas_habilitada ? 'selected' : '' %>>No</option>
+                <option value="true"  <%= defColaHabilitada ? 'selected' : '' %>>Sí</option>
+                <option value="false" <%= !defColaHabilitada ? 'selected' : '' %>>No</option>
               </select>
             </label>
-            <label class="af-label"><span>Espera cola (días)</span><input type="number" min="1" name="tiempo_max_espera_cola_dias" value="<%= recurso?.digital?.licencia?.tiempo_max_espera_cola_dias || 30 %>"></label>
+            <label class="af-label"><span>Espera cola (días)</span><input type="number" min="1" name="tiempo_max_espera_cola_dias" value="<%= defTiempoCola %>"></label>
             <label class="af-label"><span>Vencimiento licencia</span><input type="date" name="fecha_vencimiento_licencia" value="<%= recurso?.digital?.licencia?.fecha_vencimiento_licencia ? new Date(recurso.digital.licencia.fecha_vencimiento_licencia).toISOString().slice(0,10) : '' %>"></label>
           </div>
         </div>

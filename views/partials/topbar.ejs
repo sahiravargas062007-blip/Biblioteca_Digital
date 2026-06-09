@@ -7,21 +7,12 @@
   <% if (isAdmin) { %>
     <aside class="cat-sidebar is-collapsed" id="cat-sidebar">
       <div class="cat-sidebar__header">
-        <a class="cat-sidebar__brand" href="/admin/dashboard">
+        <a class="cat-sidebar__brand" href="/admin/recursos">
           BiblioNet
           <small>Conecta con el conocimiento</small>
         </a>
       </div>
       <nav class="cat-sidebar__nav">
-        <a class="cat-sidebar__link <%= isActive('/admin/dashboard') %>" href="/admin/dashboard">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-          </svg>
-          Dashboard
-        </a>
         <a class="cat-sidebar__link <%= isActive('/admin/recursos') %>" href="/admin/recursos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
@@ -93,7 +84,7 @@
       <!-- ── Top Bar ── -->
       <header class="cat-topbar <%= isHero ? 'topbar--hero' : '' %>" id="cat-topbar">
         <div class="cat-topbar__left">
-          <a class="cat-topbar__brand" href="<%= isAdmin ? '/admin/dashboard' : '/catalogo' %>">
+          <a class="cat-topbar__brand" href="<%= isAdmin ? '/admin/recursos' : '/catalogo' %>">
             <img src="/img/biblionet-logo.png" alt="BiblioNet" class="cat-topbar__logo">
             <div class="cat-topbar__brand-text">
               <span class="cat-topbar__brand-name">BiblioNet</span>
@@ -103,7 +94,6 @@
         </div>
         <nav class="cat-topbar__links">
           <% if (isAdmin) { %>
-            <a href="/admin/dashboard" class="<%= isActive('/admin/dashboard') %>">Dashboard</a>
             <a href="/admin/recursos" class="<%= isActive('/admin/recursos') %>">Materiales</a>
             <a href="/admin/usuarios" class="<%= isActive('/admin/usuarios') %>">Usuarios</a>
             <a href="/admin/prestamos" class="<%= isActive('/admin/prestamos') %>">Préstamos</a>

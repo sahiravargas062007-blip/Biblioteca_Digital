@@ -215,7 +215,9 @@ async function seedConfiguracion(admin) {
           duracion_defecto_dias: 7,
           renovaciones_permitidas: 0,
           reservas_habilitadas: true,
-          tiempo_max_espera_cola_dias: 30
+          tiempo_max_espera_cola_dias: 30,
+          usuarios_simultaneos: 1,
+          unidad_duracion: 'dias'
         },
         reservas: {
           max_reservas_por_usuario: 3,

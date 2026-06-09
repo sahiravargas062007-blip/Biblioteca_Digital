@@ -8,6 +8,7 @@ const { validationResult } = require('express-validator');
 const Categoria = require('../../models/Categoria');
 const Ejemplar  = require('../../models/Ejemplar');
 const Recurso   = require('../../models/Recurso');
+const Configuracion = require('../../models/Configuracion');
 const {
   subirBuffer,
   subirBufferGrande,
@@ -611,8 +612,11 @@ exports.api = async (req, res, next) => {
 
 exports.nuevo = async (req, res, next) => {
   try {
-    const categorias = await Categoria.find({ activa: true }).sort({ nombre: 1 }).lean();
-    res.render('admin/recursos/nuevo', { title: 'Nuevo recurso', recurso: null, categorias });
+    const [categorias, config] = await Promise.all([
+      Categoria.find({ activa: true }).sort({ nombre: 1 }).lean(),
+      Configuracion.findOne().lean()
+    ]);
+    res.render('admin/recursos/nuevo', { title: 'Nuevo recurso', recurso: null, categorias, config });
   } catch (error) {
     next(error);
   }
@@ -1223,9 +1227,10 @@ exports.detalle = async (req, res, next) => {
 
 exports.editar = async (req, res, next) => {
   try {
-    const [recurso, categorias] = await Promise.all([
+    const [recurso, categorias, config] = await Promise.all([
       Recurso.findById(req.params.id).lean(),
       Categoria.find({ activa: true }).sort({ nombre: 1 }).lean(),
+      Configuracion.findOne().lean()
     ]);
 
     if (!recurso) {
@@ -1234,7 +1239,7 @@ exports.editar = async (req, res, next) => {
     }
 
     return res.render('admin/recursos/nuevo', {
-      title: 'Editar recurso', recurso, categorias,
+      title: 'Editar recurso', recurso, categorias, config
     });
   } catch (error) {
     next(error);

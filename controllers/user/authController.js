@@ -31,7 +31,7 @@ exports.login = async (req, res, next) => {
         req.session.rol = 'administrador';
         req.session.nombre = admin.nombre;
         req.session.correo = admin.correo;
-        return res.redirect('/admin/dashboard');
+        return res.redirect('/admin/recursos');
       }
     }
 

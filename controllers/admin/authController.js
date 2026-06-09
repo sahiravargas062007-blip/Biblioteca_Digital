@@ -36,20 +36,7 @@ exports.login = async (req, res, next) => {
     req.session.nombre = admin.nombre;
     req.session.correo = admin.correo;
 
-    return res.redirect('/admin/dashboard');
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.dashboard = async (req, res, next) => {
-  try {
-    const resumenReportes = await reporteService.resumen();
-
-    res.render('admin/dashboard', {
-      title: 'Panel administrador',
-      resumen: resumenReportes
-    });
+    return res.redirect('/admin/recursos');
   } catch (error) {
     next(error);
   }

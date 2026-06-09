@@ -23,7 +23,9 @@ const configuracionSchema = new mongoose.Schema({
     duracion_defecto_dias: { type: Number, default: 7 },
     renovaciones_permitidas: { type: Number, default: 0 },
     reservas_habilitadas: { type: Boolean, default: true },
-    tiempo_max_espera_cola_dias: { type: Number, default: 30 }
+    tiempo_max_espera_cola_dias: { type: Number, default: 30 },
+    usuarios_simultaneos: { type: Number, default: 1 },
+    unidad_duracion: { type: String, default: 'dias', enum: ['horas', 'dias', 'semanas'] }
   },
   reservas: {
     max_reservas_por_usuario: { type: Number, default: 3 },

@@ -42,22 +42,29 @@ function calcularDiasPrestamo(config, recurso) {
 }
 
 async function actualizarEstadosVencidos() {
+  const ahora = new Date();
   const prestamos = await Prestamo.find({
     estado: { $in: ['Activo', 'Parcialmente devuelto'] },
-    'items.estado': 'Activo',
-    'items.fecha_limite': { $lt: new Date() }
+    'items.estado': 'Activo'
   });
 
   for (const prestamo of prestamos) {
     let changed = false;
     prestamo.items.forEach((item) => {
-      if (item.estado === 'Activo' && item.fecha_limite < new Date()) {
-        item.estado = 'Vencido';
-        changed = true;
+      if (item.estado === 'Activo') {
+        const limite = new Date(item.fecha_limite);
+        const diasTolerancia = item.dias_tolerancia || 0;
+        const limiteFinal = new Date(limite.getTime() + (diasTolerancia * 24 * 60 * 60 * 1000));
+        if (ahora > limiteFinal) {
+          item.estado = 'Vencido';
+          changed = true;
+        }
       }
     });
     if (changed) {
-      prestamo.estado = 'Vencido';
+      const hayActivos = prestamo.items.some(i => i.estado === 'Activo');
+      prestamo.estado = hayActivos ? 'Parcialmente devuelto' : 'Vencido';
+      prestamo.actualizado_en = ahora;
       await prestamo.save();
     }
   }
@@ -278,7 +285,6 @@ exports.crear = async (req, res, next) => {
     next(error);
   }
 };
-
 exports.renovar = async (req, res, next) => {
   try {
     const prestamo = await Prestamo.findById(req.params.id);
@@ -288,6 +294,11 @@ exports.renovar = async (req, res, next) => {
     if (!prestamo || !item) {
       flash(req, 'error', 'Ítem de préstamo no encontrado.');
       return res.redirect('/admin/prestamos');
+    }
+
+    if (prestamo.tipo === 'Digital') {
+      flash(req, 'error', 'La renovación no aplica para préstamos digitales.');
+      return res.redirect(`/admin/prestamos/${prestamo._id}`);
     }
 
     if (item.estado !== 'Activo' || item.renovado) {

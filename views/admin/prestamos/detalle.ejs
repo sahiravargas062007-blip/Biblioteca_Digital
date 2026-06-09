@@ -53,14 +53,12 @@
               </label>
               <button type="submit">Registrar devolución</button>
             </form>
-
-            <% if (!item.renovado && item.estado === 'Activo') { %>
+            <% if (prestamo.tipo !== 'Digital' && !item.renovado && item.estado === 'Activo') { %>
               <form method="post" action="/admin/prestamos/<%= prestamo._id %>/renovar">
                 <input type="hidden" name="item_id" value="<%= item._id %>">
                 <button class="secondary-action" type="submit">Renovar</button>
               </form>
             <% } %>
-
             <details class="sanction-box" id="details_box_<%= item._id %>">
               <summary>Registrar sanción</summary>
               <form class="form-stack" method="post" action="/admin/sanciones">
