@@ -3,6 +3,7 @@ const Recurso = require('../../models/Recurso');
 const Usuario = require('../../models/Usuario');
 const Notificacion = require('../../models/Notificacion');
 const cloudinary = require('../../config/cloudinary');
+const notifService = require('../../services/notificacionService');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
@@ -115,16 +116,12 @@ exports.devolverDigital = async (req, res, next) => {
       actualizado_en: new Date()
     });
 
-    await Notificacion.create({
-      destinatario_tipo: 'usuario',
-      destinatario_id: prestamo.usuario_id,
-      tipo: 'devolucion_confirmada',
-      titulo: 'Devolución registrada',
-      mensaje: `Tu devolución de "${item.recurso_titulo}" ha sido registrada.`,
-      referencia_tipo: 'prestamo',
-      referencia_id: prestamo._id,
-      creado_en: new Date()
-    }).catch(() => null);
+    try {
+      const usuario = await Usuario.findById(prestamo.usuario_id);
+      if (usuario) {
+        await notifService.devolucionConfirmada(usuario, prestamo, item);
+      }
+    } catch (_e) { }
 
     flash(req, 'success', 'Devolución registrada correctamente.');
     return res.redirect('/prestamos');

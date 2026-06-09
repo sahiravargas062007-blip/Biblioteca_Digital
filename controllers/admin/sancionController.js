@@ -66,9 +66,11 @@ async function crearSancionDesdePayload(req, payload) {
     actualizado_en: now
   });
 
-  usuario.estado = 'Sancionado';
-  usuario.actualizado_en = now;
-  await usuario.save();
+  if (payload.tipo_sancion !== 'Advertencia') {
+    usuario.estado = 'Sancionado';
+    usuario.actualizado_en = now;
+    await usuario.save();
+  }
 
   if (payload.prestamo_id) {
     await Prestamo.findByIdAndUpdate(payload.prestamo_id, {
@@ -179,6 +181,7 @@ exports.levantar = async (req, res, next) => {
     const sancionesActivas = await Sancion.countDocuments({
       usuario_id: sancion.usuario_id,
       estado: 'Activa',
+      tipo_sancion: { $ne: 'Advertencia' },
       _id: { $ne: sancion._id }
     });
 

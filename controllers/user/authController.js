@@ -6,6 +6,7 @@ const ldapService = require('../../services/ldapService');
 const LdapUsuarioMock = require('../../models/LdapUsuarioMock');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const notifService = require('../../services/notificacionService');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
@@ -96,16 +97,9 @@ exports.login = async (req, res, next) => {
 
     const adminNotificacion = await Administrador.findOne({ activo: true }).sort({ creado_en: 1 });
     if (adminNotificacion) {
-      await Notificacion.create({
-        destinatario_tipo: 'administrador',
-        destinatario_id: adminNotificacion._id,
-        tipo: 'nuevo_usuario_pendiente',
-        titulo: 'Nuevo usuario pendiente',
-        mensaje: `${usuario.nombre} solicitó acceso a la biblioteca digital.`,
-        referencia_tipo: 'usuario',
-        referencia_id: usuario._id,
-        creado_en: new Date()
-      });
+      try {
+        await notifService.nuevoUsuarioPendiente(adminNotificacion._id, usuario.nombre, usuario._id);
+      } catch (_e) { }
     }
 
     flash(req, 'success', 'Solicitud registrada. El administrador debe aprobar su acceso.');

@@ -29,4 +29,6 @@ router.use('/reservas', require('./user/reservas.routes'));
 router.use('/sanciones', require('./user/sanciones.routes'));
 router.use('/perfil', require('./user/perfil.routes'));
 
+router.use(require('./notificaciones.routes'));
+
 module.exports = router;

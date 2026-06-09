@@ -1,6 +1,8 @@
 const Configuracion = require('../models/Configuracion');
 const Notificacion = require('../models/Notificacion');
 const Reserva = require('../models/Reserva');
+const Usuario = require('../models/Usuario');
+const notifService = require('./notificacionService');
 
 const TIPO_FISICO = 'F\u00edsico';
 
@@ -71,16 +73,14 @@ exports.marcarDisponible = async (reserva, adminId) => {
   reserva.actualizado_en = now;
   await reserva.save();
 
-  await Notificacion.create({
-    destinatario_tipo: 'usuario',
-    destinatario_id: reserva.usuario_id,
-    tipo: 'turno_reserva_disponible',
-    titulo: 'Turno de reserva disponible',
-    mensaje: `El recurso "${reserva.recurso_titulo}" estÃ¡ disponible para reclamar hasta ${limite.toLocaleString('es-CO')}.`,
-    referencia_tipo: 'reserva',
-    referencia_id: reserva._id,
-    creado_en: now
-  }).catch(() => null);
+  try {
+    const usuario = await Usuario.findById(reserva.usuario_id);
+    if (usuario) {
+      const config = await Configuracion.findOne().lean();
+      const horas = config?.reservas?.tiempo_max_reclamo_horas || 24;
+      await notifService.turnoReservaDisponible(usuario, reserva, horas);
+    }
+  } catch (_e) { }
 
   return reserva;
 };

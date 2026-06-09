@@ -104,7 +104,7 @@
 
                 <div class="days-container" id="sancion_dias_container_<%= item._id %>" style="display: none; margin-bottom: 0.5rem;">
                   <label id="days_label_<%= item._id %>"><small>Días:</small></label>
-                  <input type="number" name="dias_suspension" id="sancion_dias_<%= item._id %>" min="1" value="0">
+                  <input type="number" name="dias_suspension" id="sancion_dias_<%= item._id %>" min="0" value="0">
                 </div>
 
                 <label>
@@ -172,21 +172,38 @@
       const chkContainer = document.getElementById(`repo_add_container_${itemId}`);
       const chkAdd = document.getElementById(`chk_add_${itemId}`);
       const labelDoi = document.getElementById(`days_label_${itemId}`);
+      const daysInput = document.getElementById(`sancion_dias_${itemId}`);
 
       if (val === 'Advertencia') {
         daysContainer.style.display = 'none';
         chkContainer.style.display = 'none';
+        if (daysInput) {
+          daysInput.setAttribute('min', '0');
+          daysInput.value = '0';
+        }
       } else if (val === 'Suspensión') {
         daysContainer.style.display = 'block';
         chkContainer.style.display = 'none';
         labelDoi.textContent = 'Días de suspensión:';
+        if (daysInput) {
+          daysInput.setAttribute('min', '1');
+          if (Number(daysInput.value) < 1) daysInput.value = '1';
+        }
       } else if (val === 'Reposición') {
         chkContainer.style.display = 'block';
         labelDoi.textContent = 'Días adicionales:';
         if (chkAdd.checked) {
           daysContainer.style.display = 'block';
+          if (daysInput) {
+            daysInput.setAttribute('min', '1');
+            if (Number(daysInput.value) < 1) daysInput.value = '1';
+          }
         } else {
           daysContainer.style.display = 'none';
+          if (daysInput) {
+            daysInput.setAttribute('min', '0');
+            daysInput.value = '0';
+          }
         }
       }
     }

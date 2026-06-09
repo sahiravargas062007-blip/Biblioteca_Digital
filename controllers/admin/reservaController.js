@@ -6,6 +6,7 @@ const Reserva = require('../../models/Reserva');
 const Sancion = require('../../models/Sancion');
 const Usuario = require('../../models/Usuario');
 const reservaService = require('../../services/reservaService');
+const notifService = require('../../services/notificacionService');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
@@ -290,6 +291,11 @@ exports.procesar = async (req, res, next) => {
         actualizado_en: now
       })
     ]);
+
+    // Notificar al usuario (préstamo físico aprobado/procesado desde reserva)
+    try {
+      await notifService.prestamoAprobado(usuario, prestamo, [reserva.recurso_titulo]);
+    } catch (_e) { }
 
     flash(req, 'success', 'Reserva procesada y préstamo generado.');
     return res.redirect(`/admin/prestamos/${prestamo._id}`);
