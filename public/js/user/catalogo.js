@@ -7,6 +7,10 @@
   var debounceTimer;
   var grid, countEl, root, catalogMode, apiUrl, detailBaseUrl, countText;
 
+  var currentPage = 1;
+  var limit = 15;
+  var allRecursos = [];
+
   document.addEventListener('DOMContentLoaded', function () {
     root    = document.querySelector('.cat-main');
     grid    = document.getElementById('cat-grid');
@@ -15,6 +19,18 @@
     apiUrl = root ? root.dataset.apiUrl || '/catalogo/api' : '/catalogo/api';
     detailBaseUrl = root ? root.dataset.detailBaseUrl || '/catalogo' : '/catalogo';
     countText = root ? root.dataset.countText || 'recursos disponibles' : 'recursos disponibles';
+
+    if (root && root.dataset.initialRecursos) {
+      try {
+        allRecursos = JSON.parse(root.dataset.initialRecursos);
+      } catch (e) {
+        console.error('Error parsing initialRecursos attribute:', e);
+        allRecursos = window.initialRecursos || [];
+      }
+    } else {
+      allRecursos = window.initialRecursos || [];
+    }
+    currentPage = 1;
 
     initCategoryTree();
     initTypeChips();
@@ -27,6 +43,8 @@
     document.querySelectorAll('.cat-tree__checkbox').forEach(function (cb) {
       cb.addEventListener('change', fetchFiltered);
     });
+
+    renderPage();
   });
 
   /* ── Sidebar Toggle ──────────────────────────────────────────── */
@@ -215,16 +233,97 @@
 
     fetch(url)
       .then(function (res) { return res.json(); })
-      .then(function (recursos) { renderCards(recursos); })
+      .then(function (recursos) {
+        allRecursos = recursos;
+        currentPage = 1;
+        renderPage();
+      })
       .catch(function (err) { console.error('Filter error:', err); });
   }
 
+  /* ── Render Page ─────────────────────────────────────────────── */
+  function renderPage() {
+    if (!grid) return;
+    var start = (currentPage - 1) * limit;
+    var end = start + limit;
+    var pageRecursos = allRecursos.slice(start, end);
+    renderCards(pageRecursos, allRecursos.length);
+    renderPagination();
+  }
+
+  /* ── Render Pagination ───────────────────────────────────────── */
+  function renderPagination() {
+    var paginationEl = document.getElementById('cat-pagination');
+    if (!paginationEl) return;
+
+    var total = allRecursos.length;
+    var totalPages = Math.ceil(total / limit);
+
+    if (totalPages <= 1) {
+      paginationEl.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+
+    // Previous button
+    var prevDisabled = (currentPage === 1) ? ' disabled' : '';
+    html += '<button class="cat-pagination__btn cat-pagination__btn--prev"' + prevDisabled + ' data-page="' + (currentPage - 1) + '">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>' +
+      '</button>';
+
+    // Page numbers
+    var range = [];
+    var delta = 1;
+    for (var i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      } else if (range[range.length - 1] !== '...') {
+        range.push('...');
+      }
+    }
+
+    range.forEach(function (p) {
+      if (p === '...') {
+        html += '<span class="cat-pagination__ellipsis">...</span>';
+      } else {
+        var activeClass = (p === currentPage) ? ' is-active' : '';
+        html += '<button class="cat-pagination__btn' + activeClass + '" data-page="' + p + '">' + p + '</button>';
+      }
+    });
+
+    // Next button
+    var nextDisabled = (currentPage === totalPages) ? ' disabled' : '';
+    html += '<button class="cat-pagination__btn cat-pagination__btn--next"' + nextDisabled + ' data-page="' + (currentPage + 1) + '">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</button>';
+
+    paginationEl.innerHTML = html;
+
+    // Attach click events
+    paginationEl.querySelectorAll('.cat-pagination__btn').forEach(function (btn) {
+      if (btn.hasAttribute('disabled')) return;
+      btn.addEventListener('click', function () {
+        var newPage = parseInt(btn.dataset.page, 10);
+        if (newPage && newPage >= 1 && newPage <= totalPages) {
+          currentPage = newPage;
+          renderPage();
+          // Scroll up to results list
+          var scrollTarget = document.querySelector('.cat-results__header') || root;
+          if (scrollTarget) {
+            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      });
+    });
+  }
+
   /* ── Render Cards ────────────────────────────────────────────── */
-  function renderCards(recursos) {
+  function renderCards(recursos, totalCount) {
     if (!grid) return;
 
     if (countEl) {
-      countEl.textContent = recursos.length + ' ' + countText;
+      countEl.textContent = (typeof totalCount !== 'undefined' ? totalCount : recursos.length) + ' ' + countText;
     }
 
     if (!recursos.length) {
@@ -273,6 +372,12 @@
       return '<article class="cat-card' + (catalogMode === 'admin' ? ' cat-card--admin' : '') + '">' +
         '<a class="cat-card__cover" href="' + detailUrl + '">' +
           '<img src="' + escapeHtml(imgUrl) + '" alt="" loading="lazy">' +
+          '<span class="cat-card__cover-badge">' + escapeHtml(r.tipo_material || '').toUpperCase() + '</span>' +
+          '<span class="cat-card__cover-bookmark">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+              '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>' +
+            '</svg>' +
+          '</span>' +
         '</a>' +
         '<div class="cat-card__body">' +
           adminBadges +

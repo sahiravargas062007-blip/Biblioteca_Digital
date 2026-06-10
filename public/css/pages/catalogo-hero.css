@@ -46,35 +46,20 @@ body.catalog-page .page,
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #0a0a0a;
+  background: transparent !important;
 }
 
 .biblionet-hero__bg {
-  position: absolute;
-  inset: 0;
-  background: url('/img/hero-library.png') center/cover no-repeat;
-  z-index: 1;
-  filter: brightness(0.7) saturate(0.85);
+  display: none !important;
 }
 
 .biblionet-hero__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.35) 40%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
-  z-index: 2;
+  display: none !important;
 }
 
 /* Vignette */
 .biblionet-hero__vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
-  z-index: 3;
+  display: none !important;
 }
 
 /* ── Particles Canvas ─────────────────────────────────────────── */
