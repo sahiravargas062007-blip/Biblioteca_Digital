@@ -1,656 +1,999 @@
-<%
-/*
-  recursoDetalleCore.ejs  — views/partials/recursoDetalleCore.ejs
-  ================================================================
-  Partial compartido entre usuario y admin.
-  Variables recibidas:
-    recurso    → objeto completo del recurso (con campos calculados del controller)
-    modo       → 'user' | 'admin'
-    ejemplares → array de ejemplares físicos (solo admin, puede ser [])
-*/
+<% /* recursoDetalleCore.ejs —
+  views/partials/recursoDetalleCore.ejs================================================================Partial
+  compartido entre usuario y admin. Variables recibidas: recurso → objeto completo del recurso (con campos calculados
+  del controller) modo → 'user' | 'admin' ejemplares → array de ejemplares físicos (solo admin, puede ser []) */ var
+  modoAdmin=typeof modo !=='undefined' && modo==='admin' ; var modoUsuario=!modoAdmin; // Parsear metadatos dinámicos de forma segura
+  var metaObj={}; if (recurso.metadatos) { if (recurso.metadatos instanceof Map) {
+  metaObj=Object.fromEntries(recurso.metadatos); } else if (typeof recurso.metadatos.toObject==='function' ) {
+  metaObj=recurso.metadatos.toObject(); } else { metaObj=recurso.metadatos; } } var metaLabels={ editorial: "Editorial"
+  , paginas: "Páginas" , isbn: "ISBN" , volumen: "Volumen" , numero: "Número" , issn: "ISSN" ,
+  revista: "Revista / Diario" , doi: "DOI" , universidad: "Universidad" , programa: "Programa Académico" ,
+  tipo_tesis: "Tipo de Tesis" , director: "Director / Tutor" , numero_norma: "Número de Norma" ,
+  entidad_emisora: "Entidad Emisora" , diario_oficial: "Diario Oficial" , escala: "Escala" , region: "Región Geográfica"
+  , proyeccion: "Proyección Cartográfica" , año_cartografico: "Año Cartográfico" }; /* Naturaleza */ var
+  tieneDigital=recurso.tipo_naturaleza==='Digital' || recurso.tipo_naturaleza==='Mixto' ; var
+  tieneFisico=recurso.tipo_naturaleza==='Físico' || recurso.tipo_naturaleza==='Mixto' ; /* Digital */ var
+  esLibre=recurso.digital && recurso.digital.tipo_licencia==='Libre' ; var licUsadas=(recurso.digital &&
+  recurso.digital.licencias_en_uso) || 0; var licMax=(recurso.digital && recurso.digital.licencia &&
+  recurso.digital.licencia.usuarios_simultaneos) || 1; var hayLicencias=licUsadas < licMax; /* Disponibilidad */ var
+  dispFisica=recurso.disponibilidadFisica || (tieneFisico ? (recurso.fisico && recurso.fisico.ejemplares_disponibles> 0
+  ? 'Disponible' : 'No disponible') : null);
+  var dispDigital = recurso.disponibilidadDigital || (tieneDigital ? (esLibre ? 'Acceso libre' : (hayLicencias ?
+  'Disponible' : 'No disponible')) : null);
 
-var modoAdmin  = typeof modo !== 'undefined' && modo === 'admin';
-var modoUsuario = !modoAdmin;
+  /* Archivo principal */
+  var arch = recurso.archivo || null;
+  var urlArchivo = arch ? arch.url : null;
+  var tipoArchivo = arch ? arch.tipo : null;
 
-// Parsear metadatos dinámicos de forma segura
-var metaObj = {};
-if (recurso.metadatos) {
-  if (recurso.metadatos instanceof Map) {
-    metaObj = Object.fromEntries(recurso.metadatos);
-  } else if (typeof recurso.metadatos.toObject === 'function') {
-    metaObj = recurso.metadatos.toObject();
-  } else {
-    metaObj = recurso.metadatos;
-  }
-}
+  /* Tipo contenido */
+  var esLectura = recurso.tipo_contenido === 'Lectura';
+  var esAudio = recurso.tipo_contenido === 'Audio';
+  var esVideo = recurso.tipo_contenido === 'Video';
 
-var metaLabels = {
-  editorial: "Editorial",
-  paginas: "Páginas",
-  isbn: "ISBN",
-  volumen: "Volumen",
-  numero: "Número",
-  issn: "ISSN",
-  revista: "Revista / Diario",
-  doi: "DOI",
-  universidad: "Universidad",
-  programa: "Programa Académico",
-  tipo_tesis: "Tipo de Tesis",
-  director: "Director / Tutor",
-  numero_norma: "Número de Norma",
-  entidad_emisora: "Entidad Emisora",
-  diario_oficial: "Diario Oficial",
-  escala: "Escala",
-  region: "Región Geográfica",
-  proyeccion: "Proyección Cartográfica",
-  año_cartografico: "Año Cartográfico"
-};
+  /* Préstamo activo */
+  var yaTienePrestamo = recurso.prestamoActivoItem != null;
+  var prestamoEsDigital = yaTienePrestamo && recurso.prestamoActivoItem && recurso.prestamoActivoItem.tipo ===
+  'Digital';
+  var sesionActiva = typeof session !== 'undefined' && session && (session.userId || session.adminId);
 
-/* Naturaleza */
-var tieneDigital = recurso.tipo_naturaleza === 'Digital' || recurso.tipo_naturaleza === 'Mixto';
-var tieneFisico  = recurso.tipo_naturaleza === 'Físico'  || recurso.tipo_naturaleza === 'Mixto';
+  /* Categoría principal */
+  var catPrincipal = recurso.categorias && recurso.categorias[0] ? recurso.categorias[0].categoria_nombre : null;
 
-/* Digital */
-var esLibre      = recurso.digital && recurso.digital.tipo_licencia === 'Libre';
-var licUsadas    = (recurso.digital && recurso.digital.licencias_en_uso) || 0;
-var licMax       = (recurso.digital && recurso.digital.licencia && recurso.digital.licencia.usuarios_simultaneos) || 1;
-var hayLicencias = licUsadas < licMax;
-
-/* Disponibilidad */
-var dispFisica  = recurso.disponibilidadFisica  || (tieneFisico  ? (recurso.fisico && recurso.fisico.ejemplares_disponibles > 0 ? 'Disponible' : 'No disponible') : null);
-var dispDigital = recurso.disponibilidadDigital || (tieneDigital ? (esLibre ? 'Acceso libre' : (hayLicencias ? 'Disponible' : 'No disponible')) : null);
-
-/* Archivo principal */
-var arch         = recurso.archivo || null;
-var urlArchivo   = arch ? arch.url  : null;
-var tipoArchivo  = arch ? arch.tipo : null;
-
-/* Tipo contenido */
-var esLectura = recurso.tipo_contenido === 'Lectura';
-var esAudio   = recurso.tipo_contenido === 'Audio';
-var esVideo   = recurso.tipo_contenido === 'Video';
-
-/* Préstamo activo */
-var yaTienePrestamo   = recurso.prestamoActivoItem != null;
-var prestamoEsDigital = yaTienePrestamo && recurso.prestamoActivoItem && recurso.prestamoActivoItem.tipo === 'Digital';
-var sesionActiva      = typeof session !== 'undefined' && session && (session.userId || session.adminId);
-
-/* Categoría principal */
-var catPrincipal = recurso.categorias && recurso.categorias[0] ? recurso.categorias[0].categoria_nombre : null;
-
-/* Duración legible */
-function duracionStr(seg) {
+  /* Duración legible */
+  function duracionStr(seg) {
   if (!seg) return null;
   var h = Math.floor(seg / 3600);
   var m = Math.floor((seg % 3600) / 60);
   return h > 0 ? h + 'h ' + (m > 0 ? m + 'min' : '') : m + 'min';
-}
-var durStr = duracionStr(recurso.duracion_segundos);
+  }
+  var durStr = duracionStr(recurso.duracion_segundos);
 
-/* Ejemplares para el modal admin */
-var ejemplaresArr = typeof ejemplares !== 'undefined' ? ejemplares : [];
-%>
+  /* Ejemplares para el modal admin */
+  var ejemplaresArr = typeof ejemplares !== 'undefined' ? ejemplares : [];
+  %>
 
-<!-- ════════════════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════════════════
      LAYOUT PRINCIPAL
      ════════════════════════════════════════════════════════ -->
-<div class="rd-layout<%= modoAdmin ? ' rd-layout--admin' : '' %>">
+  <div class="rd-layout<%= modoAdmin ? ' rd-layout--admin' : '' %>">
 
-  <!-- ═══ COLUMNA IZQUIERDA: portada + info lateral ═══ -->
-  <aside class="rd-aside">
+    <!-- ═══ COLUMNA IZQUIERDA: portada ═══ -->
+    <aside class="rd-aside">
+      <!-- Portada -->
+      <div class="rd-cover-wrap">
+        <img class="rd-cover"
+          src="<%= recurso.imagen && recurso.imagen.url ? recurso.imagen.url : '/img/placeholder.png' %>"
+          alt="Portada de <%= recurso.titulo %>">
+      </div>
 
-    <!-- Portada -->
-    <div class="rd-cover-wrap">
-      <img class="rd-cover"
-           src="<%= recurso.imagen && recurso.imagen.url ? recurso.imagen.url : '/img/placeholder.png' %>"
-           alt="Portada de <%= recurso.titulo %>">
-      <% if (modoAdmin) { %>
-        <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-edit-cover">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
-            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          Editar portada
-        </a>
-      <% } %>
-    </div>
-
-    <!-- Tarjeta de info del recurso -->
-    <div class="rd-aside-card">
-      <p class="rd-aside-label">Información del recurso</p>
-      <div class="rd-info-row"><span>Formato</span><strong><%= recurso.tipo_naturaleza %></strong></div>
-      <% if (tieneDigital) { %>
-        <div class="rd-info-row"><span>Tipo de acceso</span><strong><%= esLibre ? 'Acceso libre' : 'Préstamo digital' %></strong></div>
-        <div class="rd-info-row"><span>Licencias disponibles</span><strong><%= licMax - licUsadas %> de <%= licMax %></strong></div>
-      <% } %>
-      <% if (recurso.fecha_publicacion) { %>
-        <div class="rd-info-row"><span>Fecha de publicación</span><strong><%= new Date(recurso.fecha_publicacion).getFullYear() %></strong></div>
-      <% } %>
-      <% if (durStr) { %>
-        <div class="rd-info-row"><span>Duración</span><strong><%= durStr %></strong></div>
-      <% } %>
-      <% if (recurso.narrador) { %>
-        <div class="rd-info-row"><span>Narrador</span><strong><%= recurso.narrador %></strong></div>
-      <% } %>
-      <% var editorialVal = recurso.editorial || metaObj.editorial; %>
-      <% if (recurso.productora || editorialVal) { %>
-        <div class="rd-info-row">
-          <span><%= recurso.tipo_contenido === 'Video' ? 'Productora' : 'Editorial' %></span>
-          <strong><%= recurso.productora || editorialVal %></strong>
-        </div>
-      <% } %>
-    </div>
-
-    <!-- ── Solo admin: estado, acciones rápidas ── -->
-    <% if (modoAdmin) { %>
-
-      <div class="rd-aside-card">
-        <p class="rd-aside-label">Estado del recurso</p>
-        <span class="rd-estado-badge rd-estado-<%= (recurso.estado || '').toLowerCase().replace(/\s+/g,'-') %>">
-          <%= recurso.estado %>
-        </span>
-        <% if (recurso.fecha_publicacion) { %>
-        <div class="rd-meta-row">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <div><span>Fecha de publicación</span><strong><%= new Date(recurso.fecha_publicacion).getFullYear() %></strong></div>
-        </div>
+      <div class="rd-cover-actions">
+        <% if (tieneDigital && urlArchivo) { %>
+          <a href="/catalogo/<%= recurso._id %>/ver" class="rd-preview-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Vista previa
+          </a>
         <% } %>
-        <% var editorialVal = recurso.editorial || metaObj.editorial; %>
-        <% if (recurso.productora || editorialVal) { %>
-        <div class="rd-meta-row">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <div><span>Proveedor / Productora</span><strong><%= recurso.productora || editorialVal %></strong></div>
-        </div>
-        <% } %>
-        <% if (durStr) { %>
-        <div class="rd-meta-row">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <div><span>Duración</span><strong><%= durStr %></strong></div>
-        </div>
+        <% if (modoAdmin) { %>
+          <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-edit-cover-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Editar portada
+          </a>
         <% } %>
       </div>
+    </aside>
 
-      <% if (recurso.categorias && recurso.categorias.length) { %>
-      <div class="rd-aside-card">
-        <p class="rd-aside-label">Información adicional</p>
-        <% recurso.categorias.forEach(function(c) { %>
-          <div class="rd-info-row"><span>Categoría</span><strong><%= c.categoria_nombre %></strong></div>
-          <% if (c.subcategoria_nombre) { %>
-            <div class="rd-info-row"><span>Subcategoría</span><strong><%= c.subcategoria_nombre %></strong></div>
-          <% } %>
-        <% }); %>
-      </div>
-      <% } %>
+    <!-- ═══ COLUMNA PRINCIPAL ═══ -->
+    <main class="rd-main">
 
-      <div class="rd-aside-card">
-        <p class="rd-aside-label">Acciones rápidas</p>
-        <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-action-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Editar recurso
-        </a>
-        <form method="post" action="/admin/recursos/<%= recurso._id %>?_method=DELETE"
-              onsubmit="return confirm('¿Eliminar este recurso y todos sus ejemplares?')">
-          <button type="submit" class="rd-action-btn rd-action-btn--danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-            Eliminar recurso
-          </button>
-        </form>
-      </div>
-
-    <% } else { %>
-
-      <!-- ── Solo usuario: favoritos y vistas ── -->
-      <div class="rd-aside-card">
-        <button class="rd-fav-btn" id="rd-fav-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-          Agregar a favoritos
-        </button>
-        <% if (recurso.total_prestamos) { %>
-          <p class="rd-views">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Visto <%= recurso.total_prestamos.toLocaleString('es-CO') %> veces
-          </p>
-        <% } %>
-      </div>
-
-    <% } %>
-  </aside>
-
-  <!-- ═══ COLUMNA PRINCIPAL ═══ -->
-  <main class="rd-main">
-
-    <!-- Encabezado -->
-    <div class="rd-header">
-      <div class="rd-badges">
-        <span class="rd-badge"><%= recurso.tipo_contenido %></span>
-        <span class="rd-badge"><%= recurso.tipo_naturaleza %></span>
-      </div>
-      <h1 class="rd-title"><%= recurso.titulo %></h1>
-      <p class="rd-author"><%= recurso.autor %></p>
-      <p class="rd-desc"><%= recurso.descripcion %></p>
-    </div>
-
-    <!-- Fichas de metadatos -->
-    <div class="rd-meta-grid">
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        <div><span>Material</span><strong><%= recurso.tipo_material %></strong></div>
-      </div>
-      
-      <% var editorialVal = recurso.editorial || metaObj.editorial; %>
-      <% if (editorialVal) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <div><span>Editorial</span><strong><%= editorialVal %></strong></div>
-      </div>
-      <% } %>
-
-      <% var isbnVal = recurso.isbn || metaObj.isbn; %>
-      <% if (isbnVal) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        <div><span>ISBN</span><strong><%= isbnVal %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (recurso.idioma) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-        <div><span>Idioma</span><strong><%= recurso.idioma %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (catPrincipal) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-        <div><span>Categoría</span><strong><%= catPrincipal %></strong></div>
-      </div>
-      <% } %>
-
-      <% var paginasVal = recurso.cantidad_paginas || metaObj.paginas; %>
-      <% if (paginasVal) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <div><span>Páginas</span><strong><%= paginasVal %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.revista) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <div><span>Revista</span><strong><%= metaObj.revista %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.volumen) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
-        <div><span>Volumen</span><strong><%= metaObj.volumen %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.numero) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
-        <div><span>Número</span><strong><%= metaObj.numero %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.issn) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        <div><span>ISSN</span><strong><%= metaObj.issn %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.doi) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        <div><span>DOI</span><strong><%= metaObj.doi %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.universidad) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-        <div><span>Universidad</span><strong><%= metaObj.universidad %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.programa) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <div><span>Programa</span><strong><%= metaObj.programa %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.tipo_tesis) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="7" r="4"/><path d="M5.5 21l3-12h7l3 12z"/></svg>
-        <div><span>Tipo Tesis</span><strong><%= metaObj.tipo_tesis %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.numero_norma) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <div><span>Núm. Norma</span><strong><%= metaObj.numero_norma %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.entidad_emisora) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <div><span>Emisor</span><strong><%= metaObj.entidad_emisora %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.escala) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
-        <div><span>Escala</span><strong><%= metaObj.escala %></strong></div>
-      </div>
-      <% } %>
-
-      <% if (metaObj.region) { %>
-      <div class="rd-meta-cell">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <div><span>Región</span><strong><%= metaObj.region %></strong></div>
-      </div>
-      <% } %>
-    </div>
-
-    <!-- Tags -->
-    <% if (recurso.categorias && recurso.categorias.length) { %>
-    <div class="rd-tags">
-      <% recurso.categorias.forEach(function(c) { %>
-        <span class="rd-tag"><%= c.subcategoria_nombre || c.categoria_nombre %></span>
-      <% }); %>
-    </div>
-    <% } %>
-
-    <!-- ════ DISPONIBILIDAD Y ACCESO ════ -->
-    <div class="rd-acceso-section">
-      <h2 class="rd-acceso-title">Disponibilidad y acceso</h2>
-
-      <div class="rd-acceso-grid">
-
-        <!-- ACCESO FÍSICO -->
-        <% if (tieneFisico) { %>
-        <div class="rd-acceso-card">
-          <div class="rd-acceso-card__head">
-            <div class="rd-acceso-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
-                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-              </svg>
-            </div>
-            <div>
-              <p class="rd-acceso-card__tipo">Acceso físico</p>
-              <span class="rd-disp-badge rd-disp-<%= dispFisica === 'Disponible' ? 'ok' : 'no' %>">
-                <%= dispFisica || 'No disponible' %>
-              </span>
-            </div>
-          </div>
-
-          <% if (recurso.fisico) { %>
-            <p class="rd-acceso-card__count">
-              <%= recurso.fisico.ejemplares_disponibles %> de <%= recurso.fisico.total_ejemplares %> ejemplares disponibles
-            </p>
-          <% } %>
-
-          <% if (recurso.fisico && recurso.fisico.ubicacion) { %>
-            <div class="rd-acceso-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span>Ubicación: <strong><%= recurso.fisico.ubicacion %></strong></span>
-            </div>
-          <% } %>
-          <% if (recurso.fisico && recurso.fisico.codigo_ubicacion) { %>
-            <div class="rd-acceso-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
-              <span>Código: <strong><%= recurso.fisico.codigo_ubicacion %></strong></span>
-            </div>
-          <% } %>
-          <% if (recurso.digital && recurso.digital.licencia && recurso.digital.licencia.duracion_prestamo) { %>
-            <div class="rd-acceso-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>Préstamo: <strong><%= recurso.digital.licencia.duracion_prestamo %> días</strong></span>
-            </div>
-          <% } %>
-
-          <% if (modoAdmin) { %>
-            <!-- Tabla mini de ejemplares -->
-            <% if (ejemplaresArr.length > 0) { %>
-            <div class="rd-ejemplares-mini">
-              <table class="rd-ej-table">
-                <thead>
-                  <tr><th>Código</th><th>Estado</th><th></th></tr>
-                </thead>
-                <tbody>
-                  <% ejemplaresArr.slice(0, 4).forEach(function(ej) { %>
-                  <tr>
-                    <td class="rd-ej-codigo"><%= ej.codigo_inventario %></td>
-                    <td><span class="rd-ej-badge rd-ej-badge--<%= ej.estado === 'Disponible' ? 'ok' : 'no' %>"><%= ej.estado %></span></td>
-                    <td><button class="rd-ej-btn" type="button" onclick="rdAbrirEjemplar('<%= ej._id %>')">Ver</button></td>
-                  </tr>
-                  <% }); %>
-                  <% if (ejemplaresArr.length > 4) { %>
-                  <tr><td colspan="3" class="rd-ej-more">+ <%= ejemplaresArr.length - 4 %> más</td></tr>
-                  <% } %>
-                </tbody>
-              </table>
-            </div>
-            <% } %>
-            <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-acceso-card__btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-              Gestionar ejemplares físicos
-            </a>
-          <% } else { %>
-            <% if (!sesionActiva) { %>
-              <a href="/login" class="rd-acceso-card__btn">Iniciar sesión para solicitar</a>
-            <% } else if (recurso.tieneReservaActiva) { %>
-              <p class="rd-acceso-info">Ya tienes una solicitud activa para este recurso.</p>
-            <% } else { %>
-              <form action="/reservas" method="POST">
-                <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
-                <input type="hidden" name="tipo" value="Físico">
-                <button type="submit" class="rd-acceso-card__btn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                  <%= dispFisica === 'Disponible' ? 'Acceder en físico' : 'Reservar turno físico' %>
-                </button>
-              </form>
-            <% } %>
-          <% } %>
+      <!-- Encabezado -->
+      <div class="rd-header">
+        <div class="rd-badges">
+          <span class="rd-badge">
+            <%= recurso.tipo_contenido %>
+          </span>
+          <span class="rd-badge">
+            <%= recurso.tipo_naturaleza %>
+          </span>
         </div>
-        <% } %>
-
-        <!-- ACCESO DIGITAL -->
-        <% if (tieneDigital) { %>
-        <div class="rd-acceso-card">
-          <div class="rd-acceso-card__head">
-            <div class="rd-acceso-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
-                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-            </div>
-            <div>
-              <p class="rd-acceso-card__tipo">Acceso digital</p>
-              <span class="rd-disp-badge rd-disp-<%= (esLibre || hayLicencias) ? 'ok' : 'no' %>">
-                <%= esLibre ? 'Acceso libre' : (hayLicencias ? 'Disponible' : 'No disponible') %>
-              </span>
-            </div>
-          </div>
-
-          <p class="rd-acceso-card__count"><%= licUsadas %> / <%= licMax %> licencias en uso</p>
-
-          <% if (recurso.digital && recurso.digital.licencia) { %>
-            <div class="rd-acceso-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>Préstamo: <strong><%= recurso.digital.licencia.duracion_prestamo %> <%= recurso.digital.licencia.unidad_duracion || 'días' %></strong></span>
-            </div>
-            <% if (!esLibre) { %>
-            <div class="rd-acceso-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>Licencia: <strong><%= recurso.digital.tipo_licencia %></strong> · <%= recurso.digital.licencia.usuarios_simultaneos %> usuario(s)</span>
-            </div>
-            <% } %>
-          <% } %>
-          <% if (arch && arch.tipo) { %>
-            <div class="rd-acceso-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span>Formato: <strong><%= arch.tipo.toUpperCase() %></strong></span>
-            </div>
-          <% } %>
-
-          <% if (modoAdmin) { %>
-            <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-acceso-card__btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Gestionar licencias digitales
-            </a>
-          <% } else { %>
-            <% if (!sesionActiva) { %>
-              <a href="/login" class="rd-acceso-card__btn">Iniciar sesión</a>
-            <% } else if (prestamoEsDigital && recurso.prestamoActivoItem) { %>
-              <div class="rd-acceso-info rd-acceso-info--activo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Tienes acceso hasta el <strong><%= new Date(recurso.prestamoActivoItem.fecha_limite).toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'}) %></strong>
-              </div>
-              <a href="/catalogo/<%= recurso._id %>/ver" class="rd-acceso-card__btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                Acceder ahora
-              </a>
-            <% } else if ((esLibre || hayLicencias) && urlArchivo) { %>
-              <form action="<%= esLibre ? '' : '/catalogo/' + recurso._id + '/prestar' %>" method="POST">
-                <% if (!esLibre) { %>
-                <button type="submit" class="rd-acceso-card__btn">
-                <% } else { %>
-                <a href="/catalogo/<%= recurso._id %>/ver" class="rd-acceso-card__btn">
-                <% } %>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                  Acceder digital
-                <% if (!esLibre) { %>
-                </button>
-                <% } else { %>
-                </a>
-                <% } %>
-              </form>
-            <% } else if (!recurso.tieneReservaActiva) { %>
-              <form action="/reservas" method="POST">
-                <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
-                <input type="hidden" name="tipo" value="Digital">
-                <button type="submit" class="rd-acceso-card__btn rd-acceso-card__btn--outline">
-                  Reservar turno digital
-                </button>
-              </form>
-            <% } else { %>
-              <p class="rd-acceso-info">Ya tienes una reserva activa para este recurso.</p>
-            <% } %>
-          <% } %>
-        </div>
-        <% } %>
-
-      </div>
-
-      <% if (modoUsuario) { %>
-        <p class="rd-legal-notice">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Al acceder, aceptas las condiciones de uso y las políticas de la biblioteca.
+        <h1 class="rd-title">
+          <%= recurso.titulo %>
+        </h1>
+        <p class="rd-author">
+          <%= recurso.autor %>
         </p>
-      <% } %>
-    </div>
+        <p class="rd-desc">
+          <%= recurso.descripcion %>
+        </p>
+      </div>
 
-    <!-- Tabs -->
-    <div class="rd-tabs">
-      <button class="rd-tab is-active" data-tab="descripcion">Descripción</button>
-      <button class="rd-tab" data-tab="detalles">Detalles técnicos</button>
-    </div>
+      <!-- Fichas de metadatos -->
+      <div class="rd-meta-grid">
+        <div class="rd-meta-cell">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+          </svg>
+          <div><span>Material</span><strong>
+              <%= recurso.tipo_material %>
+            </strong></div>
+        </div>
 
-    <div class="rd-tab-panel is-active" id="tab-descripcion">
-      <p class="rd-desc-full"><%= recurso.descripcion %></p>
-    </div>
+        <% var editorialVal=recurso.editorial || metaObj.editorial; %>
+          <% if (editorialVal) { %>
+            <div class="rd-meta-cell">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+              </svg>
+              <div><span>Editorial</span><strong>
+                  <%= editorialVal %>
+                </strong></div>
+            </div>
+            <% } %>
 
-    <div class="rd-tab-panel" id="tab-detalles">
-      <div class="rd-details-grid">
-        <% if (recurso.isbn) { %><div><span>ISBN</span><strong><%= recurso.isbn %></strong></div><% } %>
-        <% if (recurso.editorial) { %><div><span>Editorial</span><strong><%= recurso.editorial %></strong></div><% } %>
-        <% if (recurso.idioma) { %><div><span>Idioma</span><strong><%= recurso.idioma %></strong></div><% } %>
-        <% if (recurso.fecha_publicacion) { %><div><span>Año</span><strong><%= new Date(recurso.fecha_publicacion).getFullYear() %></strong></div><% } %>
-        <% if (recurso.cantidad_paginas) { %><div><span>Páginas</span><strong><%= recurso.cantidad_paginas %></strong></div><% } %>
-        <% if (durStr) { %><div><span>Duración</span><strong><%= durStr %></strong></div><% } %>
-        <% if (recurso.narrador) { %><div><span>Narrador</span><strong><%= recurso.narrador %></strong></div><% } %>
-        <% if (recurso.director) { %><div><span>Director</span><strong><%= recurso.director %></strong></div><% } %>
-        <% if (recurso.resolucion) { %><div><span>Resolución</span><strong><%= recurso.resolucion %></strong></div><% } %>
-        <% if (recurso.productora) { %><div><span>Productora</span><strong><%= recurso.productora %></strong></div><% } %>
+              <% var isbnVal=recurso.isbn || metaObj.isbn; %>
+                <% if (isbnVal) { %>
+                  <div class="rd-meta-cell">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                    <div><span>ISBN</span><strong>
+                        <%= isbnVal %>
+                      </strong></div>
+                  </div>
+                  <% } %>
 
-        <% Object.keys(metaObj).forEach(function(key) { %>
-          <% if (metaLabels[key] && metaObj[key]) { %>
-            <% if ((key === 'isbn' && recurso.isbn) || (key === 'editorial' && recurso.editorial) || (key === 'paginas' && recurso.cantidad_paginas)) return; %>
-            <div><span><%= metaLabels[key] %></span><strong><%= metaObj[key] %></strong></div>
+                    <% if (recurso.idioma) { %>
+                      <div class="rd-meta-cell">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"
+                          height="15">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path
+                            d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                        </svg>
+                        <div><span>Idioma</span><strong>
+                            <%= recurso.idioma %>
+                          </strong></div>
+                      </div>
+                      <% } %>
+
+                        <% if (catPrincipal) { %>
+                          <div class="rd-meta-cell">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"
+                              height="15">
+                              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                            </svg>
+                            <div><span>Categoría</span><strong>
+                                <%= catPrincipal %>
+                              </strong></div>
+                          </div>
+                          <% } %>
+
+                            <% var paginasVal=recurso.cantidad_paginas || metaObj.paginas; %>
+                              <% if (paginasVal) { %>
+                                <div class="rd-meta-cell">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"
+                                    height="15">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                  </svg>
+                                  <div><span>Páginas</span><strong>
+                                      <%= paginasVal %>
+                                    </strong></div>
+                                </div>
+                                <% } %>
+
+                                  <% if (metaObj.revista) { %>
+                                    <div class="rd-meta-cell">
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        width="15" height="15">
+                                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                                      </svg>
+                                      <div><span>Revista</span><strong>
+                                          <%= metaObj.revista %>
+                                        </strong></div>
+                                    </div>
+                                    <% } %>
+
+                                      <% if (metaObj.volumen) { %>
+                                        <div class="rd-meta-cell">
+                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="15" height="15">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <line x1="2" y1="12" x2="22" y2="12" />
+                                          </svg>
+                                          <div><span>Volumen</span><strong>
+                                              <%= metaObj.volumen %>
+                                            </strong></div>
+                                        </div>
+                                        <% } %>
+
+                                          <% if (metaObj.numero) { %>
+                                            <div class="rd-meta-cell">
+                                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" width="15" height="15">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <line x1="2" y1="12" x2="22" y2="12" />
+                                              </svg>
+                                              <div><span>Número</span><strong>
+                                                  <%= metaObj.numero %>
+                                                </strong></div>
+                                            </div>
+                                            <% } %>
+
+                                              <% if (metaObj.issn) { %>
+                                                <div class="rd-meta-cell">
+                                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" width="15" height="15">
+                                                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                                                    <line x1="2" y1="10" x2="22" y2="10" />
+                                                  </svg>
+                                                  <div><span>ISSN</span><strong>
+                                                      <%= metaObj.issn %>
+                                                    </strong></div>
+                                                </div>
+                                                <% } %>
+
+                                                  <% if (metaObj.doi) { %>
+                                                    <div class="rd-meta-cell">
+                                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" width="15" height="15">
+                                                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                                                        <line x1="2" y1="10" x2="22" y2="10" />
+                                                      </svg>
+                                                      <div><span>DOI</span><strong>
+                                                          <%= metaObj.doi %>
+                                                        </strong></div>
+                                                    </div>
+                                                    <% } %>
+
+                                                      <% if (metaObj.universidad) { %>
+                                                        <div class="rd-meta-cell">
+                                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" width="15" height="15">
+                                                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                                                            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+                                                          </svg>
+                                                          <div><span>Universidad</span><strong>
+                                                              <%= metaObj.universidad %>
+                                                            </strong></div>
+                                                        </div>
+                                                        <% } %>
+
+                                                          <% if (metaObj.programa) { %>
+                                                            <div class="rd-meta-cell">
+                                                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                stroke-width="2" width="15" height="15">
+                                                                <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                                                                <path
+                                                                  d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                                                              </svg>
+                                                              <div><span>Programa</span><strong>
+                                                                  <%= metaObj.programa %>
+                                                                </strong></div>
+                                                            </div>
+                                                            <% } %>
+
+                                                              <% if (metaObj.tipo_tesis) { %>
+                                                                <div class="rd-meta-cell">
+                                                                  <svg viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2" width="15"
+                                                                    height="15">
+                                                                    <circle cx="12" cy="7" r="4" />
+                                                                    <path d="M5.5 21l3-12h7l3 12z" />
+                                                                  </svg>
+                                                                  <div><span>Tipo Tesis</span><strong>
+                                                                      <%= metaObj.tipo_tesis %>
+                                                                    </strong></div>
+                                                                </div>
+                                                                <% } %>
+
+                                                                  <% if (metaObj.numero_norma) { %>
+                                                                    <div class="rd-meta-cell">
+                                                                      <svg viewBox="0 0 24 24" fill="none"
+                                                                        stroke="currentColor" stroke-width="2"
+                                                                        width="15" height="15">
+                                                                        <rect x="3" y="4" width="18" height="18"
+                                                                          rx="2" />
+                                                                        <line x1="3" y1="10" x2="21" y2="10" />
+                                                                      </svg>
+                                                                      <div><span>Núm. Norma</span><strong>
+                                                                          <%= metaObj.numero_norma %>
+                                                                        </strong></div>
+                                                                    </div>
+                                                                    <% } %>
+
+                                                                      <% if (metaObj.entidad_emisora) { %>
+                                                                        <div class="rd-meta-cell">
+                                                                          <svg viewBox="0 0 24 24" fill="none"
+                                                                            stroke="currentColor" stroke-width="2"
+                                                                            width="15" height="15">
+                                                                            <path
+                                                                              d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                                                            <circle cx="12" cy="7" r="4" />
+                                                                          </svg>
+                                                                          <div><span>Emisor</span><strong>
+                                                                              <%= metaObj.entidad_emisora %>
+                                                                            </strong></div>
+                                                                        </div>
+                                                                        <% } %>
+
+                                                                          <% if (metaObj.escala) { %>
+                                                                            <div class="rd-meta-cell">
+                                                                              <svg viewBox="0 0 24 24" fill="none"
+                                                                                stroke="currentColor" stroke-width="2"
+                                                                                width="15" height="15">
+                                                                                <line x1="2" y1="12" x2="22" y2="12" />
+                                                                                <line x1="12" y1="2" x2="12" y2="22" />
+                                                                              </svg>
+                                                                              <div><span>Escala</span><strong>
+                                                                                  <%= metaObj.escala %>
+                                                                                </strong></div>
+                                                                            </div>
+                                                                            <% } %>
+
+                                                                              <% if (metaObj.region) { %>
+                                                                                <div class="rd-meta-cell">
+                                                                                  <svg viewBox="0 0 24 24" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    stroke-width="2" width="15"
+                                                                                    height="15">
+                                                                                    <path
+                                                                                      d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                                                                    <circle cx="12" cy="10" r="3" />
+                                                                                  </svg>
+                                                                                  <div><span>Región</span><strong>
+                                                                                      <%= metaObj.region %>
+                                                                                    </strong></div>
+                                                                                </div>
+                                                                                <% } %>
+      </div>
+
+      <!-- Tags -->
+      <% if (recurso.categorias && recurso.categorias.length) { %>
+        <div class="rd-tags">
+          <% recurso.categorias.forEach(function(c) { %>
+            <span class="rd-tag">
+              <%= c.subcategoria_nombre || c.categoria_nombre %>
+            </span>
+            <% }); %>
+        </div>
+        <% } %>
+
+          <!-- ════ DISPONIBILIDAD Y ACCESO ════ -->
+          <div class="rd-acceso-section">
+            <h2 class="rd-acceso-title">
+              Disponibilidad y acceso
+              <svg class="title-flourish" viewBox="0 0 40 12" fill="none" stroke="#c5a880" stroke-width="1.2">
+                <path d="M2,6 Q10,2 20,6 T38,6" />
+                <circle cx="20" cy="6" r="2" fill="#c5a880" />
+              </svg>
+            </h2>
+
+            <div class="rd-acceso-grid">
+
+              <!-- ACCESO FÍSICO -->
+              <% if (tieneFisico) { %>
+                <div class="rd-acceso-card">
+                  <div class="rd-acceso-card__head">
+                    <div class="rd-acceso-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22"
+                        height="22">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="rd-acceso-card__tipo">Acceso físico</p>
+                      <span class="rd-disp-badge rd-disp-<%= dispFisica === 'Disponible' ? 'ok' : 'no' %>">
+                        <%= dispFisica || 'No disponible' %>
+                      </span>
+                    </div>
+                  </div>
+
+                  <% if (recurso.fisico) { %>
+                    <p class="rd-acceso-card__count">
+                      <%= recurso.fisico.ejemplares_disponibles %> de <%= recurso.fisico.total_ejemplares %> ejemplares
+                          disponibles
+                    </p>
+                    <% } %>
+
+                      <% if (recurso.fisico && recurso.fisico.ubicacion) { %>
+                        <div class="rd-acceso-card__detail">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"
+                            height="13">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          <span>Ubicación: <strong>
+                              <%= recurso.fisico.ubicacion %>
+                            </strong></span>
+                        </div>
+                        <% } %>
+                          <% if (recurso.fisico && recurso.fisico.codigo_ubicacion) { %>
+                            <div class="rd-acceso-card__detail">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"
+                                height="13">
+                                <rect x="2" y="4" width="20" height="16" rx="2" />
+                              </svg>
+                              <span>Código: <strong>
+                                  <%= recurso.fisico.codigo_ubicacion %>
+                                </strong></span>
+                            </div>
+                            <% } %>
+                              <% if (recurso.digital && recurso.digital.licencia &&
+                                recurso.digital.licencia.duracion_prestamo) { %>
+                                <div class="rd-acceso-card__detail">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"
+                                    height="13">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                  </svg>
+                                  <span>Préstamo: <strong>
+                                      <%= recurso.digital.licencia.duracion_prestamo %> días
+                                    </strong></span>
+                                </div>
+                                <% } %>
+
+                                  <% if (modoAdmin) { %>
+                                    <!-- Tabla mini de ejemplares -->
+                                    <% if (ejemplaresArr.length> 0) { %>
+                                      <div class="rd-ejemplares-mini">
+                                        <table class="rd-ej-table">
+                                          <thead>
+                                            <tr>
+                                              <th>Código</th>
+                                              <th>Estado</th>
+                                              <th></th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <% ejemplaresArr.slice(0, 4).forEach(function(ej) { %>
+                                              <tr>
+                                                <td class="rd-ej-codigo">
+                                                  <%= ej.codigo_inventario %>
+                                                </td>
+                                                <td><span
+                                                    class="rd-ej-badge rd-ej-badge--<%= ej.estado === 'Disponible' ? 'ok' : 'no' %>">
+                                                    <%= ej.estado %>
+                                                  </span></td>
+                                                <td><button class="rd-ej-btn" type="button"
+                                                    onclick="rdAbrirEjemplar('<%= ej._id %>')">Ver</button></td>
+                                              </tr>
+                                              <% }); %>
+                                                <% if (ejemplaresArr.length> 4) { %>
+                                                  <tr>
+                                                    <td colspan="3" class="rd-ej-more">+ <%= ejemplaresArr.length - 4 %>
+                                                        más</td>
+                                                  </tr>
+                                                  <% } %>
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                      <% } %>
+                                        <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-acceso-card__btn">
+                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            width="14" height="14">
+                                            <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                                          </svg>
+                                          Gestionar ejemplares físicos
+                                        </a>
+                                        <% } else { %>
+                                          <% if (!sesionActiva) { %>
+                                            <a href="/login" class="rd-acceso-card__btn">Iniciar sesión para
+                                              solicitar</a>
+                                            <% } else if (recurso.tieneReservaActiva) { %>
+                                              <p class="rd-acceso-info">Ya tienes una solicitud activa para este
+                                                recurso.</p>
+                                              <% } else { %>
+                                                <form action="/reservas" method="POST">
+                                                  <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
+                                                  <input type="hidden" name="tipo" value="Físico">
+                                                  <button type="submit" class="rd-acceso-card__btn">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                      stroke-width="2" width="14" height="14">
+                                                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                                                      <path
+                                                        d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                                                    </svg>
+                                                    <%= dispFisica==='Disponible' ? 'Acceder en físico'
+                                                      : 'Reservar turno físico' %>
+                                                  </button>
+                                                </form>
+                                                <% } %>
+                                                  <% } %>
+                </div>
+                <% } %>
+
+                  <!-- ACCESO DIGITAL -->
+                  <% if (tieneDigital) { %>
+                    <div class="rd-acceso-card">
+                      <div class="rd-acceso-card__head">
+                        <div class="rd-acceso-icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22"
+                            height="22">
+                            <rect x="2" y="3" width="20" height="14" rx="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="rd-acceso-card__tipo">Acceso digital</p>
+                          <span class="rd-disp-badge rd-disp-<%= (esLibre || hayLicencias) ? 'ok' : 'no' %>">
+                            <%= esLibre ? 'Acceso libre' : (hayLicencias ? 'Disponible' : 'No disponible' ) %>
+                          </span>
+                        </div>
+                      </div>
+
+                      <p class="rd-acceso-card__count">
+                        <%= licUsadas %> / <%= licMax %> licencias en uso
+                      </p>
+
+                      <% if (recurso.digital && recurso.digital.licencia) { %>
+                        <div class="rd-acceso-card__detail">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"
+                            height="13">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          <span>Préstamo: <strong>
+                              <%= recurso.digital.licencia.duracion_prestamo %>
+                                <%= recurso.digital.licencia.unidad_duracion || 'días' %>
+                            </strong></span>
+                        </div>
+                        <% if (!esLibre) { %>
+                          <div class="rd-acceso-card__detail">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"
+                              height="13">
+                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                            <span>Licencia: <strong>
+                                <%= recurso.digital.tipo_licencia %>
+                              </strong> · <%= recurso.digital.licencia.usuarios_simultaneos %> usuario(s)</span>
+                          </div>
+                          <% } %>
+                            <% } %>
+                              <% if (arch && arch.tipo) { %>
+                                <div class="rd-acceso-card__detail">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13"
+                                    height="13">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                  </svg>
+                                  <span>Formato: <strong>
+                                      <%= arch.tipo.toUpperCase() %>
+                                    </strong></span>
+                                </div>
+                                <% } %>
+
+                                  <% if (modoAdmin) { %>
+                                    <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-acceso-card__btn">
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        width="14" height="14">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                      </svg>
+                                      Gestionar licencias digitales
+                                    </a>
+                                    <% } else { %>
+                                      <% if (!sesionActiva) { %>
+                                        <a href="/login" class="rd-acceso-card__btn">Iniciar sesión</a>
+                                        <% } else if (prestamoEsDigital && recurso.prestamoActivoItem) { %>
+                                          <div class="rd-acceso-info rd-acceso-info--activo">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                              width="14" height="14">
+                                              <rect x="3" y="4" width="18" height="18" rx="2" />
+                                              <line x1="16" y1="2" x2="16" y2="6" />
+                                              <line x1="8" y1="2" x2="8" y2="6" />
+                                              <line x1="3" y1="10" x2="21" y2="10" />
+                                            </svg>
+                                            Tienes acceso hasta el <strong>
+                                              <%= new
+                                                Date(recurso.prestamoActivoItem.fecha_limite).toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})
+                                                %>
+                                            </strong>
+                                          </div>
+                                          <a href="/catalogo/<%= recurso._id %>/ver" class="rd-acceso-card__btn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                              width="14" height="14">
+                                              <circle cx="12" cy="12" r="10" />
+                                              <polygon points="10 8 16 12 10 16 10 8" />
+                                            </svg>
+                                            Acceder ahora
+                                          </a>
+                                          <% } else if ((esLibre || hayLicencias) && urlArchivo) { %>
+                                            <form action="<%= esLibre ? '' : '/catalogo/' + recurso._id + '/prestar' %>"
+                                              method="POST">
+                                              <% if (!esLibre) { %>
+                                                <button type="submit" class="rd-acceso-card__btn">
+                                                  <% } else { %>
+                                                    <a href="/catalogo/<%= recurso._id %>/ver"
+                                                      class="rd-acceso-card__btn">
+                                                      <% } %>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                          stroke-width="2" width="14" height="14">
+                                                          <rect x="2" y="3" width="20" height="14" rx="2" />
+                                                          <line x1="8" y1="21" x2="16" y2="21" />
+                                                          <line x1="12" y1="17" x2="12" y2="21" />
+                                                        </svg>
+                                                        Acceder digital
+                                                        <% if (!esLibre) { %>
+                                                </button>
+                                                <% } else { %>
+                                                  </a>
+                                                  <% } %>
+                                            </form>
+                                            <% } else if (!recurso.tieneReservaActiva) { %>
+                                              <form action="/reservas" method="POST">
+                                                <input type="hidden" name="recurso_id" value="<%= recurso._id %>">
+                                                <input type="hidden" name="tipo" value="Digital">
+                                                <button type="submit"
+                                                  class="rd-acceso-card__btn rd-acceso-card__btn--outline">
+                                                  Reservar turno digital
+                                                </button>
+                                              </form>
+                                              <% } else { %>
+                                                <p class="rd-acceso-info">Ya tienes una reserva activa para este
+                                                  recurso.</p>
+                                                <% } %>
+                                                  <% } %>
+                    </div>
+                    <% } %>
+
+            </div>
+
+            <% if (modoUsuario) { %>
+              <p class="rd-legal-notice">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Al acceder, aceptas las condiciones de uso y las políticas de la biblioteca.
+              </p>
+              <% } %>
+          </div>
+
+          <!-- Tabs -->
+          <div class="rd-tabs">
+            <button class="rd-tab is-active" data-tab="descripcion">Descripción</button>
+            <button class="rd-tab" data-tab="detalles">Detalles técnicos</button>
+          </div>
+
+          <div class="rd-tab-panel is-active" id="tab-descripcion">
+            <p class="rd-desc-full">
+              <%= recurso.descripcion %>
+            </p>
+            <div class="classic-description-divider">
+              <svg viewBox="0 0 200 10" fill="none" stroke="#c5a880" stroke-width="1" stroke-linecap="round">
+                <path d="M10,5 H90 Q100,1 100,5 T110,5 H190" />
+                <circle cx="100" cy="5" r="2" fill="#c5a880" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="rd-tab-panel" id="tab-detalles">
+            <div class="rd-details-grid">
+              <% if (recurso.isbn) { %>
+                <div><span>ISBN</span><strong>
+                    <%= recurso.isbn %>
+                  </strong></div>
+                <% } %>
+                  <% if (recurso.editorial) { %>
+                    <div><span>Editorial</span><strong>
+                        <%= recurso.editorial %>
+                      </strong></div>
+                    <% } %>
+                      <% if (recurso.idioma) { %>
+                        <div><span>Idioma</span><strong>
+                            <%= recurso.idioma %>
+                          </strong></div>
+                        <% } %>
+                          <% if (recurso.fecha_publicacion) { %>
+                            <div><span>Año</span><strong>
+                                <%= new Date(recurso.fecha_publicacion).getFullYear() %>
+                              </strong></div>
+                            <% } %>
+                              <% if (recurso.cantidad_paginas) { %>
+                                <div><span>Páginas</span><strong>
+                                    <%= recurso.cantidad_paginas %>
+                                  </strong></div>
+                                <% } %>
+                                  <% if (durStr) { %>
+                                    <div><span>Duración</span><strong>
+                                        <%= durStr %>
+                                      </strong></div>
+                                    <% } %>
+                                      <% if (recurso.narrador) { %>
+                                        <div><span>Narrador</span><strong>
+                                            <%= recurso.narrador %>
+                                          </strong></div>
+                                        <% } %>
+                                          <% if (recurso.director) { %>
+                                            <div><span>Director</span><strong>
+                                                <%= recurso.director %>
+                                              </strong></div>
+                                            <% } %>
+                                              <% if (recurso.resolucion) { %>
+                                                <div><span>Resolución</span><strong>
+                                                    <%= recurso.resolucion %>
+                                                  </strong></div>
+                                                <% } %>
+                                                  <% if (recurso.productora) { %>
+                                                    <div><span>Productora</span><strong>
+                                                        <%= recurso.productora %>
+                                                      </strong></div>
+                                                    <% } %>
+
+                                                      <% Object.keys(metaObj).forEach(function(key) { %>
+                                                        <% if (metaLabels[key] && metaObj[key]) { %>
+                                                          <% if ((key==='isbn' && recurso.isbn) || (key==='editorial' &&
+                                                            recurso.editorial) || (key==='paginas' &&
+                                                            recurso.cantidad_paginas)) return; %>
+                                                            <div><span>
+                                                                <%= metaLabels[key] %>
+                                                              </span><strong>
+                                                                <%= metaObj[key] %>
+                                                              </strong></div>
+                                                            <% } %>
+                                                              <% }); %>
+            </div>
+          </div>
+
+    </main>
+
+    <!-- ═══ COLUMNA DERECHA: información + estado + acciones rápidas ═══ -->
+    <aside class="rd-aside-right">
+
+      <!-- Tarjeta de info del recurso -->
+      <div class="rd-aside-card">
+        <p class="rd-aside-label">Información del recurso</p>
+        <div class="classic-card-divider">
+          <svg viewBox="0 0 100 8" fill="none" stroke="#c5a880" stroke-width="1.2" stroke-linecap="round">
+            <path d="M 0 4 L 42 4 C 45 4 47 1 50 4 C 53 1 55 4 58 4 L 100 4" />
+            <circle cx="50" cy="4" r="1.5" fill="#c5a880" />
+          </svg>
+        </div>
+        <div class="rd-info-row"><span>Formato</span><strong>
+            <%= recurso.tipo_naturaleza %>
+          </strong></div>
+        <% if (tieneDigital) { %>
+          <div class="rd-info-row"><span>Tipo de acceso</span><strong>
+              <%= esLibre ? 'Acceso libre' : 'Préstamo digital' %>
+            </strong></div>
+          <div class="rd-info-row"><span>Licencias disponibles</span><strong>
+              <%= licMax - licUsadas %> de <%= licMax %>
+            </strong></div>
           <% } %>
-        <% }); %>
+            <% if (recurso.fecha_publicacion) { %>
+              <div class="rd-info-row"><span>Fecha de publicación</span><strong>
+                  <%= new Date(recurso.fecha_publicacion).getFullYear() %>
+                </strong></div>
+              <% } %>
+                <% if (durStr) { %>
+                  <div class="rd-info-row"><span>Duración</span><strong>
+                      <%= durStr %>
+                    </strong></div>
+                  <% } %>
+                    <% if (recurso.narrador) { %>
+                      <div class="rd-info-row"><span>Narrador</span><strong>
+                          <%= recurso.narrador %>
+                        </strong></div>
+                      <% } %>
+                        <% var editorialVal=recurso.editorial || metaObj.editorial; %>
+                          <% if (recurso.productora || editorialVal) { %>
+                            <div class="rd-info-row">
+                              <span>
+                                <%= recurso.tipo_contenido==='Video' ? 'Productora' : 'Editorial' %>
+                              </span>
+                              <strong>
+                                <%= recurso.productora || editorialVal %>
+                              </strong>
+                            </div>
+                            <% } %>
+      </div>
+
+      <!-- ── Solo admin: estado, acciones rápidas ── -->
+      <% if (modoAdmin) { %>
+
+        <div class="rd-aside-card">
+          <p class="rd-aside-label">Estado del recurso</p>
+          <div class="classic-card-divider">
+            <svg viewBox="0 0 100 8" fill="none" stroke="#c5a880" stroke-width="1.2" stroke-linecap="round">
+              <path d="M 0 4 L 42 4 C 45 4 47 1 50 4 C 53 1 55 4 58 4 L 100 4" />
+              <circle cx="50" cy="4" r="1.5" fill="#c5a880" />
+            </svg>
+          </div>
+          <span class="rd-estado-badge rd-estado-<%= (recurso.estado || '').toLowerCase().replace(/\s+/g,'-') %>">
+            <%= recurso.estado %>
+          </span>
+          <% if (recurso.fecha_publicacion) { %>
+            <div class="rd-meta-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <div><span>Fecha de publicación</span><strong>
+                  <%= new Date(recurso.fecha_publicacion).getFullYear() %>
+                </strong></div>
+            </div>
+            <% } %>
+              <% var editorialVal=recurso.editorial || metaObj.editorial; %>
+                <% if (recurso.productora || editorialVal) { %>
+                  <div class="rd-meta-row">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                    </svg>
+                    <div><span>Proveedor / Productora</span><strong>
+                        <%= recurso.productora || editorialVal %>
+                      </strong></div>
+                  </div>
+                  <% } %>
+                    <% if (durStr) { %>
+                      <div class="rd-meta-row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"
+                          height="15">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <div><span>Duración</span><strong>
+                            <%= durStr %>
+                          </strong></div>
+                      </div>
+                      <% } %>
+        </div>
+
+        <% if (recurso.categorias && recurso.categorias.length) { %>
+          <div class="rd-aside-card">
+            <p class="rd-aside-label">Información adicional</p>
+            <div class="classic-card-divider">
+              <svg viewBox="0 0 100 8" fill="none" stroke="#c5a880" stroke-width="1.2" stroke-linecap="round">
+                <path d="M 0 4 L 42 4 C 45 4 47 1 50 4 C 53 1 55 4 58 4 L 100 4" />
+                <circle cx="50" cy="4" r="1.5" fill="#c5a880" />
+              </svg>
+            </div>
+            <% recurso.categorias.forEach(function(c) { %>
+              <div class="rd-info-row"><span>Categoría</span><strong>
+                  <%= c.categoria_nombre %>
+                </strong></div>
+              <% if (c.subcategoria_nombre) { %>
+                <div class="rd-info-row"><span>Subcategoría</span><strong>
+                    <%= c.subcategoria_nombre %>
+                  </strong></div>
+                <% } %>
+                  <% }); %>
+          </div>
+          <% } %>
+
+            <div class="rd-aside-card">
+              <p class="rd-aside-label">Acciones rápidas</p>
+              <div class="classic-card-divider">
+                <svg viewBox="0 0 100 8" fill="none" stroke="#c5a880" stroke-width="1.2" stroke-linecap="round">
+                  <path d="M 0 4 L 42 4 C 45 4 47 1 50 4 C 53 1 55 4 58 4 L 100 4" />
+                  <circle cx="50" cy="4" r="1.5" fill="#c5a880" />
+                </svg>
+              </div>
+              <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Editar recurso
+              </a>
+              <form method="post" action="/admin/recursos/<%= recurso._id %>?_method=DELETE"
+                onsubmit="return confirm('¿Eliminar este recurso y todos sus ejemplares?')">
+                <button type="submit" class="rd-action-btn rd-action-btn--danger">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                  </svg>
+                  Eliminar recurso
+                </button>
+              </form>
+            </div>
+
+            <% } else { %>
+
+              <!-- ── Solo usuario: favoritos y vistas ── -->
+              <div class="rd-aside-card">
+                <button class="rd-fav-btn" id="rd-fav-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                  </svg>
+                  Agregar a favoritos
+                </button>
+                <% if (recurso.total_prestamos) { %>
+                  <p class="rd-views">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Visto <%= recurso.total_prestamos.toLocaleString('es-CO') %> veces
+                  </p>
+                  <% } %>
+              </div>
+
+              <% } %>
+    </aside>
+  </div>
+
+  <!-- ═══ MODAL EJEMPLAR (solo admin) ═══ -->
+  <% if (modoAdmin && ejemplaresArr.length> 0) { %>
+    <div class="rd-modal-overlay" id="rd-modal-ejemplar" hidden>
+      <div class="rd-modal">
+        <div class="rd-modal__head">
+          <h3 class="rd-modal__title">Detalle del ejemplar</h3>
+          <button class="rd-modal__close" type="button" onclick="rdCerrarEjemplar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="rd-modal__body" id="rd-modal-body"></div>
       </div>
     </div>
+    <% } %>
 
-  </main>
-</div>
-
-<!-- ═══ MODAL EJEMPLAR (solo admin) ═══ -->
-<% if (modoAdmin && ejemplaresArr.length > 0) { %>
-<div class="rd-modal-overlay" id="rd-modal-ejemplar" hidden>
-  <div class="rd-modal">
-    <div class="rd-modal__head">
-      <h3 class="rd-modal__title">Detalle del ejemplar</h3>
-      <button class="rd-modal__close" type="button" onclick="rdCerrarEjemplar()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="rd-modal__body" id="rd-modal-body"></div>
-  </div>
-</div>
-<% } %>
-
-<!-- Scripts -->
-<script>
-(function () {
-  /* Tabs */
-  document.querySelectorAll('.rd-tab').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.rd-tab').forEach(function (b) { b.classList.remove('is-active'); });
-      document.querySelectorAll('.rd-tab-panel').forEach(function (p) { p.classList.remove('is-active'); });
-      btn.classList.add('is-active');
-      var panel = document.getElementById('tab-' + btn.dataset.tab);
-      if (panel) panel.classList.add('is-active');
-    });
-  });
+      <!-- Scripts -->
+      <script>
+        (function () {
+          /* Tabs */
+          document.querySelectorAll('.rd-tab').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              document.querySelectorAll('.rd-tab').forEach(function (b) { b.classList.remove('is-active'); });
+              document.querySelectorAll('.rd-tab-panel').forEach(function (p) { p.classList.remove('is-active'); });
+              btn.classList.add('is-active');
+              var panel = document.getElementById('tab-' + btn.dataset.tab);
+              if (panel) panel.classList.add('is-active');
+            });
+          });
 
   <% if (modoAdmin && ejemplaresArr.length > 0) { %>
   /* Modal ejemplares */
-  var rdEjemplares = <%- JSON.stringify(ejemplaresArr) %>;
+  var rdEjemplares = <% - JSON.stringify(ejemplaresArr) %>;
 
-  window.rdAbrirEjemplar = function (id) {
-    var ej = rdEjemplares.find(function (e) { return String(e._id) === String(id); });
-    if (!ej) return;
-    document.getElementById('rd-modal-body').innerHTML =
-      '<div class="rd-modal-grid">' +
-        '<div><span>Código</span><strong>' + (ej.codigo_inventario || '—') + '</strong></div>' +
-        '<div><span>Estado</span><span class="rd-ej-badge rd-ej-badge--' + (ej.estado === 'Disponible' ? 'ok' : 'no') + '">' + ej.estado + '</span></div>' +
-        '<div><span>Ubicación</span><strong>' + (ej.ubicacion || 'No registrada') + '</strong></div>' +
-        '<div><span>Observación</span><strong>' + (ej.descripcion_dano || 'Sin observación') + '</strong></div>' +
-        '<div><span>Registrado</span><strong>' + (ej.creado_en ? new Date(ej.creado_en).toLocaleDateString('es-CO') : '—') + '</strong></div>' +
-      '</div>';
-    var ov = document.getElementById('rd-modal-ejemplar');
-    ov.hidden = false;
-    requestAnimationFrame(function () { ov.classList.add('is-open'); });
-  };
+            window.rdAbrirEjemplar = function (id) {
+              var ej = rdEjemplares.find(function (e) { return String(e._id) === String(id); });
+              if (!ej) return;
+              document.getElementById('rd-modal-body').innerHTML =
+                '<div class="rd-modal-grid">' +
+                '<div><span>Código</span><strong>' + (ej.codigo_inventario || '—') + '</strong></div>' +
+                '<div><span>Estado</span><span class="rd-ej-badge rd-ej-badge--' + (ej.estado === 'Disponible' ? 'ok' : 'no') + '">' + ej.estado + '</span></div>' +
+                '<div><span>Ubicación</span><strong>' + (ej.ubicacion || 'No registrada') + '</strong></div>' +
+                '<div><span>Observación</span><strong>' + (ej.descripcion_dano || 'Sin observación') + '</strong></div>' +
+                '<div><span>Registrado</span><strong>' + (ej.creado_en ? new Date(ej.creado_en).toLocaleDateString('es-CO') : '—') + '</strong></div>' +
+                '</div>';
+              var ov = document.getElementById('rd-modal-ejemplar');
+              ov.hidden = false;
+              requestAnimationFrame(function () { ov.classList.add('is-open'); });
+            };
 
-  window.rdCerrarEjemplar = function () {
-    var ov = document.getElementById('rd-modal-ejemplar');
-    ov.classList.remove('is-open');
-    setTimeout(function () { ov.hidden = true; }, 220);
-  };
+            window.rdCerrarEjemplar = function () {
+              var ov = document.getElementById('rd-modal-ejemplar');
+              ov.classList.remove('is-open');
+              setTimeout(function () { ov.hidden = true; }, 220);
+            };
 
-  document.getElementById('rd-modal-ejemplar').addEventListener('click', function (e) {
-    if (e.target === this) window.rdCerrarEjemplar();
-  });
+            document.getElementById('rd-modal-ejemplar').addEventListener('click', function (e) {
+              if (e.target === this) window.rdCerrarEjemplar();
+            });
   <% } %>
 })();
-</script>
+      </script>

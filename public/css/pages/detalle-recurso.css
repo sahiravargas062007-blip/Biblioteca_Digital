@@ -1,32 +1,48 @@
 /* ═══════════════════════════════════════════════════════════════
-   detalle-recurso.css
-   Página de detalle — usuario y administrador
-   Paleta: turquesa BiblioNet (#0c7c86 / #0fb3bd) + neutros
+   detalle-recurso.css — Rediseño Clásico Premium
+   Paleta: verde bosque (#184e42), oro/arena (#b89568), papel marfil (#faf6ee / #fcfaf6)
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Tokens locales ─────────────────────────────────────────── */
-.rd-page {
-  --rd-primary: #0c7c86;
-  --rd-primary-lt: #0fb3bd;
-  --rd-primary-bg: #eaf7f8;
-  --rd-text: #1a2633;
-  --rd-muted: #5a6a7a;
-  --rd-border: #dde3ea;
-  --rd-surface: #ffffff;
-  --rd-radius: 10px;
-  --rd-radius-lg: 16px;
-  --rd-shadow-sm: 0 1px 4px rgba(0, 0, 0, .07);
-  --rd-shadow-md: 0 4px 18px rgba(0, 0, 0, .10);
+/* ── Fondo de Biblioteca para toda la página ── */
+body:has(.rd-page) {
+  background: radial-gradient(circle, rgba(20, 15, 10, 0.45) 0%, rgba(10, 8, 5, 0.88) 100%), 
+              url('/img/hero-library.png') center/cover no-repeat fixed !important;
+  min-height: 100vh;
+  margin: 0;
 }
 
-/* ── Contenedor de página ────────────────────────────────────── */
+/* ── Tokens de diseño ── */
 .rd-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 20px 48px;
+  --rd-primary: #184e42;
+  --rd-primary-lt: #256a5c;
+  --rd-primary-bg: #eaf1ee;
+  --rd-accent: #b89568;
+  --rd-accent-light: #e7dfd3;
+  --rd-text: #2a251e;
+  --rd-muted: #70624d;
+  --rd-border: #e6dfd1;
+  --rd-surface: #fcfaf6;
+  --rd-surface-alt: #f5ecd8;
+  --rd-radius: 8px;
+  --rd-radius-lg: 12px;
+  --rd-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --rd-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* ── Volver ──────────────────────────────────────────────────── */
+/* ── Contenedor de página clásica ── */
+.rd-page {
+  max-width: 1150px;
+  margin: 40px auto;
+  padding: 40px;
+  background: #faf6ee;
+  border: 1px solid #e2d8c5;
+  border-radius: 16px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+  color: var(--rd-text);
+  box-sizing: border-box;
+}
+
+/* ── Volver ── */
 .rd-back {
   display: inline-flex;
   align-items: center;
@@ -36,104 +52,168 @@
   font-size: .9rem;
   text-decoration: none;
   margin-bottom: 24px;
+  transition: color 0.2s;
 }
 
 .rd-back:hover {
-  text-decoration: underline;
+  color: var(--rd-primary-lt);
+  text-decoration: none;
 }
 
-/* ── Layout principal ────────────────────────────────────────── */
-.rd-layout {
+/* ── Layout principal de 3 columnas ── */
+.rd-layout,
+.rd-layout--admin {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 28px;
+  grid-template-columns: 240px 1fr 280px;
+  gap: 32px;
   align-items: start;
 }
 
-/* Admin: columna derecha extra para el panel de estado */
-.rd-layout--admin {
-  grid-template-columns: 280px 1fr 260px;
-}
-
-@media (max-width: 900px) {
-
+@media (max-width: 1024px) {
   .rd-layout,
   .rd-layout--admin {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 }
 
-/* ── Aside izquierdo ─────────────────────────────────────────── */
+/* ── Columna Izquierda (Portada) ── */
 .rd-aside {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .rd-cover-wrap {
   position: relative;
+  border-radius: var(--rd-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--rd-shadow-md);
+  border: 1px solid rgba(0,0,0,0.1);
 }
 
 .rd-cover {
   width: 100%;
   aspect-ratio: 3/4;
   object-fit: cover;
-  border-radius: var(--rd-radius-lg);
-  box-shadow: var(--rd-shadow-md);
   display: block;
 }
 
-.rd-edit-cover {
+.rd-cover-actions {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
   align-items: center;
-  gap: 5px;
-  justify-content: center;
-  margin-top: 8px;
-  font-size: .8rem;
-  color: var(--rd-muted);
-  text-decoration: none;
+  width: 100%;
 }
 
-.rd-edit-cover:hover {
+.rd-preview-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #f3ebd9;
+  border: 1px solid #dccfac;
+  border-radius: var(--rd-radius);
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--rd-primary);
+  text-decoration: none;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rd-preview-btn:hover {
+  background: #ebdcb9;
+  transform: translateY(-1px);
+  text-decoration: none;
   color: var(--rd-primary);
 }
 
-/* Tarjeta lateral */
+.rd-edit-cover-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--rd-muted);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.rd-edit-cover-link:hover {
+  color: var(--rd-primary);
+  text-decoration: underline;
+}
+
+/* ── Columna Derecha (Aside Cards) ── */
+.rd-aside-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .rd-aside-card {
   background: var(--rd-surface);
   border: 1px solid var(--rd-border);
   border-radius: var(--rd-radius);
-  padding: 16px;
+  padding: 20px;
   box-shadow: var(--rd-shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .rd-aside-label {
-  font-size: .75rem;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--rd-primary);
+  letter-spacing: 0.08em;
+  color: #7a6652;
+  text-align: center;
   margin: 0;
+}
+
+.classic-card-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2px 0 6px;
+}
+
+.classic-card-divider svg {
+  width: 80px;
+  height: 8px;
 }
 
 .rd-info-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: .85rem;
-  gap: 8px;
+  font-size: .88rem;
+  gap: 10px;
+  border-bottom: 1px dashed var(--rd-border);
+  padding-bottom: 6px;
+}
+
+.rd-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .rd-info-row span {
   color: var(--rd-muted);
-  flex-shrink: 0;
+  font-size: 0.82rem;
 }
 
 .rd-info-row strong {
   text-align: right;
+  color: var(--rd-text);
+  font-weight: 600;
 }
 
 /* Favoritos / visto */
@@ -141,22 +221,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: none;
-  border: 1px solid var(--rd-border);
+  background: transparent;
+  border: 1px solid var(--rd-accent);
   border-radius: var(--rd-radius);
-  padding: 9px 14px;
+  padding: 10px 14px;
   font-size: .88rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  color: var(--rd-text);
-  transition: border-color .15s, color .15s;
+  color: var(--rd-primary);
+  transition: background .15s, border-color .15s;
   width: 100%;
   justify-content: center;
 }
 
 .rd-fav-btn:hover {
+  background: var(--rd-primary-bg);
   border-color: var(--rd-primary);
-  color: var(--rd-primary);
 }
 
 .rd-views {
@@ -169,24 +249,23 @@
   justify-content: center;
 }
 
-/* Panel lateral admin */
+/* Badges de estado en aside */
 .rd-estado-badge {
-  display: inline-block;
-  font-size: .82rem;
+  display: block;
+  text-align: center;
+  font-size: .8rem;
   font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 99px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: var(--rd-surface-alt);
+  color: #7a6652;
+  border: 1px solid var(--rd-border);
 }
 
 .rd-estado-activo {
-  background: #e6f7ee;
-  color: #1a7a3f;
-}
-
-.rd-estado-inactivo,
-.rd-estado-pendiente-de-configuración {
-  background: #f5f5f5;
-  color: #666;
+  background: #eaf1ee;
+  color: var(--rd-primary);
+  border-color: #c9ded7;
 }
 
 .rd-meta-row {
@@ -199,7 +278,7 @@
 .rd-meta-row svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--rd-muted);
+  color: var(--rd-accent);
 }
 
 .rd-meta-row div {
@@ -210,122 +289,135 @@
 
 .rd-meta-row span {
   color: var(--rd-muted);
-  font-size: .78rem;
+  font-size: .75rem;
 }
 
 .rd-meta-row strong {
-  font-size: .88rem;
+  font-size: .85rem;
+  color: var(--rd-text);
 }
 
-.rd-acciones-rapidas {
-  gap: 8px;
-}
-
+/* Botones de acciones rápidas */
 .rd-action-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 14px;
+  padding: 10px 14px;
   border-radius: var(--rd-radius);
-  border: 1px solid var(--rd-border);
-  background: var(--rd-surface);
+  border: 1px solid var(--rd-primary);
+  background: transparent;
   font-size: .88rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: none;
-  color: var(--rd-text);
-  transition: border-color .15s;
+  color: var(--rd-primary);
+  transition: background .15s, color .15s, border-color .15s;
   width: 100%;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .rd-action-btn:hover {
-  border-color: var(--rd-primary);
+  background: var(--rd-primary-bg);
   color: var(--rd-primary);
+  text-decoration: none;
 }
 
 .rd-action-btn--danger {
-  color: #c0392b;
-  border-color: #f5c6c2;
+  color: #ac3d33;
+  border-color: #eec5c1;
 }
 
 .rd-action-btn--danger:hover {
-  background: #fef2f2;
-  border-color: #c0392b;
+  background: #fdf2f0;
+  border-color: #ac3d33;
+  color: #ac3d33;
 }
 
-/* ── Columna principal ───────────────────────────────────────── */
+/* ── Columna Principal (Contenido) ── */
 .rd-main {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 24px;
 }
 
-/* Encabezado */
 .rd-header {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .rd-badges {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .rd-badge {
-  background: #f0f4f8;
-  color: var(--rd-muted);
+  background: var(--rd-primary) !important;
+  color: #fff !important;
   border-radius: 99px;
-  font-size: .8rem;
-  font-weight: 600;
-  padding: 4px 12px;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
 }
 
 .rd-title {
-  font-size: clamp(1.5rem, 3vw, 2.1rem);
-  font-weight: 800;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 2.3rem;
+  font-weight: 700;
   color: var(--rd-text);
   line-height: 1.15;
   margin: 0;
 }
 
 .rd-author {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-style: italic;
   color: var(--rd-primary);
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-weight: 600;
+  font-size: 1.15rem;
   margin: 0;
 }
 
 .rd-desc {
   color: var(--rd-muted);
-  line-height: 1.65;
+  line-height: 1.7;
   margin: 0;
-  font-size: .95rem;
+  font-size: .98rem;
 }
 
-/* Fichas de metadatos */
+/* Grilla de metadatos */
 .rd-meta-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 10px 0;
 }
 
 .rd-meta-cell {
   display: flex;
-  align-items: flex-start;
-  gap: 9px;
+  align-items: center;
+  gap: 12px;
   background: var(--rd-surface);
   border: 1px solid var(--rd-border);
   border-radius: var(--rd-radius);
-  padding: 11px 13px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.rd-meta-cell:hover {
+  background: #f6f1e6;
+  border-color: var(--rd-accent);
 }
 
 .rd-meta-cell svg {
   flex-shrink: 0;
-  color: var(--rd-muted);
-  margin-top: 2px;
+  color: var(--rd-accent);
 }
 
 .rd-meta-cell div {
@@ -335,16 +427,18 @@
 }
 
 .rd-meta-cell span {
-  font-size: .75rem;
+  font-size: .7rem;
   color: var(--rd-muted);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
 }
 
 .rd-meta-cell strong {
-  font-size: .9rem;
-  color: var(--rd-text);
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: .95rem;
+  color: var(--rd-primary);
+  font-weight: 700;
 }
 
 /* Tags */
@@ -355,55 +449,71 @@
 }
 
 .rd-tag {
-  background: var(--rd-primary-bg);
-  color: var(--rd-primary);
+  background: #ebdcb9;
+  color: #70552b;
+  border: 1px solid #dfcca2;
   border-radius: 99px;
-  font-size: .8rem;
+  font-size: .78rem;
   font-weight: 600;
   padding: 4px 12px;
 }
 
-/* ── Sección de acceso ───────────────────────────────────────── */
+/* ── Sección de acceso ── */
 .rd-acceso-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  margin-top: 10px;
 }
 
 .rd-acceso-title {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: var(--rd-text);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-flourish {
+  width: 40px;
+  height: 12px;
 }
 
 .rd-acceso-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-/* Card de acceso */
 .rd-acceso-card {
   background: var(--rd-surface);
   border: 1px solid var(--rd-border);
   border-radius: var(--rd-radius-lg);
-  padding: 18px 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   box-shadow: var(--rd-shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rd-acceso-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
 .rd-acceso-card__head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .rd-acceso-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--rd-primary-bg);
   display: flex;
@@ -414,78 +524,83 @@
 }
 
 .rd-acceso-card__tipo {
+  font-family: 'Playfair Display', 'Georgia', serif;
   font-weight: 700;
   color: var(--rd-primary);
-  font-size: .95rem;
+  font-size: 1.05rem;
   margin: 0;
 }
 
-/* Badges de disponibilidad */
 .rd-disp-badge {
   display: inline-block;
-  font-size: .75rem;
+  font-size: .72rem;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .rd-disp-ok {
-  background: #e6f7ee;
-  color: #1a7a3f;
+  background: #eaf1ee;
+  color: var(--rd-primary);
 }
 
 .rd-disp-no {
-  background: #f5f5f5;
-  color: #888;
+  background: var(--rd-surface-alt);
+  color: var(--rd-muted);
 }
 
 .rd-acceso-card__count {
   font-size: .9rem;
   color: var(--rd-text);
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .rd-acceso-card__detail {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   font-size: .85rem;
   color: var(--rd-muted);
 }
 
 .rd-acceso-card__detail svg {
   flex-shrink: 0;
+  color: var(--rd-accent);
 }
 
 .rd-acceso-card__detail strong {
   color: var(--rd-text);
 }
 
-/* Botón principal dentro de la card */
 .rd-acceso-card__btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 11px 18px;
+  padding: 12px 18px;
   background: var(--rd-primary);
   color: #fff;
   border: none;
   border-radius: var(--rd-radius);
+  font-family: 'Playfair Display', 'Georgia', serif;
   font-weight: 700;
-  font-size: .92rem;
+  font-size: .95rem;
   cursor: pointer;
   text-decoration: none;
-  transition: background .2s;
+  transition: background .2s, transform 0.15s;
   width: 100%;
   margin-top: 4px;
+  box-sizing: border-box;
 }
 
 .rd-acceso-card__btn:hover {
   background: var(--rd-primary-lt);
   color: #fff;
   text-decoration: none;
+  transform: translateY(-1px);
 }
 
 .rd-acceso-card__btn--outline {
@@ -498,7 +613,6 @@
   background: var(--rd-primary-bg);
 }
 
-/* Info de préstamo activo */
 .rd-acceso-info {
   font-size: .85rem;
   color: var(--rd-muted);
@@ -512,12 +626,11 @@
   background: var(--rd-primary-bg);
   border: 1px solid #b2e0e4;
   border-radius: var(--rd-radius);
-  padding: 9px 12px;
+  padding: 10px 14px;
   color: var(--rd-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* Aviso legal */
 .rd-legal-notice {
   display: flex;
   align-items: center;
@@ -525,17 +638,18 @@
   font-size: .82rem;
   color: var(--rd-primary);
   background: var(--rd-primary-bg);
-  border: 1px solid #b2e0e4;
+  border: 1px solid #a4d8d1;
   border-radius: var(--rd-radius);
   padding: 10px 14px;
   margin: 0;
 }
 
-/* ── Tabla mini de ejemplares (admin) ────────────────────────── */
+/* ── Tabla mini de ejemplares (admin) ── */
 .rd-ejemplares-mini {
   border: 1px solid var(--rd-border);
   border-radius: var(--rd-radius);
   overflow: hidden;
+  margin-top: 6px;
 }
 
 .rd-ej-table {
@@ -545,11 +659,11 @@
 }
 
 .rd-ej-table thead {
-  background: #f8fafb;
+  background: var(--rd-surface-alt);
 }
 
 .rd-ej-table th {
-  padding: 7px 10px;
+  padding: 8px 12px;
   text-align: left;
   font-size: .72rem;
   font-weight: 700;
@@ -560,7 +674,7 @@
 }
 
 .rd-ej-table td {
-  padding: 7px 10px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--rd-border);
   vertical-align: middle;
 }
@@ -572,36 +686,38 @@
 .rd-ej-codigo {
   font-family: monospace;
   font-size: .8rem;
+  color: var(--rd-text);
+  font-weight: 600;
 }
 
 .rd-ej-badge {
   display: inline-block;
-  font-size: .72rem;
+  font-size: .7rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 99px;
 }
 
 .rd-ej-badge--ok {
-  background: #e6f7ee;
-  color: #1a7a3f;
+  background: #eaf1ee;
+  color: var(--rd-primary);
 }
 
 .rd-ej-badge--no {
-  background: #f5f5f5;
-  color: #888;
+  background: var(--rd-surface-alt);
+  color: var(--rd-muted);
 }
 
 .rd-ej-btn {
-  background: none;
+  background: transparent;
   border: 1px solid var(--rd-border);
-  border-radius: 5px;
-  padding: 2px 8px;
+  border-radius: 4px;
+  padding: 3px 8px;
   font-size: .75rem;
   cursor: pointer;
   color: var(--rd-primary);
   font-weight: 600;
-  transition: background .12s;
+  transition: background .12s, border-color .12s;
 }
 
 .rd-ej-btn:hover {
@@ -614,14 +730,15 @@
   color: var(--rd-muted);
   font-size: .78rem;
   font-style: italic;
-  padding: 6px;
+  padding: 8px;
 }
 
-/* ── Tabs ────────────────────────────────────────────────────── */
+/* ── Pestañas y paneles ── */
 .rd-tabs {
   display: flex;
   gap: 0;
   border-bottom: 2px solid var(--rd-border);
+  margin-top: 10px;
 }
 
 .rd-tab {
@@ -629,8 +746,9 @@
   border: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  padding: 10px 20px;
-  font-size: .9rem;
+  padding: 12px 24px;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: .98rem;
   font-weight: 600;
   color: var(--rd-muted);
   cursor: pointer;
@@ -644,11 +762,12 @@
 .rd-tab.is-active {
   color: var(--rd-primary);
   border-bottom-color: var(--rd-primary);
+  font-weight: 700;
 }
 
 .rd-tab-panel {
   display: none;
-  padding-top: 16px;
+  padding-top: 20px;
 }
 
 .rd-tab-panel.is-active {
@@ -656,22 +775,34 @@
 }
 
 .rd-desc-full {
-  color: var(--rd-muted);
+  color: var(--rd-text);
   line-height: 1.75;
   margin: 0;
-  font-size: .95rem;
+  font-size: .98rem;
+}
+
+.classic-description-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 28px 0 10px;
+}
+
+.classic-description-divider svg {
+  width: 180px;
+  height: 10px;
 }
 
 .rd-details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .rd-details-grid div {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   background: var(--rd-surface);
   border: 1px solid var(--rd-border);
   border-radius: var(--rd-radius);
@@ -679,23 +810,26 @@
 }
 
 .rd-details-grid span {
-  font-size: .75rem;
+  font-size: .72rem;
   color: var(--rd-muted);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .05em;
 }
 
 .rd-details-grid strong {
-  font-size: .9rem;
-  color: var(--rd-text);
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: .95rem;
+  color: var(--rd-primary);
+  font-weight: 700;
 }
 
-/* ── Modal de ejemplar ───────────────────────────────────────── */
+/* ── Modales ── */
 .rd-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .45);
+  background: rgba(10, 8, 5, 0.65);
+  backdrop-filter: blur(2px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -712,8 +846,9 @@
 
 .rd-modal {
   background: var(--rd-surface);
+  border: 1px solid var(--rd-accent);
   border-radius: var(--rd-radius-lg);
-  box-shadow: var(--rd-shadow-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
   width: 90%;
   max-width: 440px;
   transform: translateY(12px);
@@ -733,10 +868,11 @@
 }
 
 .rd-modal__title {
-  font-size: 1rem;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 1.15rem;
   font-weight: 700;
   margin: 0;
-  color: var(--rd-text);
+  color: var(--rd-primary);
 }
 
 .rd-modal__close {
@@ -748,15 +884,16 @@
   border-radius: 6px;
   display: flex;
   align-items: center;
+  transition: background 0.15s, color 0.15s;
 }
 
 .rd-modal__close:hover {
-  background: #f0f4f8;
-  color: var(--rd-text);
+  background: var(--rd-primary-bg);
+  color: var(--rd-primary);
 }
 
 .rd-modal__body {
-  padding: 18px 20px 22px;
+  padding: 20px;
 }
 
 .rd-modal-grid {
@@ -769,8 +906,8 @@
   justify-content: space-between;
   align-items: center;
   font-size: .9rem;
-  border-bottom: 1px solid var(--rd-border);
-  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--rd-border);
+  padding-bottom: 8px;
 }
 
 .rd-modal-grid div:last-child {
@@ -784,66 +921,6 @@
 
 .rd-modal-grid strong {
   text-align: right;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   detalle-badges-patch.css
-   FIX 3: Badges de tipo contenido y estado iguales en detalle
-   Replica los colores de .cat-card__badge del catálogo.
-   
-   INSTRUCCIÓN: agregar AL FINAL de public/css/pages/detalle-recurso.css
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Reutiliza las mismas clases que usa el catálogo en las tarjetas */
-.rd-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: .78rem;
+  color: var(--rd-text);
   font-weight: 600;
-  padding: 4px 11px;
-  border-radius: 99px;
-  line-height: 1;
-}
-
-/* Tipo de contenido: Lectura, Audio, Video */
-.rd-badge--content,
-.rd-badge:first-child {
-  background: #eaf2ff;
-  color: #1a5fb4;
-}
-
-/* Estado: Activo */
-.rd-badge--activo,
-.rd-badge--ok {
-  background: #e6f7ee;
-  color: #1a7a3f;
-}
-
-/* Estado: Inactivo / Pendiente */
-.rd-badge--inactivo,
-.rd-badge--muted,
-.rd-badge--pendiente {
-  background: #f0f4f8;
-  color: #5a6a7a;
-}
-
-/* Estado: Bloqueado */
-.rd-badge--bloqueado {
-  background: #fde8e6;
-  color: #c0392b;
-}
-
-/* Sobreescribe los badges genéricos del encabezado para que usen
-   los colores del catálogo según el valor del tipo */
-.rd-header .rd-badges .rd-badge:nth-child(1) {
-  /* tipo_contenido: mismo chip azul del catálogo */
-  background: #eaf2ff;
-  color: #1a5fb4;
-}
-
-.rd-header .rd-badges .rd-badge:nth-child(2) {
-  /* tipo_naturaleza: chip neutro */
-  background: #f0f4f8;
-  color: #5a6a7a;
 }
