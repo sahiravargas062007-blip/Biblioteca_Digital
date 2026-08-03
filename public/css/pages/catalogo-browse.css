@@ -3,113 +3,24 @@
    Sidebar + Filters + Resource Grid
    ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap");
 
 /* ── Bookshelf Background for Catalogue pages ─────────────────── */
 body.catalog-page,
-body.admin-shell.admin-catalog-page {
+body.admin-shell.admin-catalog-page,
+body.admin-shell.admin-users-page {
   background-image:
-    linear-gradient(180deg,
+    linear-gradient(
+      180deg,
       rgba(0, 0, 0, 0.5) 0%,
       rgba(0, 0, 0, 0.35) 40%,
-      rgba(0, 0, 0, 0.5) 100%),
-    url('/img/hero-library.png') !important;
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    url("/img/hero-library.png") !important;
   background-position: center !important;
   background-size: cover !important;
   background-repeat: no-repeat !important;
   background-attachment: fixed !important;
-}
-
-/* ── Sidebar Navigation ───────────────────────────────────────── */
-.cat-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 250px;
-  height: 100vh;
-  background: #fff;
-  border-right: 1px solid var(--color-border);
-  z-index: 900;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(0);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding-top: 0;
-}
-
-.cat-sidebar.is-collapsed {
-  transform: translateX(-250px);
-}
-
-.cat-sidebar__header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 20px 16px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.cat-sidebar__brand {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--bn-turquoise-dark, #0C7C86);
-  text-decoration: none;
-}
-
-.cat-sidebar__brand small {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 400;
-  color: var(--color-muted);
-  letter-spacing: 0.5px;
-}
-
-.cat-sidebar__nav {
-  flex: 1;
-  padding: 12px 0;
-  overflow-y: auto;
-}
-
-.cat-sidebar__link {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 11px 24px;
-  color: var(--color-muted);
-  font-size: 0.92rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  border-radius: 0;
-}
-
-.cat-sidebar__link svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
-.cat-sidebar__link:hover {
-  background: #f0faf9;
-  color: var(--bn-turquoise-dark, #0C7C86);
-}
-
-.cat-sidebar__link.is-active {
-  background: linear-gradient(90deg, #0C7C86, #0e8e99);
-  color: #fff;
-  border-radius: 0 30px 30px 0;
-  margin-right: 16px;
-}
-
-.cat-sidebar__link.is-active svg {
-  opacity: 1;
-}
-
-.cat-sidebar__footer {
-  border-top: 1px solid var(--color-border);
-  padding: 12px 0;
 }
 
 /* ── Main Content Area ────────────────────────────────────────── */
@@ -119,7 +30,7 @@ body.admin-shell.admin-catalog-page {
   margin: 40px auto !important;
   width: calc(100% - 96px) !important;
   min-height: calc(100vh - 180px);
-  background: #F9F6F0 !important;
+  background: #f9f6f0 !important;
   border-radius: 20px !important;
   border: 1px solid rgba(201, 168, 76, 0.18) !important;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
@@ -144,7 +55,7 @@ body.admin-shell.admin-catalog-page {
   min-height: calc(100vh - 150px);
   border-radius: 20px !important;
   overflow: hidden !important;
-  background: #F9F6F0 !important;
+  background: #f9f6f0 !important;
 }
 
 .cat-main--admin {
@@ -159,7 +70,7 @@ body.admin-shell.admin-catalog-page {
   transition: none !important;
 }
 
-.cat-sidebar:not(.is-collapsed)~.admin-main.admin-catalog-page {
+.cat-sidebar:not(.is-collapsed) ~ .admin-main.admin-catalog-page {
   margin-left: auto !important;
   margin-right: auto !important;
   width: calc(100% - 96px) !important;
@@ -171,7 +82,7 @@ body.admin-shell.admin-catalog-page {
   top: 88px;
 }
 
-.cat-sidebar:not(.is-collapsed)~.cat-topbar~.cat-main {
+.cat-sidebar:not(.is-collapsed) ~ .cat-topbar ~ .cat-main {
   margin-left: auto !important;
   margin-right: auto !important;
 }
@@ -180,7 +91,7 @@ body.admin-shell.admin-catalog-page {
 .cat-filters {
   padding: 28px 24px;
   border-right: 1px solid rgba(201, 168, 76, 0.15) !important;
-  background: #F6F2E9 !important;
+  background: #f6f2e9 !important;
   /* Slightly darker warm beige */
   overflow-y: auto;
   max-height: calc(100vh - 120px);
@@ -196,7 +107,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-filters__header h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
@@ -216,7 +127,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-filters__clear:hover {
-  color: var(--bn-turquoise-dark, #0C7C86);
+  color: var(--bn-turquoise-dark, #0c7c86);
 }
 
 /* Línea ornamental dorada bajo el título del panel */
@@ -245,7 +156,7 @@ body.admin-shell.admin-catalog-page {
 
 .cat-filters__search input:focus {
   outline: none;
-  border-color: var(--bn-turquoise-dark, #0C7C86);
+  border-color: var(--bn-turquoise-dark, #0c7c86);
   background: #fff;
 }
 
@@ -266,7 +177,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-filters__section-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -276,7 +187,8 @@ body.admin-shell.admin-catalog-page {
 }
 
 /* Category item */
-.cat-tree {}
+.cat-tree {
+}
 
 .cat-tree__item {
   margin-bottom: 2px;
@@ -307,14 +219,14 @@ body.admin-shell.admin-catalog-page {
   height: 14px;
 }
 
-.cat-tree__item.is-open>.cat-tree__header .cat-tree__toggle {
+.cat-tree__item.is-open > .cat-tree__header .cat-tree__toggle {
   transform: rotate(90deg);
 }
 
 .cat-tree__checkbox {
   width: 18px;
   height: 18px;
-  accent-color: var(--bn-turquoise-dark, #0C7C86);
+  accent-color: var(--bn-turquoise-dark, #0c7c86);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -330,7 +242,7 @@ body.admin-shell.admin-catalog-page {
   display: none;
 }
 
-.cat-tree__item.is-open>.cat-tree__children {
+.cat-tree__item.is-open > .cat-tree__children {
   display: block;
 }
 
@@ -373,14 +285,14 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-chip:hover {
-  border-color: var(--bn-turquoise-dark, #0C7C86);
-  color: var(--bn-turquoise-dark, #0C7C86);
+  border-color: var(--bn-turquoise-dark, #0c7c86);
+  color: var(--bn-turquoise-dark, #0c7c86);
 }
 
 .cat-chip.is-active {
-  background: var(--bn-turquoise-dark, #0C7C86);
+  background: var(--bn-turquoise-dark, #0c7c86);
   color: #fff;
-  border-color: var(--bn-turquoise-dark, #0C7C86);
+  border-color: var(--bn-turquoise-dark, #0c7c86);
 }
 
 .cat-chip svg {
@@ -392,7 +304,7 @@ body.admin-shell.admin-catalog-page {
 .cat-filters__apply {
   width: 100%;
   padding: 12px;
-  background: var(--bn-turquoise-dark, #0C7C86);
+  background: var(--bn-turquoise-dark, #0c7c86);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -408,13 +320,13 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-filters__apply:hover {
-  background: var(--bn-turquoise-mid, #2CB9C7);
+  background: var(--bn-turquoise-mid, #2cb9c7);
 }
 
 /* ── Results Area ─────────────────────────────────────────────── */
 .cat-results {
   padding: 28px 32px;
-  background: #FCFAF6 !important;
+  background: #fcfaf6 !important;
   /* Lighter warm cream */
 }
 
@@ -428,7 +340,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-results__title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
@@ -454,7 +366,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-results__count {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-muted);
@@ -484,7 +396,10 @@ body.admin-shell.admin-catalog-page {
   overflow: hidden !important;
   border: 1px solid rgba(201, 168, 76, 0.2) !important;
   box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06) !important;
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease !important;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    border-color 0.25s ease !important;
   display: flex;
   flex-direction: column;
 }
@@ -543,7 +458,9 @@ body.admin-shell.admin-catalog-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s, transform 0.2s;
+  transition:
+    color 0.2s,
+    transform 0.2s;
   z-index: 2;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
@@ -568,7 +485,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-card__title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 0.95rem;
   font-weight: 600;
   margin: 0;
@@ -703,14 +620,6 @@ body.admin-shell.admin-catalog-page {
 }
 
 @media (max-width: 768px) {
-  .cat-sidebar {
-    transform: translateX(-250px);
-  }
-
-  .cat-sidebar.is-open-mobile {
-    transform: translateX(0);
-  }
-
   .cat-topbar {
     left: 0;
   }
@@ -733,26 +642,11 @@ body.admin-shell.admin-catalog-page {
   }
 }
 
-/* Sidebar overlay on mobile */
-.cat-sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 899;
-}
-
-.cat-sidebar-overlay.is-visible {
-  display: block;
-}
-
-
 /* ═══════════════════════════════════════════════════════════════
    BiblioNet — Páginas de Biblioteca (Categorías / Novedades / Más leídos)
    Fondo inmersivo compartido
    ═══════════════════════════════════════════════════════════════ */
 
-/* Fondo biblioteca fijo */
 .blib-page {
   position: relative;
   min-height: 100vh;
@@ -769,20 +663,29 @@ body.admin-shell.admin-catalog-page {
 .blib-bg__img {
   position: absolute;
   inset: 0;
-  background: url('/img/hero-library.png') center/cover no-repeat;
+  background: url("/img/hero-library.png") center/cover no-repeat;
   filter: brightness(0.38) saturate(0.7) sepia(0.3);
 }
 
 .blib-bg__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.72) 100%);
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
 }
 
 .blib-bg__gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(10, 8, 6, 0.55) 0%, rgba(10, 8, 6, 0.25) 40%, rgba(10, 8, 6, 0.45) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 8, 6, 0.55) 0%,
+    rgba(10, 8, 6, 0.25) 40%,
+    rgba(10, 8, 6, 0.45) 100%
+  );
 }
 
 .blib-content {
@@ -808,7 +711,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .blib-header__title {
-  font-family: 'Poppins', serif;
+  font-family: "Poppins", serif;
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 700;
   color: #f5ead6;
@@ -880,7 +783,10 @@ body.admin-shell.admin-catalog-page {
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s, border-color 0.25s;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s,
+    border-color 0.25s;
   display: flex;
   flex-direction: column;
 }
@@ -936,7 +842,7 @@ body.admin-shell.admin-catalog-page {
 }
 
 .blib-rec-card__title {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.87rem;
   font-weight: 600;
   color: #f5ead6;
@@ -993,7 +899,9 @@ body.admin-shell.admin-catalog-page {
   border-radius: 999px;
   font-size: 0.88rem;
   font-weight: 700;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s;
 }
 
 .blib-viewall:hover {
@@ -1147,9 +1055,9 @@ body.admin-shell.admin-catalog-page {
   height: 40px;
   border-radius: 50%;
   border: 1px solid rgba(201, 168, 76, 0.2);
-  background: #F9F6F0;
+  background: #f9f6f0;
   color: #2a1b0a;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -1165,16 +1073,16 @@ body.admin-shell.admin-catalog-page {
 }
 
 .cat-pagination__btn:hover:not(:disabled) {
-  border-color: var(--bn-turquoise-dark, #0C7C86);
+  border-color: var(--bn-turquoise-dark, #0c7c86);
   background: rgba(12, 124, 134, 0.08);
-  color: var(--bn-turquoise-dark, #0C7C86);
+  color: var(--bn-turquoise-dark, #0c7c86);
   transform: translateY(-2px);
 }
 
 .cat-pagination__btn.is-active {
-  background: var(--bn-turquoise-dark, #0C7C86);
+  background: var(--bn-turquoise-dark, #0c7c86);
   color: #fff;
-  border-color: var(--bn-turquoise-dark, #0C7C86);
+  border-color: var(--bn-turquoise-dark, #0c7c86);
   box-shadow: 0 4px 10px rgba(12, 124, 134, 0.25);
 }
 

@@ -58,7 +58,7 @@
      ════════════════════════════════════════════════════════ -->
   <div class="rd-layout<%= modoAdmin ? ' rd-layout--admin' : '' %>">
 
-    <!-- ═══ COLUMNA IZQUIERDA: portada ═══ -->
+    <!-- ═══ COLUMNA IZQUIERDA: portada + info lateral ═══ -->
     <aside class="rd-aside">
       <!-- Portada -->
       <div class="rd-cover-wrap">
@@ -78,15 +78,86 @@
           </a>
         <% } %>
         <% if (modoAdmin) { %>
-          <a href="/admin/recursos/<%= recurso._id %>/editar" class="rd-edit-cover-link">
+          <button type="button" class="rd-edit-cover-link" onclick="triggerCoverUpload()" style="background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 5px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
               <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
             Editar portada
-          </a>
+          </button>
+          <input type="file" id="cover-file-input" name="imagen" accept="image/*" style="display: none;" onchange="handleCoverChange(event)">
         <% } %>
       </div>
+
+      <!-- Tarjeta de info del recurso -->
+      <div class="rd-aside-card">
+        <p class="rd-aside-label">Información del recurso</p>
+        <div class="classic-card-divider">
+          <svg viewBox="0 0 100 8" fill="none" stroke="#c5a880" stroke-width="1.2" stroke-linecap="round">
+            <path d="M 0 4 L 42 4 C 45 4 47 1 50 4 C 53 1 55 4 58 4 L 100 4" />
+            <circle cx="50" cy="4" r="1.5" fill="#c5a880" />
+          </svg>
+        </div>
+        <div class="rd-info-row"><span>Formato</span><strong>
+            <%= recurso.tipo_naturaleza %>
+          </strong></div>
+        <% if (tieneDigital) { %>
+          <div class="rd-info-row"><span>Tipo de acceso</span><strong>
+              <%= esLibre ? 'Acceso libre' : 'Préstamo digital' %>
+            </strong></div>
+          <div class="rd-info-row"><span>Licencias disponibles</span><strong>
+              <%= licMax - licUsadas %> de <%= licMax %>
+            </strong></div>
+          <% } %>
+            <% if (recurso.fecha_publicacion) { %>
+              <div class="rd-info-row"><span>Fecha de publicación</span><strong>
+                  <%= new Date(recurso.fecha_publicacion).getFullYear() %>
+                </strong></div>
+              <% } %>
+                <% if (durStr) { %>
+                  <div class="rd-info-row"><span>Duración</span><strong>
+                      <%= durStr %>
+                    </strong></div>
+                  <% } %>
+                    <% if (recurso.narrador) { %>
+                      <div class="rd-info-row"><span>Narrador</span><strong>
+                          <%= recurso.narrador %>
+                        </strong></div>
+                      <% } %>
+                        <% var editorialVal=recurso.editorial || metaObj.editorial; %>
+                          <% if (recurso.productora || editorialVal) { %>
+                            <div class="rd-info-row">
+                              <span>
+                                <%= recurso.tipo_contenido==='Video' ? 'Productora' : 'Editorial' %>
+                              </span>
+                              <strong>
+                                <%= recurso.productora || editorialVal %>
+                              </strong>
+                            </div>
+                            <% } %>
+      </div>
+
+      <!-- Tarjeta de favoritos para usuario -->
+      <% if (modoUsuario) { %>
+        <div class="rd-aside-card">
+          <button class="rd-fav-btn" id="rd-fav-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </svg>
+            Agregar a favoritos
+          </button>
+          <% if (recurso.total_prestamos) { %>
+            <p class="rd-views">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Visto <%= recurso.total_prestamos.toLocaleString('es-CO') %> veces
+            </p>
+            <% } %>
+        </div>
+      <% } %>
     </aside>
 
     <!-- ═══ COLUMNA PRINCIPAL ═══ -->
@@ -754,60 +825,10 @@
 
     </main>
 
-    <!-- ═══ COLUMNA DERECHA: información + estado + acciones rápidas ═══ -->
+    <!-- ═══ COLUMNA DERECHA: estado + acciones rápidas ═══ -->
+    <% if (modoAdmin) { %>
     <aside class="rd-aside-right">
-
-      <!-- Tarjeta de info del recurso -->
-      <div class="rd-aside-card">
-        <p class="rd-aside-label">Información del recurso</p>
-        <div class="classic-card-divider">
-          <svg viewBox="0 0 100 8" fill="none" stroke="#c5a880" stroke-width="1.2" stroke-linecap="round">
-            <path d="M 0 4 L 42 4 C 45 4 47 1 50 4 C 53 1 55 4 58 4 L 100 4" />
-            <circle cx="50" cy="4" r="1.5" fill="#c5a880" />
-          </svg>
-        </div>
-        <div class="rd-info-row"><span>Formato</span><strong>
-            <%= recurso.tipo_naturaleza %>
-          </strong></div>
-        <% if (tieneDigital) { %>
-          <div class="rd-info-row"><span>Tipo de acceso</span><strong>
-              <%= esLibre ? 'Acceso libre' : 'Préstamo digital' %>
-            </strong></div>
-          <div class="rd-info-row"><span>Licencias disponibles</span><strong>
-              <%= licMax - licUsadas %> de <%= licMax %>
-            </strong></div>
-          <% } %>
-            <% if (recurso.fecha_publicacion) { %>
-              <div class="rd-info-row"><span>Fecha de publicación</span><strong>
-                  <%= new Date(recurso.fecha_publicacion).getFullYear() %>
-                </strong></div>
-              <% } %>
-                <% if (durStr) { %>
-                  <div class="rd-info-row"><span>Duración</span><strong>
-                      <%= durStr %>
-                    </strong></div>
-                  <% } %>
-                    <% if (recurso.narrador) { %>
-                      <div class="rd-info-row"><span>Narrador</span><strong>
-                          <%= recurso.narrador %>
-                        </strong></div>
-                      <% } %>
-                        <% var editorialVal=recurso.editorial || metaObj.editorial; %>
-                          <% if (recurso.productora || editorialVal) { %>
-                            <div class="rd-info-row">
-                              <span>
-                                <%= recurso.tipo_contenido==='Video' ? 'Productora' : 'Editorial' %>
-                              </span>
-                              <strong>
-                                <%= recurso.productora || editorialVal %>
-                              </strong>
-                            </div>
-                            <% } %>
-      </div>
-
-      <!-- ── Solo admin: estado, acciones rápidas ── -->
-      <% if (modoAdmin) { %>
-
+        <!-- Estado del recurso -->
         <div class="rd-aside-card">
           <p class="rd-aside-label">Estado del recurso</p>
           <div class="classic-card-divider">
@@ -906,31 +927,8 @@
                 </button>
               </form>
             </div>
-
-            <% } else { %>
-
-              <!-- ── Solo usuario: favoritos y vistas ── -->
-              <div class="rd-aside-card">
-                <button class="rd-fav-btn" id="rd-fav-btn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                  </svg>
-                  Agregar a favoritos
-                </button>
-                <% if (recurso.total_prestamos) { %>
-                  <p class="rd-views">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    Visto <%= recurso.total_prestamos.toLocaleString('es-CO') %> veces
-                  </p>
-                  <% } %>
-              </div>
-
-              <% } %>
     </aside>
+    <% } %>
   </div>
 
   <!-- ═══ MODAL EJEMPLAR (solo admin) ═══ -->
@@ -965,9 +963,51 @@
             });
           });
 
+          <% if (modoAdmin) { %>
+            window.triggerCoverUpload = function() {
+              document.getElementById('cover-file-input').click();
+            };
+
+            window.handleCoverChange = async function(event) {
+              const file = event.target.files[0];
+              if (!file) return;
+
+              const formData = new FormData();
+              formData.append('imagen', file);
+
+              const btnEl = document.querySelector('.rd-edit-cover-link');
+              const originalHtml = btnEl.innerHTML;
+
+              try {
+                btnEl.disabled = true;
+                btnEl.innerHTML = 'Subiendo...';
+
+                const response = await fetch('/admin/recursos/<%= recurso._id %>/portada', {
+                  method: 'POST',
+                  body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                  document.querySelector('.rd-cover').src = data.url;
+                  location.reload();
+                } else {
+                  alert(data.message || 'Error al actualizar la portada');
+                  btnEl.innerHTML = originalHtml;
+                  btnEl.disabled = false;
+                }
+              } catch (error) {
+                console.error(error);
+                alert('Error al conectar con el servidor.');
+                btnEl.innerHTML = originalHtml;
+                btnEl.disabled = false;
+              }
+            };
+          <% } %>
+
   <% if (modoAdmin && ejemplaresArr.length > 0) { %>
   /* Modal ejemplares */
-  var rdEjemplares = <% - JSON.stringify(ejemplaresArr) %>;
+  var rdEjemplares = <%- JSON.stringify(ejemplaresArr) %>;
 
             window.rdAbrirEjemplar = function (id) {
               var ej = rdEjemplares.find(function (e) { return String(e._id) === String(id); });

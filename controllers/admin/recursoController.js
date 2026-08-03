@@ -1308,6 +1308,46 @@ exports.actualizar = async (req, res, next) => {
   }
 };
 
+exports.actualizarPortada = async (req, res, next) => {
+  try {
+    const recurso = await Recurso.findById(req.params.id);
+    if (!recurso) {
+      return res.status(404).json({ success: false, message: 'El recurso no existe.' });
+    }
+
+    const imagenFile = req.file;
+    if (!imagenFile) {
+      return res.status(400).json({ success: false, message: 'No se recibió ninguna imagen.' });
+    }
+
+    // Subir a Cloudinary
+    const publicId = generarPublicId(recurso.titulo, 'portadas');
+    const result = await subirBuffer(imagenFile.buffer, {
+      resource_type: 'image',
+      public_id:     publicId,
+      upload_preset: UPLOAD_PRESET,
+    });
+
+    // Eliminar portada anterior de Cloudinary si no es la default/placeholder
+    if (recurso.imagen && recurso.imagen.public_id && !recurso.imagen.es_default) {
+      await eliminar(recurso.imagen.public_id).catch(err => {
+        console.error('[Cloudinary] Error al eliminar imagen anterior:', err);
+      });
+    }
+
+    // Actualizar en BD
+    const nuevaImagen = { url: result.secure_url, public_id: result.public_id, es_default: false };
+    await Recurso.findByIdAndUpdate(req.params.id, {
+      $set: { imagen: nuevaImagen, actualizado_en: new Date() }
+    });
+
+    return res.json({ success: true, url: result.secure_url });
+  } catch (error) {
+    console.error('[actualizarPortada] Error:', error);
+    return res.status(500).json({ success: false, message: 'Error interno al actualizar la portada.' });
+  }
+};
+
 exports.eliminar = async (req, res, next) => {
   try {
     await Promise.all([

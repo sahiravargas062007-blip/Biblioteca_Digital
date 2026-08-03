@@ -1,6 +1,7 @@
 /* ── ADMIN SPECIFIC IMPORTS ── */
 @import url('./pages/admin-dashboard.css');
 @import url('./pages/admin-recursos.css');
+@import url('./pages/admin-usuarios.css');
 
 .admin-shell {
   min-height: 100vh;

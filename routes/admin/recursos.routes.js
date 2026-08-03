@@ -2,7 +2,7 @@ const router = require('express').Router();
 const controller = require('../../controllers/admin/recursoController');
 const isAdminAuth = require('../../middlewares/isAdminAuth');
 const validarRecurso = require('../../middlewares/validarRecurso');
-const { uploadRecurso, uploadZip, uploadExcel } = require('../../middlewares/uploadMiddleware');
+const { uploadRecurso, uploadZip, uploadExcel, uploadImagen } = require('../../middlewares/uploadMiddleware');
 
 router.use(isAdminAuth);
 
@@ -34,6 +34,7 @@ router.post('/masivo/confirmar', controller.confirmarMasivo);
 router.get('/:id',        controller.detalle);
 router.get('/:id/editar', controller.editar);
 router.put('/:id',        uploadRecurso.fields([{ name: 'imagen' }, { name: 'archivo' }]), controller.actualizar);
+router.post('/:id/portada', uploadImagen.single('imagen'), controller.actualizarPortada);
 router.delete('/:id',     controller.eliminar);
 
 module.exports = router;

@@ -23,11 +23,35 @@ exports.index = async (req, res, next) => {
 
     if (estado) filtro.estado = estado;
 
-    const usuarios = await Usuario.find(filtro).sort({ estado: -1, creado_en: -1 }).lean();
+    const limitesPermitidos = [10, 20, 50];
+    let limite = parseInt(req.query.limite, 10);
+    if (!limitesPermitidos.includes(limite)) limite = 10;
+
+    const totalRegistros = await Usuario.countDocuments(filtro);
+    const totalPaginas = Math.max(Math.ceil(totalRegistros / limite), 1);
+
+    let pagina = parseInt(req.query.pagina, 10) || 1;
+    if (pagina < 1) pagina = 1;
+    if (pagina > totalPaginas) pagina = totalPaginas;
+
+    const usuarios = await Usuario.find(filtro)
+      .sort({ estado: -1, creado_en: -1 })
+      .skip((pagina - 1) * limite)
+      .limit(limite)
+      .lean();
+
     res.render('admin/usuarios/index', {
       title: 'Usuarios',
       usuarios,
-      filtros: { q, estado }
+      filtros: { q, estado },
+      pageClass: 'admin-users-page',
+      paginacion: {
+        pagina,
+        totalPaginas,
+        limite,
+        totalRegistros,
+        limitesPermitidos
+      }
     });
   } catch (error) {
     next(error);
