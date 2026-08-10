@@ -193,7 +193,7 @@ exports.exportarPdf = async (req, res, next) => {
     // ── Encabezado ────────────────────────────────────────────────────────
     doc.rect(0, 0, doc.page.width, 70).fill(COLOR_PRIMARY);
     doc.fill('#fff').font('Helvetica-Bold').fontSize(16)
-       .text('Biblioteca Digital SENA', 40, 18);
+       .text('BiblioNet', 40, 18);
     doc.fill('#fff').font('Helvetica').fontSize(11)
        .text(titulo, 40, 38);
     doc.fill(COLOR_MUTED).fontSize(9)
@@ -272,7 +272,7 @@ exports.exportarPdf = async (req, res, next) => {
     // ── Pie de página ─────────────────────────────────────────────────────
     y += 20;
     doc.fill(COLOR_MUTED).font('Helvetica').fontSize(8)
-       .text('Sistema de Gestión — Biblioteca Digital SENA', 40, y, { align: 'center', width: PAGE_WIDTH });
+       .text('Sistema de Gestión — BiblioNet', 40, y, { align: 'center', width: PAGE_WIDTH });
 
     doc.end();
   } catch (err) {

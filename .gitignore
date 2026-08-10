@@ -9,3 +9,6 @@ coverage/
 tmp/
 uploads/
 dist/
+tmp_*.js
+temp_*.py
+prev_index.txt

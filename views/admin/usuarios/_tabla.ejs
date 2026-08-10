@@ -1,0 +1,147 @@
+<%
+  const buildLink = (overrides) => {
+    const base = {
+      q: filtros.q,
+      estado: filtros.estado,
+      pagina: paginacion.pagina,
+      limite: paginacion.limite
+    };
+    const merged = Object.assign({}, base, overrides);
+    const qs = Object.keys(merged)
+      .filter((k) => merged[k] !== '' && merged[k] !== undefined && merged[k] !== null)
+      .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(merged[k])}`)
+      .join('&');
+    return `/admin/usuarios?${qs}`;
+  };
+
+  const totalP = paginacion.totalPaginas;
+  const curP = paginacion.pagina;
+  const pageTokens = [];
+  if (totalP <= 7) {
+    for (let i = 1; i <= totalP; i++) pageTokens.push(i);
+  } else {
+    pageTokens.push(1);
+    if (curP > 3) pageTokens.push('...');
+    for (let i = Math.max(2, curP - 1); i <= Math.min(totalP - 1, curP + 1); i++) pageTokens.push(i);
+    if (curP < totalP - 2) pageTokens.push('...');
+    pageTokens.push(totalP);
+  }
+%>
+<div class="table-wrap">
+  <table class="table users-table">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Documento</th>
+        <th>Programa</th>
+        <th>Ficha</th>
+        <th>Estado</th>
+        <th>Préstamos</th>
+        <th>Reservas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (!usuarios.length) { %>
+        <tr><td colspan="8">No hay usuarios registrados.</td></tr>
+      <% } %>
+
+      <% usuarios.forEach((usuario, i) => {
+           const partes = (usuario.nombre || '').trim().split(/\s+/);
+           const iniciales = ((partes[0] ? partes[0][0] : '') + (partes[1] ? partes[1][0] : '')).toUpperCase();
+           const estadoBadge = usuario.estado === 'Activo'
+             ? 'badge-disponible'
+             : usuario.estado === 'Pendiente de aprobación'
+               ? 'badge-prestado'
+               : 'badge-no-disponible';
+           const tieneAcciones = usuario.estado === 'Pendiente de aprobación' || usuario.estado === 'Activo';
+      %>
+        <tr>
+          <td>
+            <div class="user-cell">
+              <span class="user-avatar avatar-tone-<%= i % 6 %>"><%= iniciales %></span>
+              <div class="user-cell__info">
+                <strong><%= usuario.nombre %></strong>
+                <small><%= usuario.correo %></small>
+              </div>
+            </div>
+          </td>
+          <td><span class="chip"><%= usuario.tipo_documento %> <%= usuario.documento %></span></td>
+          <td><%= usuario.programa_formacion || 'No registrado' %></td>
+          <td><%= usuario.ficha || 'No registrada' %></td>
+          <td>
+            <span class="badge <%= estadoBadge %>">
+              <span class="status-dot"></span><%= usuario.estado %>
+            </span>
+          </td>
+          <td class="num-cell"><%= usuario.prestamos_activos || 0 %></td>
+          <td class="num-cell"><%= usuario.reservas_activas || 0 %></td>
+          <td>
+            <% if (tieneAcciones) { %>
+              <div class="row-menu-wrap">
+                <button type="button" class="row-menu-toggle" data-row-menu-toggle aria-label="Acciones de <%= usuario.nombre %>">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="5" cy="12" r="1.8" />
+                    <circle cx="12" cy="12" r="1.8" />
+                    <circle cx="19" cy="12" r="1.8" />
+                  </svg>
+                </button>
+                <div class="row-menu">
+                  <% if (usuario.estado === 'Pendiente de aprobación') { %>
+                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/aprobar" data-ajax data-ajax-refresh="#usuarios-resultado">
+                      <button type="submit" class="row-menu__item row-menu__item--ok">Aprobar</button>
+                    </form>
+                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/rechazar" data-ajax data-ajax-refresh="#usuarios-resultado">
+                      <button type="submit" class="row-menu__item row-menu__item--danger">Rechazar</button>
+                    </form>
+                  <% } else if (usuario.estado === 'Activo') { %>
+                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/suspender" data-ajax data-ajax-refresh="#usuarios-resultado">
+                      <button type="submit" class="row-menu__item row-menu__item--danger">Suspender</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            <% } else { %>
+              <span class="muted">Sin acciones</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<% if (usuarios.length) { %>
+  <nav class="users-pagination" aria-label="Paginación de usuarios">
+    <div class="page-nav">
+      <a class="page-btn page-btn--nav <%= curP <= 1 ? 'is-disabled' : '' %>"
+         href="<%= curP > 1 ? buildLink({ pagina: curP - 1 }) : '#' %>" aria-label="Página anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </a>
+      <% pageTokens.forEach((token) => { %>
+        <% if (token === '...') { %>
+          <span class="page-ellipsis">…</span>
+        <% } else { %>
+          <a class="page-btn <%= token === curP ? 'is-active' : '' %>" href="<%= buildLink({ pagina: token }) %>"><%= token %></a>
+        <% } %>
+      <% }) %>
+      <a class="page-btn page-btn--nav <%= curP >= totalP ? 'is-disabled' : '' %>"
+         href="<%= curP < totalP ? buildLink({ pagina: curP + 1 }) : '#' %>" aria-label="Página siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </a>
+    </div>
+    <div class="page-size">
+      <span>Mostrar</span>
+      <select data-ajax-nav>
+        <% paginacion.limitesPermitidos.forEach((l) => { %>
+          <option value="<%= buildLink({ limite: l, pagina: 1 }) %>" <%= l === paginacion.limite ? 'selected' : '' %>><%= l %></option>
+        <% }) %>
+      </select>
+      <span>por página</span>
+    </div>
+  </nav>
+<% } %>

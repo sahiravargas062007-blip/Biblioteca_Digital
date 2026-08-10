@@ -233,6 +233,22 @@ exports.turnoReservaDisponible = async (usuario, reserva, horasLimite) => {
     });
 };
 
+// Recordatorio manual enviado por un administrador a alguien en la cola
+exports.recordatorioReserva = async (usuario, reserva) => {
+    await _crear({
+        destinatario_tipo: 'usuario',
+        destinatario_id: usuario._id,
+        correo: usuario.correo,
+        nombre_usuario: usuario.nombre,
+        tipo: 'recordatorio_reserva',
+        titulo: '📌 Recordatorio de tu reserva',
+        mensaje: `Sigues en la fila de espera para "${reserva.recurso_titulo}" (posición ${reserva.posicion}). Te avisaremos apenas esté disponible.`,
+        referencia_tipo: 'reserva',
+        referencia_id: reserva._id,
+        enlace: `${APP_URL}/reservas`
+    });
+};
+
 // Reserva expirada (ya existe en verificarReservas, pero centralizado aquí)
 exports.reservaExpirada = async (usuario, reserva) => {
     await _crear({

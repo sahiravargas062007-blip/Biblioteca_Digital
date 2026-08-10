@@ -1,0 +1,455 @@
+/* ═══════════════════════════════════════════════════════════════
+   admin-reservas.css
+   Diseño propio de Reservas: lista de colas + panel de detalle
+   deslizante, y el formulario por pasos de Nueva reserva.
+   Lo compartido con Usuarios (fondo crema, filtros, paginación,
+   menú kebab) vive en admin-panel-shared.css.
+   ═══════════════════════════════════════════════════════════════ */
+
+.reservas-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.reservas-list-pane {
+  flex: 1 1 100%;
+  min-width: 0;
+  transition: flex-basis 0.25s ease;
+}
+
+.reservas-shell.is-split .reservas-list-pane {
+  flex: 1 1 58%;
+}
+
+.reservas-new-btn {
+  white-space: nowrap;
+}
+
+.reservas-count {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  margin: 4px 2px 14px;
+}
+
+/* ── Tarjetas de recursos con cola ────────────────────────────── */
+.reservas-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reserva-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.reserva-card.is-active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(20, 108, 95, 0.12);
+}
+
+.reserva-card__cover {
+  width: 52px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: #f3ede1;
+}
+
+.reserva-card__info {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.reserva-card__info h2 {
+  font-size: 1.05rem;
+  margin: 0 0 2px;
+  color: #2c1f14;
+}
+
+.reserva-card__autor {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  margin: 0 0 6px;
+}
+
+.reserva-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9a8a72;
+}
+
+.stat-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #2c1f14;
+  font-size: 0.9rem;
+}
+
+.stat-value svg {
+  width: 16px;
+  height: 16px;
+  color: #9a8a72;
+}
+
+.ver-detalle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  border-radius: 8px;
+  color: #5a4a35;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ver-detalle-btn:hover {
+  background: #f3ede1;
+}
+
+.ver-detalle-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ── Panel de detalle deslizante ──────────────────────────────── */
+.reservas-detail-pane {
+  flex: 0 0 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.reservas-shell.is-split .reservas-detail-pane {
+  flex: 1 1 42%;
+  width: auto;
+  overflow: visible;
+}
+
+.detail-panel {
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  border-radius: 14px;
+  padding: 22px;
+  position: sticky;
+  top: 108px;
+}
+
+.detail-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.detail-close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #9a8a72;
+  border-radius: 8px;
+}
+
+.detail-close:hover {
+  background: #f3ede1;
+  color: #2c1f14;
+}
+
+.detail-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.detail-panel__resource {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+  margin-bottom: 18px;
+}
+
+.detail-panel__resource img {
+  width: 64px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f3ede1;
+}
+
+.detail-panel__resource h3 {
+  margin: 0 0 2px;
+  font-size: 1.1rem;
+  color: #2c1f14;
+}
+
+.detail-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.detail-panel__stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-panel__eta {
+  background: #f3ede1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.detail-panel__eta > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.detail-panel__eta strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+}
+
+.detail-panel__eta strong svg {
+  width: 15px;
+  height: 15px;
+}
+
+.detail-panel__eta p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.detail-panel__queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.detail-panel__queue-head h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.notify-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.notify-all-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.queue-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ficha-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+@media (max-width: 1100px) {
+  .reservas-shell {
+    flex-direction: column;
+  }
+
+  .reservas-shell.is-split .reservas-detail-pane {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .detail-panel {
+    position: static;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Nueva reserva — formulario por pasos con combobox de búsqueda
+   ═══════════════════════════════════════════════════════════════ */
+.reserva-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.reserva-step {
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.reserva-step:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.reserva-step h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  color: #2c1f14;
+  margin: 0 0 14px;
+}
+
+.reserva-step__num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #b07d2b;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reserva-step > label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2c1f14;
+  margin-bottom: 8px;
+}
+
+.combobox-input-wrap {
+  position: relative;
+}
+
+.combobox-input-wrap input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 10px;
+  padding: 0 14px;
+  background: #fff;
+}
+
+.combobox-input-wrap input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(20, 108, 95, 0.12);
+}
+
+.combobox-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  z-index: 20;
+}
+
+.combobox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.combobox-item:hover {
+  background: #f3ede1;
+}
+
+.combobox-item small {
+  display: block;
+  color: var(--color-muted);
+}
+
+.combobox-item__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #14594f;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.combobox-item__cover {
+  width: 32px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #f3ede1;
+}
+
+.combobox-empty {
+  padding: 14px;
+  color: var(--color-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.combobox-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: #f9f6f0;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 10px;
+}
+
+.combobox-preview__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.combobox-preview__info small {
+  color: var(--color-muted);
+}
