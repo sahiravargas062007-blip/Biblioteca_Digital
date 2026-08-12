@@ -1,0 +1,421 @@
+/* ═══════════════════════════════════════════════════════════════
+   admin-panel-shared.css
+   Estilos comunes a las páginas administrativas con fondo crema
+   sobre la estantería (Usuarios, Reservas): tarjeta contenedora,
+   encabezado, barra de búsqueda/filtros, menú de acciones (kebab)
+   y paginación. Cada página específica solo agrega lo propio.
+   ═══════════════════════════════════════════════════════════════ */
+
+.admin-main.admin-users-page,
+.admin-main.admin-reservas-page,
+.admin-main.admin-prestamos-nuevo-page {
+  max-width: 1560px;
+  width: calc(100% - 96px);
+  margin: 92px auto 40px;
+  padding: 32px 40px 40px;
+  background: #F9F6F0;
+  border: 1px solid rgba(201, 168, 76, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.admin-users-page .panel,
+.admin-reservas-page .panel,
+.admin-prestamos-nuevo-page .panel {
+  margin-bottom: 28px;
+}
+
+.admin-users-page .panel:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Encabezado ─────────────────────────────────────────────── */
+.admin-users-page .page-header,
+.admin-reservas-page .page-header,
+.admin-prestamos-nuevo-page .page-header {
+  border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+  padding-bottom: 20px;
+}
+
+.admin-users-page .page-header h1,
+.admin-reservas-page .page-header h1,
+.admin-prestamos-nuevo-page .page-header h1 {
+  font-family: 'Playfair Display', 'Poppins', serif;
+  font-size: 2rem;
+  color: #2c1f14;
+}
+
+.admin-users-page .eyebrow,
+.admin-reservas-page .eyebrow,
+.admin-prestamos-nuevo-page .eyebrow {
+  color: var(--color-primary);
+  letter-spacing: 0.14em;
+}
+
+/* ── Barra de búsqueda y filtros ──────────────────────────────── */
+.admin-users-page .toolbar,
+.admin-reservas-page .toolbar {
+  align-items: end;
+}
+
+.admin-users-page .toolbar label,
+.admin-reservas-page .toolbar label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2c1f14;
+}
+
+.admin-users-page .input-icon-wrap,
+.admin-reservas-page .input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-users-page .input-icon,
+.admin-reservas-page .input-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: #9a8a72;
+  pointer-events: none;
+}
+
+.admin-users-page .input-icon-wrap input,
+.admin-reservas-page .input-icon-wrap input {
+  padding-left: 42px;
+}
+
+.admin-users-page .toolbar input,
+.admin-users-page .toolbar select,
+.admin-reservas-page .toolbar input,
+.admin-reservas-page .toolbar select {
+  height: 46px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 10px;
+  background: #fff;
+  color: #2c1f14;
+}
+
+.admin-users-page .toolbar input:focus,
+.admin-users-page .toolbar select:focus,
+.admin-reservas-page .toolbar input:focus,
+.admin-reservas-page .toolbar select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(20, 108, 95, 0.12);
+}
+
+.admin-users-page .filter-btn,
+.admin-reservas-page .filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-users-page .filter-btn svg,
+.admin-reservas-page .filter-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-users-page .filter-btn:hover,
+.admin-reservas-page .filter-btn:hover {
+  background: #0f5a4f;
+}
+
+.admin-users-page .secondary-link,
+.admin-reservas-page .secondary-link {
+  height: 46px;
+  border-radius: 10px;
+}
+
+.admin-users-page .button-link,
+.admin-reservas-page .button-link {
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-users-page .button-link svg,
+.admin-reservas-page .button-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Tabla genérica ────────────────────────────────────────────── */
+.admin-users-page .table-wrap,
+.admin-reservas-page .table-wrap {
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.admin-users-page .table th,
+.admin-reservas-page .table th {
+  background: #f3ede1;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7a6a52;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+}
+
+.admin-users-page .table td,
+.admin-reservas-page .table td {
+  border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+  vertical-align: middle;
+}
+
+.admin-users-page .table tbody tr:last-child td,
+.admin-reservas-page .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-users-page .table tbody tr:hover,
+.admin-reservas-page .table tbody tr:hover {
+  background: rgba(201, 168, 76, 0.06);
+}
+
+.admin-users-page .status-dot,
+.admin-reservas-page .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.admin-users-page .status-dot--ok,
+.admin-reservas-page .status-dot--ok {
+  background: var(--color-success);
+}
+
+.admin-users-page .chip,
+.admin-reservas-page .chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #f3ede1;
+  color: #5a4a35;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-users-page .muted-inline,
+.admin-reservas-page .muted-inline {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* ── Menú de acciones (kebab) ─────────────────────────────────── */
+.admin-users-page .row-menu-wrap,
+.admin-reservas-page .row-menu-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-users-page .row-menu-toggle,
+.admin-users-page .icon-btn,
+.admin-reservas-page .row-menu-toggle,
+.admin-reservas-page .icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 8px;
+  color: #7a6a52;
+}
+
+.admin-users-page .row-menu-toggle svg,
+.admin-users-page .icon-btn svg,
+.admin-reservas-page .row-menu-toggle svg,
+.admin-reservas-page .icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-users-page .row-menu-toggle:hover,
+.admin-users-page .icon-btn:hover,
+.admin-reservas-page .row-menu-toggle:hover,
+.admin-reservas-page .icon-btn:hover {
+  background: #f3ede1;
+  color: #2c1f14;
+}
+
+.admin-users-page .row-menu,
+.admin-reservas-page .row-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 170px;
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+}
+
+.admin-users-page .row-menu.is-open,
+.admin-reservas-page .row-menu.is-open {
+  display: flex;
+}
+
+.admin-users-page .row-menu form,
+.admin-reservas-page .row-menu form {
+  margin: 0;
+}
+
+.admin-users-page .row-menu__item,
+.admin-reservas-page .row-menu__item {
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.admin-users-page .row-menu__item:hover,
+.admin-reservas-page .row-menu__item:hover {
+  background: rgba(20, 108, 95, 0.08);
+}
+
+.admin-users-page .row-menu__item--ok,
+.admin-reservas-page .row-menu__item--ok {
+  color: var(--color-success);
+}
+
+.admin-users-page .row-menu__item--ok:hover,
+.admin-reservas-page .row-menu__item--ok:hover {
+  background: #e9f7ef;
+}
+
+.admin-users-page .row-menu__item--danger,
+.admin-reservas-page .row-menu__item--danger {
+  color: var(--color-danger);
+}
+
+.admin-users-page .row-menu__item--danger:hover,
+.admin-reservas-page .row-menu__item--danger:hover {
+  background: #fdecea;
+}
+
+/* ── Paginación ────────────────────────────────────────────────── */
+.admin-users-page .users-pagination,
+.admin-reservas-page .users-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.admin-users-page .page-nav,
+.admin-reservas-page .page-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-users-page .page-btn,
+.admin-reservas-page .page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  color: #5a4a35;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-users-page .page-btn:hover,
+.admin-reservas-page .page-btn:hover {
+  background: #f3ede1;
+}
+
+.admin-users-page .page-btn.is-active,
+.admin-reservas-page .page-btn.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.admin-users-page .page-btn.is-disabled,
+.admin-reservas-page .page-btn.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.admin-users-page .page-btn--nav svg,
+.admin-reservas-page .page-btn--nav svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-users-page .page-ellipsis,
+.admin-reservas-page .page-ellipsis {
+  color: #9a8a72;
+  padding: 0 4px;
+}
+
+.admin-users-page .page-size,
+.admin-reservas-page .page-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #5a4a35;
+}
+
+.admin-users-page .page-size select,
+.admin-reservas-page .page-size select {
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 8px;
+  background: #fff;
+}
+
+@media (max-width: 768px) {
+  .admin-main.admin-users-page,
+  .admin-main.admin-reservas-page,
+  .admin-main.admin-prestamos-nuevo-page {
+    width: calc(100% - 32px);
+    padding: 24px 20px 28px;
+    margin-top: 88px;
+  }
+
+  .admin-users-page .users-pagination,
+  .admin-reservas-page .users-pagination {
+    justify-content: center;
+  }
+}
