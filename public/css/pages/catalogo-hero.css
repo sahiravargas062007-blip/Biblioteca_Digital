@@ -380,8 +380,9 @@ body.catalog-page .page,
     font-size: 0.95rem;
   }
 
-  .fl-book {
-    opacity: 0.5;
+  .fl-book,
+  .biblionet-hero__books {
+    display: none !important;
   }
 }
 

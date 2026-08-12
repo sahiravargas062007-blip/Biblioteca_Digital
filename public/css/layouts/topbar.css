@@ -244,3 +244,117 @@
     padding: 0 20px;
   }
 }
+
+/* Guest hamburger toggle mobile-only */
+.guest-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .guest-mobile-only {
+    display: inline-block !important;
+  }
+  .cat-topbar__links {
+    display: none !important;
+  }
+
+  /* Adjust resources submenu on mobile (accordion style) */
+  .user-dropdown__link.has-submenu {
+    display: block;
+    padding: 0;
+  }
+  
+  .has-submenu-trigger {
+    padding: 10px 20px;
+    box-sizing: border-box;
+  }
+
+  .user-dropdown-submenu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    background: rgba(12, 124, 134, 0.03);
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .user-dropdown__link.has-submenu:hover .user-dropdown-submenu {
+    max-height: 200px;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .user-dropdown-submenu .user-dropdown__link {
+    padding-left: 40px;
+  }
+}
+
+/* Recursos Submenu styling */
+.user-dropdown__link.has-submenu {
+  position: relative;
+  cursor: pointer;
+}
+
+.has-submenu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.submenu-arrow {
+  width: 14px !important;
+  height: 14px !important;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  color: var(--color-muted);
+}
+
+.user-dropdown__link.has-submenu:hover .submenu-arrow {
+  transform: rotate(-90deg);
+}
+
+.user-dropdown-submenu {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: 220px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: -8px 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(10px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1060;
+  pointer-events: none;
+}
+
+.user-dropdown__link.has-submenu:hover .user-dropdown-submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-8px);
+  pointer-events: auto;
+}
+
+.user-dropdown-submenu .user-dropdown__link {
+  padding: 10px 20px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.user-dropdown-submenu .user-dropdown__link:hover {
+  background: rgba(12, 124, 134, 0.08);
+  color: var(--bn-turquoise-dark, #0C7C86);
+}

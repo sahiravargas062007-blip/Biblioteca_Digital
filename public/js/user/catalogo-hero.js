@@ -9,7 +9,9 @@
 
   function init() {
     animateTitle();
-    createFloatingBooks();
+    if (window.innerWidth > 768) {
+      createFloatingBooks();
+    }
     createParticles();
     observeNavbarScroll();
   }

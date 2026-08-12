@@ -1,6 +1,14 @@
 const router = require('express').Router();
 
-router.get('/', (req, res) => res.redirect('/catalogo'));
+router.get('/', (req, res) => {
+  if (req.session.adminId) {
+    return res.redirect('/admin/recursos');
+  }
+  if (req.session.userId) {
+    return res.redirect('/catalogo');
+  }
+  res.render('landing', { layout: false });
+});
 
 // Admin layout middleware
 router.use('/admin', (req, res, next) => {

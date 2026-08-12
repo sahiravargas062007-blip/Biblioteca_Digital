@@ -1,0 +1,52 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/biblionet_cd
+          chmod 600 ~/.ssh/biblionet_cd
+
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Desplegar BiblioNet
+        run: |
+          ssh -i ~/.ssh/biblionet_cd \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
+
+            cd ~/repositories/Biblioteca_Digital
+
+            echo "Actualizando código..."
+            git pull origin main
+
+            echo "Construyendo nueva imagen..."
+            docker build -t biblionet:latest .
+
+            echo "Recreando contenedor..."
+            docker rm -f biblionet-app 2>/dev/null || true
+
+            docker run -d \
+              --name biblionet-app \
+              --env-file .env \
+              --network infrastructure \
+              -p 3002:3000 \
+              biblionet:latest
+
+            echo "Despliegue terminado."
+
+          EOF
