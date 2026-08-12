@@ -12,7 +12,12 @@ function flash(req, type, message) {
   req.session.flash = { type, message };
 }
 
-exports.loginForm = (req, res) => res.render('auth/login', { title: 'Iniciar sesión', layout: false });
+exports.loginForm = (req, res) => {
+  const flash = req.query.expirada === '1'
+    ? { type: 'info', message: 'Tu sesión expiró después de 15 minutos de inactividad.' }
+    : null;
+  res.render('auth/login', { title: 'Iniciar sesión', layout: false, flash });
+};
 
 exports.login = async (req, res, next) => {
   try {

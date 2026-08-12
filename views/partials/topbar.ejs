@@ -22,14 +22,12 @@
             <% } else { %>
               <a href="/catalogo"
                 class="<%= isActive('/catalogo') && currentPath === '/catalogo' ? 'is-active' : '' %>">Explorar</a>
-              <% if (!isUser) { %>
-                <a href="/catalogo/categorias"
-                  class="<%= currentPath && currentPath.startsWith('/catalogo/categorias') ? 'is-active' : '' %>">Categorías</a>
-                <a href="/catalogo/novedades"
-                  class="<%= currentPath && currentPath === '/catalogo/novedades' ? 'is-active' : '' %>">Novedades</a>
-                <a href="/catalogo/mas-leidos"
-                  class="<%= currentPath && currentPath === '/catalogo/mas-leidos' ? 'is-active' : '' %>">Más leídos</a>
-              <% } %>
+              <a href="/catalogo/categorias"
+                class="<%= currentPath && currentPath.startsWith('/catalogo/categorias') ? 'is-active' : '' %>">Categorías</a>
+              <a href="/catalogo/novedades"
+                class="<%= currentPath && currentPath === '/catalogo/novedades' ? 'is-active' : '' %>">Novedades</a>
+              <a href="/catalogo/mas-leidos"
+                class="<%= currentPath && currentPath === '/catalogo/mas-leidos' ? 'is-active' : '' %>">Más leídos</a>
             <% } %>
         </nav>
         <div class="cat-topbar__right">
@@ -119,7 +117,7 @@
                   </a>
 
                   <!-- Recursos Dropdown Submenu -->
-                  <div class="user-dropdown__link has-submenu">
+                  <div class="user-dropdown__link has-submenu user-catalog-mobile-only">
                     <div class="has-submenu-trigger">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />

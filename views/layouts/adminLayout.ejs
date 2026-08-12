@@ -16,6 +16,9 @@
     <%- include('../partials/alertas') %>
     <%- body %>
   </main>
+  <% if (session && (session.userId || session.adminId)) { %>
+    <script src="/js/session-inactivity.js"></script>
+  <% } %>
   <%- script %>
 </body>
 </html>

@@ -6,6 +6,7 @@ const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
 
 const sessionConfig = require('./config/session');
+const sessionInactivity = require('./middlewares/sessionInactivity');
 const routes = require('./routes');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -32,6 +33,7 @@ function crearApp() {
   app.use(express.json());
   app.use(methodOverride('_method'));
   app.use(sessionConfig);
+  app.use(sessionInactivity);
   app.use(express.static(path.join(__dirname, 'public')));
 
   app.use((req, res, next) => {

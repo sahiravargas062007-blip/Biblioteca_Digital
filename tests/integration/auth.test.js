@@ -5,6 +5,7 @@ const { conectar, limpiar, cerrarConexion } = require('../setup/db');
 let app;
 let Usuario;
 let Administrador;
+let cerrarStoreSesion;
 
 beforeAll(async () => {
   // MONGODB_URI debe existir ANTES de requerir la app, porque
@@ -13,6 +14,7 @@ beforeAll(async () => {
 
   // Requires diferidos a después de conectar(), por la misma razón.
   app = require('../../app')();
+  cerrarStoreSesion = require('../../config/session').close;
   Usuario = require('../../models/Usuario');
   Administrador = require('../../models/Administrador');
 });
@@ -22,6 +24,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  if (cerrarStoreSesion) await cerrarStoreSesion();
   await cerrarConexion();
 });
 

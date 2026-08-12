@@ -250,12 +250,21 @@
   display: none !important;
 }
 
+/* Las secciones del catálogo se muestran en la navegación principal en escritorio. */
+.user-catalog-mobile-only {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .guest-mobile-only {
     display: inline-block !important;
   }
   .cat-topbar__links {
     display: none !important;
+  }
+
+  .user-catalog-mobile-only {
+    display: block;
   }
 
   /* Adjust resources submenu on mobile (accordion style) */
