@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongoose = require("mongoose");
+const { MongoMemoryServer } = require("mongodb-memory-server");
 
 let mongoServer;
 
@@ -23,7 +23,7 @@ async function conectar() {
 async function limpiar() {
   const collections = mongoose.connection.collections;
   await Promise.all(
-    Object.values(collections).map((collection) => collection.deleteMany({}))
+    Object.values(collections).map((collection) => collection.deleteMany({})),
   );
 }
 
@@ -34,3 +34,16 @@ async function cerrarConexion() {
 }
 
 module.exports = { conectar, limpiar, cerrarConexion };
+
+// 3. Después de TODAS las pruebas: CERRAR CONEXIONES Y DETENER MONGO
+afterAll(async () => {
+  // Primero desconectar Mongoose
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+
+  // Luego apagar la BD en memoria
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
+});
