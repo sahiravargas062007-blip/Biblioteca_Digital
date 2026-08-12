@@ -783,8 +783,14 @@
 
 /* ── RESPONSIVIDAD DE MAQUETADO ── */
 @media (max-width: 768px) {
+  .admin-main.admin-configuration-page {
+    width: 100%;
+    margin: 72px 0 0 !important;
+    padding: 0;
+  }
+
   .config-page {
-    margin: -88px -16px -16px;
+    margin: 0;
     padding: 24px 12px 40px;
     background-attachment: scroll;
   }

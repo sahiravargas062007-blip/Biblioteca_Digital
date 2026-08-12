@@ -59,7 +59,8 @@ exports.editar = async (req, res, next) => {
     }
 
     return res.render('admin/recursos/nuevo', {
-      title: 'Editar recurso', recurso, categorias, config
+      title: 'Editar recurso', recurso, categorias, config,
+      pageClass: 'admin-resource-form-page'
     });
   } catch (error) {
     next(error);

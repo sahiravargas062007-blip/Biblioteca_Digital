@@ -255,6 +255,10 @@
   display: none;
 }
 
+.user-profile-mobile-only {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .guest-mobile-only {
     display: inline-block !important;
@@ -265,6 +269,14 @@
 
   .user-catalog-mobile-only {
     display: block;
+  }
+
+  .cat-topbar__profile {
+    display: none;
+  }
+
+  .user-profile-mobile-only {
+    display: flex;
   }
 
   /* Adjust resources submenu on mobile (accordion style) */

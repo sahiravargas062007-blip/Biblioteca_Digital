@@ -15,6 +15,7 @@ exports.index = async (req, res, next) => {
 
     res.render('admin/configuracion/index', {
       title: 'Configuración',
+      pageClass: 'admin-configuration-page',
       config,
       categorias
     });

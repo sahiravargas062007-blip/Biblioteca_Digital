@@ -187,11 +187,18 @@
                     </svg>
                     Sanciones
                   </a>
+                  <a class="user-dropdown__link user-profile-mobile-only <%= isActive('/perfil') %>" href="/perfil">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    Mi perfil
+                  </a>
                 </div>
               <% } %>
             </div>
             <% if (isUser) { %>
-              <a href="/perfil" class="cat-topbar__icon" aria-label="Mi perfil">
+              <a href="/perfil" class="cat-topbar__icon cat-topbar__profile" aria-label="Mi perfil">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />

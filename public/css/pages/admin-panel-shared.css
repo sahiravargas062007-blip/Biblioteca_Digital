@@ -406,6 +406,8 @@
     width: calc(100% - 32px);
     padding: 24px 20px 28px;
     margin-top: 88px;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   .admin-users-page .users-pagination,

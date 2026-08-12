@@ -51,7 +51,10 @@ exports.nuevo = async (req, res, next) => {
       Categoria.find({ activa: true }).sort({ nombre: 1 }).lean(),
       Configuracion.findOne().lean()
     ]);
-    res.render('admin/recursos/nuevo', { title: 'Nuevo recurso', recurso: null, categorias, config });
+    res.render('admin/recursos/nuevo', {
+      title: 'Nuevo recurso', recurso: null, categorias, config,
+      pageClass: 'admin-resource-form-page'
+    });
   } catch (error) {
     next(error);
   }

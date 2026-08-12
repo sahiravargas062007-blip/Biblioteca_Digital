@@ -54,7 +54,7 @@
              : usuario.estado === 'Pendiente de aprobación'
                ? 'badge-prestado'
                : 'badge-no-disponible';
-           const tieneAcciones = usuario.estado === 'Pendiente de aprobación' || usuario.estado === 'Activo';
+           const tieneAcciones = ['Pendiente de aprobación', 'Activo', 'Suspendido'].includes(usuario.estado);
       %>
         <tr>
           <td>
@@ -97,6 +97,10 @@
                   <% } else if (usuario.estado === 'Activo') { %>
                     <form method="post" action="/admin/usuarios/<%= usuario._id %>/suspender" data-ajax data-ajax-refresh="#usuarios-resultado">
                       <button type="submit" class="row-menu__item row-menu__item--danger">Suspender</button>
+                    </form>
+                  <% } else if (usuario.estado === 'Suspendido') { %>
+                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/restablecer" data-ajax data-ajax-refresh="#usuarios-resultado">
+                      <button type="submit" class="row-menu__item row-menu__item--ok">Restablecer acceso</button>
                     </form>
                   <% } %>
                 </div>

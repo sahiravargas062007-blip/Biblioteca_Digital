@@ -133,3 +133,39 @@ exports.suspender = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.restablecer = async (req, res, next) => {
+  try {
+    const usuario = await Usuario.findOneAndUpdate(
+      { _id: req.params.id, estado: 'Suspendido' },
+      { estado: 'Activo', actualizado_en: new Date() },
+      { new: true }
+    );
+
+    if (!usuario) {
+      return fail(req, res, {
+        redirect: '/admin/usuarios',
+        message: 'No se encontró un usuario suspendido para restablecer.'
+      });
+    }
+
+    await Notificacion.create({
+      destinatario_tipo: 'usuario',
+      destinatario_id: usuario._id,
+      tipo: 'acceso_aprobado',
+      titulo: 'Acceso restablecido',
+      mensaje: 'Su acceso a la Biblioteca Digital fue restablecido.',
+      referencia_tipo: 'usuario',
+      referencia_id: usuario._id,
+      creado_en: new Date()
+    });
+
+    return ok(req, res, {
+      redirect: '/admin/usuarios',
+      message: 'Acceso del usuario restablecido correctamente.',
+      extra: { estado: usuario.estado }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

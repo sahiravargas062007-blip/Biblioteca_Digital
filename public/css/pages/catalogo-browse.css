@@ -117,6 +117,30 @@ body.admin-shell.admin-reservas-page {
   letter-spacing: 0.3px;
 }
 
+.cat-filters__accordion {
+  border: 0;
+}
+
+.cat-filters__accordion-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #3a1f06;
+  cursor: pointer;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  list-style: none;
+}
+
+.cat-filters__accordion-summary::-webkit-details-marker {
+  display: none;
+}
+
+.cat-filters__accordion-summary svg {
+  display: none;
+}
+
 .cat-filters__clear {
   font-size: 0.82rem;
   color: var(--color-muted);
@@ -625,8 +649,14 @@ body.admin-shell.admin-reservas-page {
     left: 0;
   }
 
+  .admin-main.admin-catalog-page {
+    width: calc(100% - 32px) !important;
+    margin: 88px auto 24px !important;
+  }
+
   .cat-main {
     margin-left: 0;
+    width: 100% !important;
     grid-template-columns: 1fr;
   }
 
@@ -635,6 +665,35 @@ body.admin-shell.admin-reservas-page {
     max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
+    padding: 20px;
+  }
+
+  .cat-filters__header {
+    margin-bottom: 14px;
+  }
+
+  .cat-filters__accordion {
+    margin-top: 18px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cat-filters__accordion-summary {
+    min-height: 48px;
+  }
+
+  .cat-filters__accordion-summary svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+  }
+
+  .cat-filters__accordion[open] .cat-filters__accordion-summary svg {
+    transform: rotate(180deg);
+  }
+
+  .cat-filters__section--categories {
+    padding-top: 4px;
   }
 
   .cat-grid {

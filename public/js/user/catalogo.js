@@ -37,6 +37,7 @@
     initStatusChips();
     initSearch();
     initClearBtn();
+    initFiltersAccordion();
     applyInitialFiltersFromUrl();
 
     // Auto-filter on checkbox/chip change
@@ -46,6 +47,20 @@
 
     renderPage();
   });
+
+  function initFiltersAccordion() {
+    var accordion = document.querySelector('.cat-filters__accordion');
+    if (!accordion) return;
+    var mobileQuery = window.matchMedia('(max-width: 768px)');
+
+    function syncAccordion(event) {
+      accordion.open = !event.matches;
+    }
+
+    syncAccordion(mobileQuery);
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', syncAccordion);
+    else mobileQuery.addListener(syncAccordion);
+  }
 
   /* ── Sidebar Toggle ──────────────────────────────────────────── */
   /* ── Category Tree ───────────────────────────────────────────── */
