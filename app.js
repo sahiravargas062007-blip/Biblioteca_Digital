@@ -1,14 +1,14 @@
-const path = require('path');
-const express = require('express');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const methodOverride = require('method-override');
-const expressLayouts = require('express-ejs-layouts');
+const path = require("path");
+const express = require("express");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const methodOverride = require("method-override");
+const expressLayouts = require("express-ejs-layouts");
 
-const sessionConfig = require('./config/session');
-const sessionInactivity = require('./middlewares/sessionInactivity');
-const routes = require('./routes');
-const errorHandler = require('./middlewares/errorHandler');
+const sessionConfig = require("./config/session");
+const sessionInactivity = require("./middlewares/sessionInactivity");
+const routes = require("./routes");
+const errorHandler = require("./middlewares/errorHandler");
 
 /**
  * Construye y configura la app de Express, sin conectar a la base de
@@ -20,25 +20,22 @@ const errorHandler = require('./middlewares/errorHandler');
 function crearApp() {
   const app = express();
 
-  app.set('view engine', 'ejs');
-  app.set('views', path.join(__dirname, 'views'));
+  app.set("view engine", "ejs");
+  app.set("views", path.join(__dirname, "views"));
   app.use(expressLayouts);
-  app.set('layout', 'layouts/userLayout'); // Layout por defecto
-  app.set('layout extractScripts', true);
-  app.set('layout extractStyles', true);
+  app.set("layout", "layouts/userLayout"); // Layout por defecto
+  app.set("layout extractScripts", true);
+  app.set("layout extractStyles", true);
 
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 3000 }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
-  app.use(methodOverride('_method'));
+  app.use(methodOverride("_method"));
   app.use(sessionConfig);
   app.use(sessionInactivity);
-<<<<<<< HEAD
-=======
-  app.use(require('passport').initialize());
->>>>>>> Cambios
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(require("passport").initialize());
+  app.use(express.static(path.join(__dirname, "public")));
 
   app.use((req, res, next) => {
     res.locals.session = req.session;
@@ -49,8 +46,8 @@ function crearApp() {
   });
 
   // ── Timeout extendido para subida de archivos grandes (videos) ──────────
-  app.use('/admin/recursos', (req, res, next) => {
-    if (req.method === 'POST') {
+  app.use("/admin/recursos", (req, res, next) => {
+    if (req.method === "POST") {
       res.setTimeout(10 * 60 * 1000); // 10 minutos
     }
     next();
