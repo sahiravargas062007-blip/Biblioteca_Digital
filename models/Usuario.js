@@ -1,24 +1,26 @@
 const mongoose = require('mongoose');
 
 const usuarioSchema = new mongoose.Schema({
-  ldap_uid: { type: String, required: true, unique: true, trim: true },
   nombre: { type: String, required: true, trim: true },
-  documento: { type: String, required: true, unique: true, trim: true },
+  documento: { type: String, unique: true, sparse: true, trim: true },
   tipo_documento: { type: String, default: 'CC', trim: true },
   correo: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password_hash: String,
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
+  emailVerified: { type: Boolean, default: false },
+  verificationCode: String,
+  verificationCodeExpires: Date,
+  verificationAttempts: { type: Number, default: 0 },
+  resetCodeHash: String,
+  resetCodeExpires: Date,
+  resetAttempts: { type: Number, default: 0 },
   programa_formacion: { type: String, trim: true },
   ficha: { type: String, trim: true },
   telefono: { type: String, trim: true },
   estado: {
     type: String,
-    enum: ['Activo', 'Sancionado', 'Suspendido', 'Pendiente de aprobación', 'Rechazado'],
-    default: 'Pendiente de aprobación'
+    enum: ['Activo', 'Sancionado', 'Suspendido', 'No Verificado'],
+    default: 'No Verificado'
   },
-  aprobado_por: { type: mongoose.Schema.Types.ObjectId, ref: 'Administrador' },
-  aprobado_en: Date,
   prestamos_activos: { type: Number, default: 0 },
   reservas_activas: { type: Number, default: 0 },
   creado_en: { type: Date, default: Date.now },

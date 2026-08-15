@@ -34,6 +34,10 @@ function crearApp() {
   app.use(methodOverride('_method'));
   app.use(sessionConfig);
   app.use(sessionInactivity);
+<<<<<<< HEAD
+=======
+  app.use(require('passport').initialize());
+>>>>>>> Cambios
   app.use(express.static(path.join(__dirname, 'public')));
 
   app.use((req, res, next) => {

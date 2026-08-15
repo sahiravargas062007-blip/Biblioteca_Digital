@@ -1,16 +1,59 @@
-
   <section class="panel page-title-panel">
     <p class="eyebrow">Cuenta</p>
     <h1>Perfil</h1>
     <p class="muted">Consulta y actualiza la información de tu cuenta de biblioteca.</p>
   </section>
 
+  <%- include('../../partials/alertas') %>
+
+  <% if (perfilIncompleto) { %>
+    <section class="panel" style="border: 1px solid var(--accent); background-color: rgba(var(--accent-rgb), 0.05);">
+      <h2 style="color: var(--accent);">⚠️ ¡Atención! Tu perfil está incompleto</h2>
+      <p style="margin-bottom: 1rem;">Para poder realizar solicitudes de libros y reservas, es obligatorio registrar tu <strong>Documento de Identidad</strong> en el sistema.</p>
+      
+      <form method="post" action="/perfil?_method=PUT" class="form-stack">
+        <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 2fr;">
+          <label>
+            Tipo de Documento
+            <select name="tipo_documento" required>
+              <option value="CC">Cédula de Ciudadanía (CC)</option>
+              <option value="TI">Tarjeta de Identidad (TI)</option>
+              <option value="CE">Cédula de Extranjería (CE)</option>
+              <option value="PAS">Pasaporte (PAS)</option>
+            </select>
+          </label>
+          <label>
+            Número de Documento
+            <input type="text" name="documento" required placeholder="Ingresa tu número de documento">
+          </label>
+        </div>
+        
+        <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 1fr;">
+          <label>
+            Programa de formación (Opcional)
+            <input type="text" name="programa_formacion" placeholder="Ej: ADSO">
+          </label>
+          <label>
+            Ficha (Opcional)
+            <input type="text" name="ficha" placeholder="Ej: 2669894">
+          </label>
+        </div>
+        
+        <button type="submit" style="background-color: var(--accent); color: white;">Guardar Documento</button>
+      </form>
+    </section>
+  <% } %>
+
   <section class="panel">
     <h2>Información personal</h2>
     <dl class="detail-list">
-      <div><dt>Nombre</dt><dd><%= usuario.nombre %></dd></div>
-      <div><dt>Documento</dt><dd><%= usuario.documento %></dd></div>
-      <div><dt>Tipo</dt><dd><%= usuario.tipo_documento %></dd></div>
+      <div><dt>Nombre completo</dt><dd><%= usuario.nombre %> <%= usuario.apellidos || '' %></dd></div>
+      <% if (!perfilIncompleto) { %>
+        <div><dt>Documento</dt><dd><%= usuario.documento %></dd></div>
+        <div><dt>Tipo</dt><dd><%= usuario.tipo_documento %></dd></div>
+      <% } else { %>
+        <div><dt>Documento</dt><dd><em style="color:var(--danger)">No registrado</em></dd></div>
+      <% } %>
       <div><dt>Correo institucional</dt><dd><%= usuario.correo %></dd></div>
       <div><dt>Programa de formación</dt><dd><%= usuario.programa_formacion || 'No especificado' %></dd></div>
       <div><dt>Ficha</dt><dd><%= usuario.ficha || 'No especificado' %></dd></div>
@@ -28,6 +71,25 @@
       <button type="submit">Guardar cambios</button>
     </form>
   </section>
+  
+  <section class="panel">
+    <h2>Seguridad</h2>
+    <form method="post" action="/perfil/password" class="form-stack">
+      <label>
+        Contraseña actual
+        <input type="password" name="passwordActual" required placeholder="Ingresa tu contraseña actual">
+      </label>
+      <label>
+        Nueva contraseña
+        <input type="password" name="nuevaPassword" required minlength="8" placeholder="De 8 a 20 caracteres (Mayúscula, minúscula, número, especial)">
+      </label>
+      <label>
+        Confirmar nueva contraseña
+        <input type="password" name="confirmarPassword" required minlength="8" placeholder="Repite la nueva contraseña">
+      </label>
+      <button type="submit">Cambiar contraseña</button>
+    </form>
+  </section>
 
   <section class="panel">
     <h2>Estadísticas</h2>
@@ -37,4 +99,3 @@
       <div><dt>Se unió</dt><dd><%= new Date(usuario.creado_en).toLocaleString('es-CO') %></dd></div>
     </dl>
   </section>
-

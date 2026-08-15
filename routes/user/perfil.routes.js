@@ -6,5 +6,6 @@ const validarUsuario = require('../../middlewares/validarUsuario');
 router.use(isUserAuth);
 router.get('/', controller.index);
 router.put('/', validarUsuario, controller.actualizar);
+router.post('/password', validarUsuario, controller.cambiarPassword);
 
 module.exports = router;

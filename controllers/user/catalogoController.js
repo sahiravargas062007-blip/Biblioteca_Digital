@@ -292,6 +292,12 @@ exports.prestar = async (req, res, next) => {
   try {
     if (!req.session.userId) return res.redirect('/login');
 
+    const usuario = await Usuario.findById(req.session.userId);
+    if (!usuario || !usuario.documento) {
+      flash(req, 'error', 'Debes configurar tu documento de identidad en tu perfil antes de poder acceder a recursos.');
+      return res.redirect('/perfil');
+    }
+
     const recurso = await Recurso.findOne({
       _id: req.params.id, estado: 'Activo', publicado: true
     }).lean();
@@ -313,9 +319,7 @@ exports.prestar = async (req, res, next) => {
       return res.redirect(`/catalogo/${req.params.id}`);
     }
 
-    const usuario = await Usuario.findById(req.session.userId).lean();
-    if (!usuario) return res.redirect('/login');
-
+    // Usuario ya fue obtenido y validado en la línea 295
     const now = new Date();
     const tieneSancionBloqueante = await Sancion.exists({
       usuario_id: usuario._id,

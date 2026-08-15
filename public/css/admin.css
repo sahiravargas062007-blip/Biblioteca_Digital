@@ -38,8 +38,6 @@
   text-transform: uppercase;
 }
 
-.toolbar,
-.import-form,
 .form-stack {
   display: grid;
   gap: 16px;
@@ -47,9 +45,18 @@
 
 .toolbar,
 .import-form {
-  align-items: end;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
 }
+
+.toolbar > label:first-of-type,
+.import-form > label:first-of-type {
+  flex: 1;
+  min-width: 260px;
+}
+
 
 .button-link,
 .secondary-link {
