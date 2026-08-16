@@ -354,14 +354,14 @@ exports.login = async (req, res, next) => {
         ? await bcrypt.compare(password, usuario.password_hash)
         : false;
       if (passwordMatch) {
+        if (usuario.estado !== "Activo" && usuario.estado !== "No Verificado") {
+          flash(req, "error", `Su cuenta está en estado: ${usuario.estado}.`);
+          return res.redirect("/login");
+        }
         if (!usuario.emailVerified || usuario.estado === "No Verificado") {
           req.session.tempUserId = usuario._id;
           flash(req, "info", "Debes verificar tu cuenta para continuar.");
           return res.redirect("/verificar-correo");
-        }
-        if (usuario.estado !== "Activo") {
-          flash(req, "error", `Su cuenta está en estado: ${usuario.estado}.`);
-          return res.redirect("/login");
         }
 
         req.session.userId = String(usuario._id);
@@ -568,6 +568,10 @@ exports.googleCallback = (req, res) => {
     req.session.correo = user.correo;
     return res.redirect("/admin/recursos");
   } else {
+    if (user.estado !== "Activo") {
+      flash(req, "error", `Su cuenta está en estado: ${user.estado}.`);
+      return res.redirect("/login");
+    }
     req.session.userId = String(user._id);
     req.session.rol = "usuario";
     req.session.nombre = user.nombre;
