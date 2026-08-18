@@ -1,59 +1,472 @@
 <link rel="stylesheet" href="/css/components/tables.css">
 <link rel="stylesheet" href="/css/components/forms.css">
 <link rel="stylesheet" href="/css/components/badges.css">
+<style>
+  .prestamo-step-panel {
+    background: #fdf8f0;
+    border-radius: 14px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06);
+    margin-bottom: 24px;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .step-num {
+    width: 32px;
+    height: 32px;
+    background: #146c5f;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  .step-title {
+    font-size: 1.3rem;
+    color: #2c2518;
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+  }
+  .step-desc {
+    color: #5c5548;
+    margin: 0 0 20px 44px;
+    font-size: 0.95rem;
+  }
+  .search-input-wrap {
+    position: relative;
+    margin-left: 44px;
+  }
+  .search-input-wrap input {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    background: transparent;
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    border-radius: 8px;
+    color: #2c2518;
+    font-size: 1rem;
+  }
+  .search-input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8b6e35;
+  }
+  .user-card {
+    margin: 20px 0 0 44px;
+    background: rgba(201, 168, 76, 0.05);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .user-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    background: #146c5f;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  .user-info h3 { margin: 0 0 4px 0; color: #2c2518; font-size: 1.1rem; }
+  .user-info p { margin: 0; color: #5c5548; font-size: 0.9rem; }
+  .user-badge {
+    background: #146c5f;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: auto;
+  }
+  .user-details {
+    display: flex;
+    gap: 24px;
+    border-top: 1px solid rgba(201, 168, 76, 0.2);
+    padding-top: 12px;
+  }
+  .detail-item { display: flex; flex-direction: column; gap: 4px; }
+  .detail-item span.label { color: #8b6e35; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; }
+  .detail-item span.value { color: #2c2518; font-weight: 600; font-size: 0.95rem; }
+  
+  .filters {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0 0 44px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: transparent;
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    color: #5c5548;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .filter-btn.active {
+    background: #146c5f;
+    color: white;
+    border-color: #146c5f;
+  }
+  .resource-list {
+    margin: 20px 0 0 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .resource-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.5);
+  }
+  .resource-item.selected {
+    border-color: #146c5f;
+    background: rgba(20, 108, 95, 0.05);
+  }
+  .resource-cover {
+    width: 60px;
+    height: 85px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  .resource-info { flex: 1; }
+  .resource-info h4 { margin: 0 0 4px; color: #2c2518; font-size: 1.1rem; }
+  .resource-info p { margin: 0 0 8px; color: #5c5548; font-size: 0.9rem; }
+  .resource-tags { display: flex; gap: 8px; }
+  .resource-tags span { background: #eaf4f1; color: #146c5f; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+  
+  .summary-container {
+    margin-left: 44px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,255,255,0.5);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    flex: 1;
+    min-width: 250px;
+  }
+  .date-inputs {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .date-field { display: flex; flex-direction: column; gap: 4px; }
+  .date-field label { font-size: 0.85rem; color: #8b6e35; }
+  .date-field input { padding: 8px 12px; border: 1px solid rgba(201, 168, 76, 0.4); border-radius: 6px; background: transparent; color: #2c2518; }
+  .total-days {
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .total-days span { display: block; font-size: 0.85rem; color: #8b6e35; margin-bottom: 4px; }
+  .total-days strong { font-size: 1.2rem; color: #2c2518; display: flex; align-items: center; gap: 6px; }
+  
+  .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+  .btn-outline { background: transparent; border: 1px solid rgba(201, 168, 76, 0.6); color: #5c5548; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+  .btn-solid { background: #146c5f; border: none; color: white; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+</style>
 
-<section class="panel page-header">
-      <div>
-        <p class="eyebrow">Registro manual</p>
-        <h1>Nuevo préstamo físico</h1>
+<section class="panel page-header" style="background: transparent; border: none; box-shadow: none; padding-bottom: 0;">
+  <div>
+    <h1 style="font-family: 'Playfair Display', serif; color: #2c2518; font-size: 2.2rem; display: flex; align-items: center; gap: 12px;">
+      Nuevo préstamo
+      <svg width="40" height="20" viewBox="0 0 100 20" fill="none" style="stroke: #c9a84c;"><path d="M10 10 Q 25 20, 40 10 T 70 10 T 90 10" stroke-width="2" fill="none"/></svg>
+    </h1>
+    <p style="color: #5c5548; margin-top: 4px;">Gestiona préstamos de materiales físicos y digitales</p>
+  </div>
+  <a class="secondary-link" href="/admin/prestamos" style="border: 1px solid rgba(201, 168, 76, 0.4); color: #2c2518; border-radius: 8px; padding: 8px 16px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Volver al módulo de préstamos
+  </a>
+</section>
+
+<form id="prestamoForm" method="post" action="/admin/prestamos">
+  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    
+    <!-- Step 1 -->
+    <div class="prestamo-step-panel">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <h2 class="step-title">Seleccionar usuario</h2>
       </div>
-      <a class="secondary-link" href="/admin/prestamos">Volver</a>
-    </section>
+      <p class="step-desc">Busca y selecciona el usuario que recibirá el préstamo.</p>
+      
+      <div class="search-input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="userSearch" placeholder="Buscar por nombre, documento o correo...">
+        
+        <!-- Hidden select for actual submission -->
+        <select name="usuario_id" id="usuario_id" required style="display: none;">
+          <option value="">Seleccione un usuario</option>
+          <% usuarios.forEach((usuario) => { %>
+            <option value="<%= usuario._id %>" data-doc="<%= usuario.documento %>" data-email="<%= usuario.correo %>" data-activos="<%= usuario.prestamos_activos || 0 %>"><%= usuario.nombre %></option>
+          <% }) %>
+        </select>
+      </div>
 
-    <section class="panel">
-      <form method="post" action="/admin/prestamos" class="form-stack">
-        <label>
-          Usuario activo
-          <select name="usuario_id" required>
-            <option value="">Seleccione un usuario</option>
-            <% usuarios.forEach((usuario) => { %>
-              <option value="<%= usuario._id %>"><%= usuario.nombre %> · <%= usuario.documento %> · préstamos activos: <%= usuario.prestamos_activos || 0 %></option>
-            <% }) %>
-          </select>
-        </label>
-
-        <div>
-          <h2>Ejemplares disponibles</h2>
-          <div class="table-wrap">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Seleccionar</th>
-                  <th>Recurso</th>
-                  <th>Código</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (!ejemplares.length) { %>
-                  <tr><td colspan="4">No hay ejemplares disponibles.</td></tr>
-                <% } %>
-                <% ejemplares.forEach((ejemplar) => { %>
-                  <tr>
-                    <td><input type="checkbox" name="ejemplar_ids" value="<%= ejemplar._id %>"></td>
-                    <td><%= ejemplar.recurso_titulo %></td>
-                    <td><%= ejemplar.codigo_inventario %></td>
-                    <td><span class="badge badge-disponible"><%= ejemplar.estado %></span></td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
+      <!-- User Card (populated via JS) -->
+      <div id="selectedUserCard" class="user-card" style="display: none;">
+        <div class="user-card-header">
+          <div class="user-avatar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="user-info">
+            <h3 id="uName">Nombre Apellido</h3>
+            <p id="uEmail">correo@ejemplo.com</p>
+          </div>
+          <span class="user-badge">Estudiante</span>
+        </div>
+        <div class="user-details">
+          <div class="detail-item">
+            <span class="label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg> Documento</span>
+            <span class="value" id="uDoc">1.234.567.890</span>
+          </div>
+          <div class="detail-item">
+            <span class="label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Activos</span>
+            <span class="value" id="uActivos">0 préstamos</span>
+          </div>
+          <div class="detail-item">
+            <span class="label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Estado</span>
+            <span class="value">Activo</span>
           </div>
         </div>
+      </div>
+      <!-- End User Card -->
+    </div>
 
-        <div class="form-actions">
-          <button type="submit">Registrar préstamo</button>
-          <a class="secondary-link" href="/admin/prestamos">Cancelar</a>
+    <!-- Step 2 -->
+    <div class="prestamo-step-panel">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <h2 class="step-title">Buscar y seleccionar materiales</h2>
+      </div>
+      <p class="step-desc">Busca materiales y selecciónalos para agregarlos al préstamo.</p>
+      
+      <div style="display: flex; gap: 16px; margin-left: 44px;">
+        <div class="filters" style="margin: 0; flex: 1;">
+          <button type="button" class="filter-btn active" data-type="all">Todos</button>
+          <button type="button" class="filter-btn" data-type="Libro">Libro</button>
+          <button type="button" class="filter-btn" data-type="Revista">Revista</button>
+          <button type="button" class="filter-btn" data-type="Tesis">Tesis</button>
+          <button type="button" class="filter-btn" data-type="Mapa">Mapa</button>
+          <button type="button" class="filter-btn" data-type="Audiolibro">Audiolibro</button>
+          <button type="button" class="filter-btn" data-type="Video">Video</button>
         </div>
-      </form>
-    </section>
+        <div class="search-input-wrap" style="margin: 0; min-width: 250px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="resourceSearch" placeholder="Buscar por título, autor o ISBN...">
+        </div>
+      </div>
+
+      <div class="resource-list" id="resourceList">
+        <% if (!ejemplares.length) { %>
+          <p style="color: #8b6e35; font-style: italic;">No hay ejemplares disponibles.</p>
+        <% } %>
+        <% ejemplares.forEach((ejemplar) => { %>
+          <div class="resource-item" data-title="<%= ejemplar.recurso_titulo %>" data-type="Libro" data-id="<%= ejemplar._id %>">
+            <input type="checkbox" name="ejemplar_ids" value="<%= ejemplar._id %>" style="width: 20px; height: 20px; accent-color: #146c5f; cursor: pointer;">
+            <img src="/img/placeholder.png" alt="Cover" class="resource-cover">
+            <div class="resource-info">
+              <h4><%= ejemplar.recurso_titulo %></h4>
+              <p>Código: <%= ejemplar.codigo_inventario %></p>
+              <div class="resource-tags">
+                <span>Libro</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.8rem; color: #8b6e35; display: block; margin-bottom: 4px;">Tiempo de préstamo</span>
+              <strong style="color: #2c2518; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                15 días
+              </strong>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="prestamo-step-panel" style="margin-top: 0;">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <h2 class="step-title">Resumen del préstamo</h2>
+    </div>
+    
+    <div class="summary-container">
+      <div style="flex: 1;">
+        <span style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: #8b6e35;">Materiales seleccionados (<span id="selCount">0</span>)</span>
+        <div class="summary-item" id="summaryItem" style="display: none;">
+          <img src="/img/placeholder.png" alt="Cover" style="width: 48px; height: 68px; object-fit: cover; border-radius: 4px;">
+          <div style="flex: 1;">
+            <h4 style="margin: 0 0 4px; color: #2c2518; font-size: 1rem;" id="sumTitle">Título</h4>
+            <span style="background: #eaf4f1; color: #146c5f; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">Libro</span>
+          </div>
+          <div style="color: #146c5f; font-weight: bold; font-size: 1.1rem; display: none;" id="sumMore">+1</div>
+        </div>
+      </div>
+      
+      <div class="date-inputs">
+        <div class="date-field">
+          <label>Fecha de préstamo</label>
+          <input type="date" name="fecha_prestamo" id="fPrestamo" readonly>
+        </div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b6e35" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <div class="date-field">
+          <label>Fecha de devolución</label>
+          <input type="date" name="fecha_devolucion" id="fDevolucion" readonly>
+        </div>
+        <div class="total-days">
+          <span>Días totales</span>
+          <strong><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 15 días</strong>
+        </div>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button type="button" class="btn-outline" onclick="document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false); updateSummary();">Limpiar selección</button>
+      <button type="submit" class="btn-solid">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Confirmar préstamo
+      </button>
+    </div>
+  </div>
+</form>
+
+<script>
+  // Script para manejar la interfaz del nuevo préstamo
+  document.addEventListener('DOMContentLoaded', () => {
+    const userSearch = document.getElementById('userSearch');
+    const userSelect = document.getElementById('usuario_id');
+    const userCard = document.getElementById('selectedUserCard');
+    
+    // Configurar fechas iniciales
+    const fPrestamo = document.getElementById('fPrestamo');
+    const fDevolucion = document.getElementById('fDevolucion');
+    const today = new Date();
+    fPrestamo.valueAsDate = today;
+    const returnDate = new Date(today);
+    returnDate.setDate(returnDate.getDate() + 15);
+    fDevolucion.valueAsDate = returnDate;
+
+    // Buscar y seleccionar usuario
+    userSearch.addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      let found = false;
+      if (val.length > 2) {
+        Array.from(userSelect.options).forEach(opt => {
+          if (!opt.value) return;
+          if (opt.text.toLowerCase().includes(val) || opt.dataset.doc.includes(val)) {
+            userSelect.value = opt.value;
+            showUserCard(opt);
+            found = true;
+          }
+        });
+      }
+      if (!found && val.length > 0) userCard.style.display = 'none';
+    });
+
+    function showUserCard(opt) {
+      document.getElementById('uName').textContent = opt.text;
+      document.getElementById('uEmail').textContent = opt.dataset.email;
+      document.getElementById('uDoc').textContent = opt.dataset.doc;
+      document.getElementById('uActivos').textContent = opt.dataset.activos + ' préstamos';
+      userCard.style.display = 'block';
+    }
+
+    // Filtrar materiales
+    const filters = document.querySelectorAll('.filter-btn');
+    const items = document.querySelectorAll('.resource-item');
+    const searchInput = document.getElementById('resourceSearch');
+
+    function applyFilters() {
+      const activeFilter = document.querySelector('.filter-btn.active').dataset.type;
+      const searchTerm = searchInput.value.toLowerCase();
+
+      items.forEach(item => {
+        const type = item.dataset.type;
+        const title = item.dataset.title.toLowerCase();
+        const matchesFilter = activeFilter === 'all' || type === activeFilter;
+        const matchesSearch = title.includes(searchTerm);
+        item.style.display = (matchesFilter && matchesSearch) ? 'flex' : 'none';
+      });
+    }
+
+    filters.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        filters.forEach(f => f.classList.remove('active'));
+        e.target.classList.add('active');
+        applyFilters();
+      });
+    });
+
+    searchInput.addEventListener('input', applyFilters);
+
+    // Selección de materiales y resumen
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const item = e.target.closest('.resource-item');
+        if (e.target.checked) item.classList.add('selected');
+        else item.classList.remove('selected');
+        updateSummary();
+      });
+    });
+  });
+
+  function updateSummary() {
+    const selected = document.querySelectorAll('.resource-item.selected');
+    const count = selected.length;
+    document.getElementById('selCount').textContent = count;
+    
+    const summaryItem = document.getElementById('summaryItem');
+    const sumMore = document.getElementById('sumMore');
+    const sumTitle = document.getElementById('sumTitle');
+    
+    if (count > 0) {
+      summaryItem.style.display = 'flex';
+      sumTitle.textContent = selected[0].dataset.title;
+      if (count > 1) {
+        sumMore.style.display = 'block';
+        sumMore.textContent = '+' + (count - 1);
+      } else {
+        sumMore.style.display = 'none';
+      }
+    } else {
+      summaryItem.style.display = 'none';
+    }
+  }
+</script>
