@@ -33,8 +33,6 @@
       <tr>
         <th>Usuario</th>
         <th>Documento</th>
-        <th>Programa</th>
-        <th>Ficha</th>
         <th>Estado</th>
         <th>Préstamos</th>
         <th>Reservas</th>
@@ -43,7 +41,7 @@
     </thead>
     <tbody>
       <% if (!usuarios.length) { %>
-        <tr><td colspan="8">No hay usuarios registrados.</td></tr>
+        <tr><td colspan="6">No hay usuarios registrados.</td></tr>
       <% } %>
 
       <% usuarios.forEach((usuario, i) => {
@@ -66,9 +64,7 @@
               </div>
             </div>
           </td>
-          <td><span class="chip"><%= usuario.tipo_documento %> <%= usuario.documento %></span></td>
-          <td><%= usuario.programa_formacion || 'No registrado' %></td>
-          <td><%= usuario.ficha || 'No registrada' %></td>
+          <td><span class="chip"><%= usuario.tipo_documento %> <%= usuario.documento || 'Sin doc' %></span></td>
           <td>
             <span class="badge <%= estadoBadge %>">
               <span class="status-dot"></span><%= usuario.estado %>
@@ -78,32 +74,23 @@
           <td class="num-cell"><%= usuario.reservas_activas || 0 %></td>
           <td>
             <% if (tieneAcciones) { %>
-              <div class="row-menu-wrap">
-                <button type="button" class="row-menu-toggle" data-row-menu-toggle aria-label="Acciones de <%= usuario.nombre %>">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="5" cy="12" r="1.8" />
-                    <circle cx="12" cy="12" r="1.8" />
-                    <circle cx="19" cy="12" r="1.8" />
-                  </svg>
-                </button>
-                <div class="row-menu">
-                  <% if (usuario.estado === 'Pendiente de aprobación') { %>
-                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/aprobar" data-ajax data-ajax-refresh="#usuarios-resultado">
-                      <button type="submit" class="row-menu__item row-menu__item--ok">Aprobar</button>
-                    </form>
-                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/rechazar" data-ajax data-ajax-refresh="#usuarios-resultado">
-                      <button type="submit" class="row-menu__item row-menu__item--danger">Rechazar</button>
-                    </form>
-                  <% } else if (usuario.estado === 'Activo') { %>
-                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/suspender" data-ajax data-ajax-refresh="#usuarios-resultado">
-                      <button type="submit" class="row-menu__item row-menu__item--danger">Suspender</button>
-                    </form>
-                  <% } else if (usuario.estado === 'Suspendido') { %>
-                    <form method="post" action="/admin/usuarios/<%= usuario._id %>/restablecer" data-ajax data-ajax-refresh="#usuarios-resultado">
-                      <button type="submit" class="row-menu__item row-menu__item--ok">Restablecer acceso</button>
-                    </form>
-                  <% } %>
-                </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <% if (usuario.estado === 'Pendiente de aprobación') { %>
+                  <form method="post" action="/admin/usuarios/<%= usuario._id %>/aprobar" data-ajax data-ajax-refresh="#usuarios-resultado">
+                    <button type="submit" class="btn btn-sm btn-success" style="background-color: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Aprobar</button>
+                  </form>
+                  <form method="post" action="/admin/usuarios/<%= usuario._id %>/rechazar" data-ajax data-ajax-refresh="#usuarios-resultado">
+                    <button type="submit" class="btn btn-sm btn-danger" style="background-color: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Rechazar</button>
+                  </form>
+                <% } else if (usuario.estado === 'Activo') { %>
+                  <form method="post" action="/admin/usuarios/<%= usuario._id %>/suspender" data-ajax data-ajax-refresh="#usuarios-resultado">
+                    <button type="submit" class="btn btn-sm btn-danger" style="background-color: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Suspender</button>
+                  </form>
+                <% } else if (usuario.estado === 'Suspendido') { %>
+                  <form method="post" action="/admin/usuarios/<%= usuario._id %>/restablecer" data-ajax data-ajax-refresh="#usuarios-resultado">
+                    <button type="submit" class="btn btn-sm btn-success" style="background-color: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Restablecer</button>
+                  </form>
+                <% } %>
               </div>
             <% } else { %>
               <span class="muted">Sin acciones</span>

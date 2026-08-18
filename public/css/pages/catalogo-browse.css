@@ -10,18 +10,7 @@ body.catalog-page,
 body.admin-shell.admin-catalog-page,
 body.admin-shell.admin-users-page,
 body.admin-shell.admin-reservas-page {
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.5) 0%,
-      rgba(0, 0, 0, 0.35) 40%,
-      rgba(0, 0, 0, 0.5) 100%
-    ),
-    url("/img/hero-library.png") !important;
-  background-position: center !important;
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
+  /* Fondo administrado globalmente en reset.css */
 }
 
 /* ── Main Content Area ────────────────────────────────────────── */
@@ -40,16 +29,7 @@ body.admin-shell.admin-reservas-page {
   grid-template-columns: 320px 1fr;
   gap: 0;
 
-  opacity: 0;
-  transform: translateY(30px);
-  animation: catMainSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes catMainSlideUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  /* Animación manejada por clase global .page en reset.css */
 }
 
 .admin-catalog-page .cat-main {
@@ -94,8 +74,6 @@ body.admin-shell.admin-reservas-page {
   border-right: 1px solid rgba(201, 168, 76, 0.15) !important;
   background: #f6f2e9 !important;
   /* Slightly darker warm beige */
-  overflow-y: auto;
-  max-height: calc(100vh - 120px);
   position: sticky;
   top: 72px;
 }

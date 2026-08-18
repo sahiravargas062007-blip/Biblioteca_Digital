@@ -5,7 +5,6 @@
 body {
   margin: 0;
   padding: 0;
-  background: var(--color-bg);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -24,7 +23,7 @@ body {
 /* ── LEFT SIDE (HERO) ── */
 .login-hero {
   position: relative;
-  background: url('/img/hero-library.png') center/cover no-repeat;
+  background: transparent;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

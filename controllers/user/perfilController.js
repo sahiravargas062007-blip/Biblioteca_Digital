@@ -29,7 +29,7 @@ exports.index = async (req, res, next) => {
 
 exports.actualizar = async (req, res, next) => {
   try {
-    const { telefono, documento, tipo_documento, programa_formacion, ficha } = req.body;
+    const { nombre, correo, telefono, documento, tipo_documento } = req.body;
     const usuario = await Usuario.findById(req.session.userId);
 
     if (!usuario) {
@@ -37,11 +37,26 @@ exports.actualizar = async (req, res, next) => {
       return res.redirect('/perfil');
     }
 
+    if (nombre) usuario.nombre = String(nombre).trim();
     if (telefono) usuario.telefono = String(telefono).trim();
     if (documento && !usuario.documento) usuario.documento = String(documento).trim();
     if (tipo_documento && !usuario.documento) usuario.tipo_documento = String(tipo_documento).trim();
-    if (programa_formacion) usuario.programa_formacion = String(programa_formacion).trim();
-    if (ficha) usuario.ficha = String(ficha).trim();
+    
+    if (correo) {
+      const nuevoCorreo = String(correo).toLowerCase().trim();
+      if (nuevoCorreo !== usuario.correo) {
+        // Verificar que no exista en Administrador ni en Usuario
+        const Admin = require('../../models/Administrador');
+        const adminExistente = await Admin.findOne({ correo: nuevoCorreo });
+        const usuarioExistente = await Usuario.findOne({ correo: nuevoCorreo, _id: { $ne: usuario._id } });
+        
+        if (adminExistente || usuarioExistente) {
+          flash(req, 'error', 'El correo electrónico ya está en uso por otra cuenta.');
+          return res.redirect('/perfil');
+        }
+        usuario.correo = nuevoCorreo;
+      }
+    }
 
     usuario.actualizado_en = new Date();
     

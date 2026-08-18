@@ -19,7 +19,8 @@ const errorHandler = require("./middlewares/errorHandler");
  */
 function crearApp() {
   const app = express();
-
+  app.set("trust proxy", 1); // Confía en el proxy inverso (ej. Nginx, Render, Heroku) para detectar IPs reales
+  
   app.set("view engine", "ejs");
   app.set("views", path.join(__dirname, "views"));
   app.use(expressLayouts);

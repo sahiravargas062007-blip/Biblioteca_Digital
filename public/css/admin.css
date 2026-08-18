@@ -1,14 +1,13 @@
 /* ── ADMIN SPECIFIC IMPORTS ── */
-@import url('./components/toast.css');
-@import url('./pages/admin-dashboard.css');
-@import url('./pages/admin-recursos.css');
-@import url('./pages/admin-panel-shared.css');
-@import url('./pages/admin-usuarios.css');
-@import url('./pages/admin-reservas.css');
+@import url('./components/toast.css?v=3');
+@import url('./pages/admin-dashboard.css?v=3');
+@import url('./pages/admin-recursos.css?v=3');
+@import url('./pages/admin-panel-shared.css?v=3');
+@import url('./pages/admin-usuarios.css?v=3');
+@import url('./pages/admin-reservas.css?v=3');
 
 .admin-shell {
   min-height: 100vh;
-  background: var(--color-background, #f8fafc);
 }
 
 /* FIX: .cat-topbar es position:fixed con height:72px.

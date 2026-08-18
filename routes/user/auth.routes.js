@@ -5,13 +5,13 @@ const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // Límite de 5 intentos
+  max: 100, // Aumentado para evitar bloqueos
   message: 'Demasiados intentos desde esta IP, por favor intenta de nuevo después de 15 minutos.'
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
-  max: 3, // Máximo 3 registros por hora
+  max: 50, // Aumentado
   message: 'Demasiadas cuentas creadas desde esta IP, intenta más tarde.'
 });
 

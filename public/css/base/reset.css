@@ -4,9 +4,23 @@
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  background: 
+    linear-gradient(rgba(10, 8, 6, 0.45), rgba(10, 8, 6, 0.65)),
+    url("/img/hero-library.png") center/cover no-repeat fixed;
   color: var(--color-text);
+}
 
+.page {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: pageSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageSlideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 a {

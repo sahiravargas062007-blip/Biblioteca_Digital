@@ -249,6 +249,22 @@ exports.recordatorioReserva = async (usuario, reserva) => {
     });
 };
 
+// Documento Faltante
+exports.documentoFaltante = async (usuario) => {
+    await _crear({
+        destinatario_tipo: 'usuario',
+        destinatario_id: usuario._id,
+        correo: null, // No enviar correo, solo notif en app
+        nombre_usuario: usuario.nombre,
+        tipo: 'documento_faltante',
+        titulo: '⚠️ Completa tu perfil',
+        mensaje: 'Bienvenido a BiblioNet. Por favor, añade tu documento de identidad en tu perfil para poder realizar reservas y préstamos.',
+        referencia_tipo: 'usuario',
+        referencia_id: usuario._id,
+        enlace: `${APP_URL}/perfil`
+    });
+};
+
 // Reserva expirada (ya existe en verificarReservas, pero centralizado aquí)
 exports.reservaExpirada = async (usuario, reserva) => {
     await _crear({

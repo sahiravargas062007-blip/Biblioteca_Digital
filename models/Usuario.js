@@ -13,8 +13,6 @@ const usuarioSchema = new mongoose.Schema({
   resetCodeHash: String,
   resetCodeExpires: Date,
   resetAttempts: { type: Number, default: 0 },
-  programa_formacion: { type: String, trim: true },
-  ficha: { type: String, trim: true },
   telefono: { type: String, trim: true },
   estado: {
     type: String,
@@ -24,7 +22,9 @@ const usuarioSchema = new mongoose.Schema({
   prestamos_activos: { type: Number, default: 0 },
   reservas_activas: { type: Number, default: 0 },
   creado_en: { type: Date, default: Date.now },
-  actualizado_en: { type: Date, default: Date.now }
+  actualizado_en: { type: Date, default: Date.now },
+  intentos_login: { type: Number, default: 0 },
+  bloqueo_login_hasta: { type: Date, default: null }
 }, {
   collection: 'usuarios',
   versionKey: false

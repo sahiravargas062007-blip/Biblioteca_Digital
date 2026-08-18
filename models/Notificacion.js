@@ -21,8 +21,9 @@ const notificacionSchema = new mongoose.Schema({
       'nuevo_usuario_pendiente',
       'recursos_proximos_vencer',
       'reserva_sin_siguiente_usuario',
-      'recordatorio_reserva'
-      , 'acceso_aprobado'
+      'recordatorio_reserva',
+      'acceso_aprobado',
+      'documento_faltante'
     ],
     required: true
   },

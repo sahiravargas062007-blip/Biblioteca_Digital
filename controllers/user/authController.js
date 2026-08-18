@@ -116,6 +116,9 @@ const PASSWORD_REGEX =
 exports.registerForm = (req, res) => {
   const formData = req.session.formData || {};
   req.session.formData = null;
+  if (req.session && (req.session.userId || req.session.adminId)) {
+    return res.redirect(req.session.adminId ? "/admin/recursos" : "/catalogo");
+  }
   res.render("auth/index", {
     title: "Registro",
     layout: false,
@@ -318,6 +321,9 @@ exports.loginForm = (req, res) => {
       message: "Tu sesión expiró después de 15 minutos de inactividad.",
     };
   }
+  if (req.session && (req.session.userId || req.session.adminId)) {
+    return res.redirect(req.session.adminId ? "/admin/recursos" : "/catalogo");
+  }
   res.render("auth/index", {
     title: "Iniciar sesión",
     layout: false,
@@ -332,47 +338,91 @@ exports.login = async (req, res, next) => {
       .trim();
     const password = String(req.body.password || "");
 
-    // Administrador
     const admin = await Administrador.findOne({ correo, activo: true });
-    if (admin) {
-      const validAdmin = await bcrypt.compare(password, admin.password_hash);
-      if (validAdmin) {
-        admin.ultimo_acceso = new Date();
-        await admin.save();
-        req.session.adminId = String(admin._id);
-        req.session.rol = "administrador";
-        req.session.nombre = admin.nombre;
-        req.session.correo = admin.correo;
-        return res.redirect("/admin/recursos");
-      }
+    let cuentaAfectada = admin;
+    let esAdmin = true;
+
+    if (!admin) {
+      cuentaAfectada = await Usuario.findOne({ correo });
+      esAdmin = false;
     }
 
-    // Usuario
-    const usuario = await Usuario.findOne({ correo });
-    if (usuario) {
-      const passwordMatch = usuario.password_hash
-        ? await bcrypt.compare(password, usuario.password_hash)
-        : false;
-      if (passwordMatch) {
-        if (usuario.estado !== "Activo" && usuario.estado !== "No Verificado") {
-          flash(req, "error", `Su cuenta está en estado: ${usuario.estado}.`);
+    if (cuentaAfectada) {
+      // Verificar si la cuenta está bloqueada temporalmente
+      if (cuentaAfectada.bloqueo_login_hasta && cuentaAfectada.bloqueo_login_hasta > new Date()) {
+        const tiempoRestante = Math.ceil((cuentaAfectada.bloqueo_login_hasta - new Date()) / 60000);
+        flash(req, "error", `Cuenta bloqueada por seguridad. Intenta nuevamente en ${tiempoRestante} minuto(s).`);
+        return res.redirect("/login");
+      }
+
+      const passwordMatch = cuentaAfectada.password_hash ? await bcrypt.compare(password, cuentaAfectada.password_hash) : false;
+
+      if (!passwordMatch) {
+        cuentaAfectada.intentos_login = (cuentaAfectada.intentos_login || 0) + 1;
+
+        if (cuentaAfectada.intentos_login === 2) {
+          await cuentaAfectada.save();
+          flash(req, "error", "Correo o contraseña incorrectos. Te queda 1 intento antes de bloquear la cuenta por seguridad.");
+          return res.redirect("/login");
+        } else if (cuentaAfectada.intentos_login >= 3) {
+          const factor = Math.min(cuentaAfectada.intentos_login - 2, 4); // 15, 30, 45, 60 max
+          const minutosBloqueo = 15 * factor;
+          cuentaAfectada.bloqueo_login_hasta = new Date(Date.now() + minutosBloqueo * 60000);
+          await cuentaAfectada.save();
+          flash(req, "error", `Demasiados intentos fallidos. Cuenta bloqueada por ${minutosBloqueo} minutos por seguridad.`);
+          return res.redirect("/login");
+        } else {
+          await cuentaAfectada.save();
+          flash(req, "error", "Correo o contraseña incorrectos.");
           return res.redirect("/login");
         }
-        if (!usuario.emailVerified || usuario.estado === "No Verificado") {
-          req.session.tempUserId = usuario._id;
+      }
+
+      // Autenticación exitosa
+      cuentaAfectada.intentos_login = 0;
+      cuentaAfectada.bloqueo_login_hasta = null;
+
+      if (esAdmin) {
+        cuentaAfectada.ultimo_acceso = new Date();
+        await cuentaAfectada.save();
+        req.session.adminId = String(cuentaAfectada._id);
+        req.session.rol = "administrador";
+        req.session.nombre = cuentaAfectada.nombre;
+        req.session.correo = cuentaAfectada.correo;
+        return res.redirect("/admin/recursos");
+      } else {
+        await cuentaAfectada.save();
+        if (cuentaAfectada.estado !== "Activo" && cuentaAfectada.estado !== "No Verificado") {
+          flash(req, "error", `Su cuenta está en estado: ${cuentaAfectada.estado}.`);
+          return res.redirect("/login");
+        }
+        if (!cuentaAfectada.emailVerified || cuentaAfectada.estado === "No Verificado") {
+          req.session.tempUserId = cuentaAfectada._id;
           flash(req, "info", "Debes verificar tu cuenta para continuar.");
           return res.redirect("/verificar-correo");
         }
 
-        req.session.userId = String(usuario._id);
+        if (!cuentaAfectada.documento) {
+          const Notificacion = require('../../models/Notificacion');
+          const existeNotif = await Notificacion.exists({ 
+            destinatario_id: cuentaAfectada._id, 
+            tipo: 'documento_faltante' 
+          });
+          if (!existeNotif) {
+            const notifService = require('../../services/notificacionService');
+            await notifService.documentoFaltante(cuentaAfectada);
+          }
+        }
+
+        req.session.userId = String(cuentaAfectada._id);
         req.session.rol = "usuario";
-        req.session.nombre = usuario.nombre;
-        req.session.correo = usuario.correo;
+        req.session.nombre = cuentaAfectada.nombre;
+        req.session.correo = cuentaAfectada.correo;
         return res.redirect("/catalogo");
       }
     }
 
-    // Error genérico
+    // Error genérico (cuando el correo no existe)
     flash(req, "error", "Correo o contraseña incorrectos.");
     return res.redirect("/login");
   } catch (error) {
@@ -384,6 +434,9 @@ exports.logout = (req, res) =>
   req.session.destroy(() => res.redirect("/login"));
 
 exports.forgotPasswordForm = (req, res) => {
+  if (req.session && (req.session.userId || req.session.adminId)) {
+    return res.redirect(req.session.adminId ? "/admin/recursos" : "/catalogo");
+  }
   res.render("auth/index", {
     title: "Recuperar contraseña",
     layout: false,
@@ -532,6 +585,8 @@ exports.resetPassword = async (req, res, next) => {
       user.resetCodeHash = undefined;
       user.resetCodeExpires = undefined;
       user.resetAttempts = 0;
+      user.intentos_login = 0;
+      user.bloqueo_login_hasta = null;
 
       // Implicit email verification: If they reset their password via email, the email is valid.
       if (user.emailVerified !== undefined) {

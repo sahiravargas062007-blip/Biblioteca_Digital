@@ -1,101 +1,133 @@
-  <section class="panel page-title-panel">
-    <p class="eyebrow">Cuenta</p>
-    <h1>Perfil</h1>
-    <p class="muted">Consulta y actualiza la información de tu cuenta de biblioteca.</p>
-  </section>
+<section class="panel page-title-panel" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80') center/cover; color: white; border-radius: 12px; padding: 3rem 2rem; margin-bottom: 2rem; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+  <p class="eyebrow" style="color: rgba(255,255,255,0.8); letter-spacing: 2px;">Cuenta</p>
+  <h1 style="color: white; font-size: 2.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">Mi Perfil</h1>
+  <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; max-width: 600px;">Consulta y actualiza tu información personal, administra tus credenciales de acceso y revisa tus estadísticas de lectura.</p>
+</section>
 
-  <%- include('../../partials/alertas') %>
+<%- include('../../partials/alertas') %>
 
-  <% if (perfilIncompleto) { %>
-    <section class="panel" style="border: 1px solid var(--accent); background-color: rgba(var(--accent-rgb), 0.05);">
-      <h2 style="color: var(--accent);">⚠️ ¡Atención! Tu perfil está incompleto</h2>
-      <p style="margin-bottom: 1rem;">Para poder realizar solicitudes de libros y reservas, es obligatorio registrar tu <strong>Documento de Identidad</strong> en el sistema.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
+  
+  <!-- Columna Izquierda: Información y Contacto -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    
+
+
+    <section class="panel" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <div style="background: rgba(var(--primary-rgb), 0.1); padding: 10px; border-radius: 50%; color: var(--primary);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <h2 style="margin: 0; font-size: 1.3rem;">Información Personal</h2>
+      </div>
       
       <form method="post" action="/perfil?_method=PUT" class="form-stack">
+        <label>
+          Nombre completo
+          <div class="input-wrapper" style="position: relative;">
+            <input type="text" name="nombre" value="<%= usuario.nombre %>" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+          </div>
+        </label>
+        
         <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 2fr;">
           <label>
             Tipo de Documento
-            <select name="tipo_documento" required>
-              <option value="CC">Cédula de Ciudadanía (CC)</option>
-              <option value="TI">Tarjeta de Identidad (TI)</option>
-              <option value="CE">Cédula de Extranjería (CE)</option>
-              <option value="PAS">Pasaporte (PAS)</option>
+            <select name="tipo_documento" <%= !perfilIncompleto ? 'disabled' : 'required' %> style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: <%= !perfilIncompleto ? 'var(--surface-alt)' : 'transparent' %>;">
+              <option value="CC" <%= usuario.tipo_documento === 'CC' ? 'selected' : '' %>>Cédula (CC)</option>
+              <option value="TI" <%= usuario.tipo_documento === 'TI' ? 'selected' : '' %>>Tarjeta (TI)</option>
+              <option value="CE" <%= usuario.tipo_documento === 'CE' ? 'selected' : '' %>>C. Extranjería (CE)</option>
+              <option value="PAS" <%= usuario.tipo_documento === 'PAS' ? 'selected' : '' %>>Pasaporte (PAS)</option>
             </select>
           </label>
           <label>
             Número de Documento
-            <input type="text" name="documento" required placeholder="Ingresa tu número de documento">
+            <input type="text" name="documento" value="<%= usuario.documento || '' %>" <%= !perfilIncompleto ? 'readonly' : 'required' %> placeholder="Ingresa tu documento" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: <%= !perfilIncompleto ? 'var(--surface-alt)' : 'transparent' %>;">
+            <% if (!perfilIncompleto) { %><small style="color: var(--muted-fg); display: block; margin-top: 4px;">Este dato está protegido y no se puede editar.</small><% } %>
           </label>
         </div>
-        
-        <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 1fr;">
-          <label>
-            Programa de formación (Opcional)
-            <input type="text" name="programa_formacion" placeholder="Ej: ADSO">
+
+        <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--fg);">Información de Contacto</h3>
+          
+          <label style="margin-bottom: 1rem; display: block;">
+            Correo electrónico
+            <div class="input-wrapper" style="position: relative;">
+              <input type="email" name="correo" value="<%= usuario.correo %>" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+            </div>
+            <small style="color: var(--muted-fg); display: block; margin-top: 4px;">Se usará para enviar notificaciones e iniciar sesión.</small>
           </label>
-          <label>
-            Ficha (Opcional)
-            <input type="text" name="ficha" placeholder="Ej: 2669894">
+
+          <label style="display: block;">
+            Teléfono
+            <div class="input-wrapper" style="position: relative;">
+              <input type="tel" name="telefono" value="<%= usuario.telefono || '' %>" placeholder="Ingresa tu teléfono" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+            </div>
           </label>
         </div>
-        
-        <button type="submit" style="background-color: var(--accent); color: white;">Guardar Documento</button>
+
+        <button type="submit" class="btn-submit" style="margin-top: 1.5rem; width: 100%; background-color: var(--primary); color: white; padding: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+          Guardar Cambios
+        </button>
       </form>
     </section>
-  <% } %>
+  </div>
 
-  <section class="panel">
-    <h2>Información personal</h2>
-    <dl class="detail-list">
-      <div><dt>Nombre completo</dt><dd><%= usuario.nombre %> <%= usuario.apellidos || '' %></dd></div>
-      <% if (!perfilIncompleto) { %>
-        <div><dt>Documento</dt><dd><%= usuario.documento %></dd></div>
-        <div><dt>Tipo</dt><dd><%= usuario.tipo_documento %></dd></div>
-      <% } else { %>
-        <div><dt>Documento</dt><dd><em style="color:var(--danger)">No registrado</em></dd></div>
-      <% } %>
-      <div><dt>Correo institucional</dt><dd><%= usuario.correo %></dd></div>
-      <div><dt>Programa de formación</dt><dd><%= usuario.programa_formacion || 'No especificado' %></dd></div>
-      <div><dt>Ficha</dt><dd><%= usuario.ficha || 'No especificado' %></dd></div>
-      <div><dt>Estado</dt><dd><span class="badge <%= usuario.estado === 'Activo' ? 'badge-disponible' : 'badge-no-disponible' %>"><%= usuario.estado %></span></dd></div>
-    </dl>
-  </section>
+  <!-- Columna Derecha: Seguridad y Estadísticas -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    
+    <section class="panel" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <div style="background: rgba(var(--danger-rgb), 0.1); padding: 10px; border-radius: 50%; color: var(--danger);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h2 style="margin: 0; font-size: 1.3rem;">Seguridad</h2>
+      </div>
 
-  <section class="panel">
-    <h2>Información de contacto</h2>
-    <form method="post" action="/perfil?_method=PUT" class="form-stack">
-      <label>
-        Teléfono
-        <input type="tel" name="telefono" value="<%= usuario.telefono || '' %>" placeholder="Ej: 3012345678">
-      </label>
-      <button type="submit">Guardar cambios</button>
-    </form>
-  </section>
-  
-  <section class="panel">
-    <h2>Seguridad</h2>
-    <form method="post" action="/perfil/password" class="form-stack">
-      <label>
-        Contraseña actual
-        <input type="password" name="passwordActual" required placeholder="Ingresa tu contraseña actual">
-      </label>
-      <label>
-        Nueva contraseña
-        <input type="password" name="nuevaPassword" required minlength="8" placeholder="De 8 a 20 caracteres (Mayúscula, minúscula, número, especial)">
-      </label>
-      <label>
-        Confirmar nueva contraseña
-        <input type="password" name="confirmarPassword" required minlength="8" placeholder="Repite la nueva contraseña">
-      </label>
-      <button type="submit">Cambiar contraseña</button>
-    </form>
-  </section>
+      <form method="post" action="/perfil/password" class="form-stack">
+        <label style="margin-bottom: 1rem; display: block;">
+          Contraseña actual
+          <input type="password" name="passwordActual" required placeholder="Ingresa tu contraseña actual" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+        </label>
+        <label style="margin-bottom: 1rem; display: block;">
+          Nueva contraseña
+          <input type="password" name="nuevaPassword" required minlength="8" placeholder="De 8 a 20 caracteres" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+        </label>
+        <label style="display: block;">
+          Confirmar nueva contraseña
+          <input type="password" name="confirmarPassword" required minlength="8" placeholder="Repite la nueva contraseña" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+        </label>
+        <button type="submit" class="btn-submit" style="margin-top: 1.5rem; width: 100%; background-color: var(--surface-alt); border: 1px solid var(--border); color: var(--fg); padding: 0.75rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+          Actualizar Contraseña
+        </button>
+      </form>
+    </section>
 
-  <section class="panel">
-    <h2>Estadísticas</h2>
-    <dl class="detail-list">
-      <div><dt>Préstamos activos</dt><dd><%= usuario.prestamos_activos || 0 %></dd></div>
-      <div><dt>Reservas activas</dt><dd><%= usuario.reservas_activas || 0 %></dd></div>
-      <div><dt>Se unió</dt><dd><%= new Date(usuario.creado_en).toLocaleString('es-CO') %></dd></div>
-    </dl>
-  </section>
+    <section class="panel" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); background: linear-gradient(145deg, var(--surface) 0%, var(--surface-alt) 100%);">
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <div style="background: rgba(var(--accent-rgb), 0.1); padding: 10px; border-radius: 50%; color: var(--accent);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h2 style="margin: 0; font-size: 1.3rem;">Estadísticas</h2>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center;">
+        <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border);">
+          <span style="font-size: 2rem; font-weight: 700; color: var(--primary); display: block;"><%= usuario.prestamos_activos || 0 %></span>
+          <span style="color: var(--muted-fg); font-size: 0.9rem;">Préstamos activos</span>
+        </div>
+        <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border);">
+          <span style="font-size: 2rem; font-weight: 700; color: var(--accent); display: block;"><%= usuario.reservas_activas || 0 %></span>
+          <span style="color: var(--muted-fg); font-size: 0.9rem;">Reservas activas</span>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <p style="color: var(--muted-fg); font-size: 0.9rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Miembro desde: <strong style="color: var(--fg);"><%= new Date(usuario.creado_en).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
+        </p>
+      </div>
+    </section>
+
+  </div>
+</div>

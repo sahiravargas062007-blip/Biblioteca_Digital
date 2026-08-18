@@ -388,11 +388,6 @@
         '<a class="cat-card__cover" href="' + detailUrl + '">' +
           '<img src="' + escapeHtml(imgUrl) + '" alt="" loading="lazy">' +
           '<span class="cat-card__cover-badge">' + escapeHtml(r.tipo_material || '').toUpperCase() + '</span>' +
-          '<span class="cat-card__cover-bookmark">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-              '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>' +
-            '</svg>' +
-          '</span>' +
         '</a>' +
         '<div class="cat-card__body">' +
           adminBadges +
