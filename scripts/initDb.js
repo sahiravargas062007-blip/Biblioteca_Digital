@@ -64,14 +64,14 @@ async function ensureCollections() {
 }
 
 async function seedAdmin() {
-  const correo = process.env.SEED_ADMIN_EMAIL || 'admin@biblioteca.sena.edu.co';
+  const correo = process.env.SEED_ADMIN_EMAIL || 'admin@biblionet.local';
   const passwordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || 'Admin123*', 12);
 
   const admin = await Administrador.findOneAndUpdate(
     { correo },
     {
       $setOnInsert: {
-        nombre: 'Administrador Biblioteca SENA',
+        nombre: 'Administrador BiblioNet',
         correo,
         password_hash: passwordHash,
         activo: true,

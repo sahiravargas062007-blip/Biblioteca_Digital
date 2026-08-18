@@ -9,7 +9,16 @@ function flash(req, type, message) {
   req.session.flash = { type, message };
 }
 
-exports.loginForm = (req, res) => res.render('auth/loginAdmin', { title: 'Ingreso administrativo', layout: false });
+exports.loginForm = (req, res) => {
+  if (req.session) {
+    delete req.session.userId;
+    delete req.session.adminId;
+    delete req.session.rol;
+    delete req.session.nombre;
+    delete req.session.correo;
+  }
+  return res.render('auth/loginAdmin', { title: 'Ingreso administrativo', layout: false });
+};
 
 exports.login = async (req, res, next) => {
   try {

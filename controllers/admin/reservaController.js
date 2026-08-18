@@ -7,10 +7,7 @@ const Sancion = require('../../models/Sancion');
 const Usuario = require('../../models/Usuario');
 const reservaService = require('../../services/reservaService');
 const notifService = require('../../services/notificacionService');
-
-function flash(req, type, message) {
-  req.session.flash = { type, message };
-}
+const { esAjax, ok, fail } = require('../../utils/responder');
 
 function addDays(date, days) {
   const result = new Date(date);
@@ -41,10 +38,91 @@ async function agruparReservasActivas() {
   return Array.from(grupos.values());
 }
 
+async function calcularProximaDisponibilidad(recursoId) {
+  const prestamos = await Prestamo.find({
+    estado: { $in: ['Activo', 'Vencido', 'Parcialmente devuelto'] },
+    items: { $elemMatch: { recurso_id: recursoId, estado: { $in: ['Activo', 'Vencido'] } } }
+  }).select('items').lean();
+
+  let proxima = null;
+  prestamos.forEach((prestamo) => {
+    (prestamo.items || []).forEach((item) => {
+      if (String(item.recurso_id) === String(recursoId) && ['Activo', 'Vencido'].includes(item.estado)) {
+        if (!proxima || item.fecha_limite < proxima) proxima = item.fecha_limite;
+      }
+    });
+  });
+
+  return proxima;
+}
+
+async function enriquecerGrupo(grupo) {
+  const recurso = await Recurso.findById(grupo.recurso_id).lean();
+  const proximaDisponibilidad = await calcularProximaDisponibilidad(grupo.recurso_id);
+
+  return {
+    ...grupo,
+    autor: recurso?.autor || '',
+    isbn: recurso?.isbn || '',
+    total_ejemplares: recurso?.fisico?.total_ejemplares || 0,
+    disponibles: recurso?.fisico?.ejemplares_disponibles || 0,
+    proxima_disponibilidad: proximaDisponibilidad,
+    en_espera: grupo.reservas.filter((r) => r.estado === 'Pendiente').length,
+    disponibles_para_reclamar: grupo.reservas.filter((r) => r.estado === 'Disponible para reclamar').length
+  };
+}
+
 exports.index = async (req, res, next) => {
   try {
-    const grupos = await agruparReservasActivas();
-    res.render('admin/reservas/index', { title: 'Reservas', grupos });
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const tipo = String(req.query.tipo || '').trim();
+    const estado = String(req.query.estado || '').trim();
+
+    let grupos = await agruparReservasActivas();
+    grupos = await Promise.all(grupos.map(enriquecerGrupo));
+
+    if (tipo) grupos = grupos.filter((g) => g.tipo === tipo);
+    if (estado === 'Pendiente') grupos = grupos.filter((g) => g.en_espera > 0);
+    if (estado === 'Disponible para reclamar') grupos = grupos.filter((g) => g.disponibles_para_reclamar > 0);
+    if (q) {
+      grupos = grupos.filter((g) => {
+        const enTitulo = g.recurso_titulo.toLowerCase().includes(q);
+        const enAutor = (g.autor || '').toLowerCase().includes(q);
+        const enUsuario = g.reservas.some((r) => (r.usuario_nombre || '').toLowerCase().includes(q)
+          || (r.usuario_documento || '').toLowerCase().includes(q));
+        return enTitulo || enAutor || enUsuario;
+      });
+    }
+
+    const limitesPermitidos = [10, 20, 50];
+    let limite = parseInt(req.query.limite, 10);
+    if (!limitesPermitidos.includes(limite)) limite = 10;
+
+    const totalRegistros = grupos.length;
+    const totalPaginas = Math.max(Math.ceil(totalRegistros / limite), 1);
+
+    let pagina = parseInt(req.query.pagina, 10) || 1;
+    if (pagina < 1) pagina = 1;
+    if (pagina > totalPaginas) pagina = totalPaginas;
+
+    const gruposPagina = grupos.slice((pagina - 1) * limite, pagina * limite);
+
+    const datos = {
+      grupos: gruposPagina,
+      filtros: { q: req.query.q || '', tipo, estado },
+      paginacion: { pagina, totalPaginas, limite, totalRegistros, limitesPermitidos }
+    };
+
+    // Petición de nuestro fetch(): solo el fragmento (tarjetas + panel de
+    // detalle), sin layout ni el encabezado/toolbar (evita recargar todo).
+    if (esAjax(req)) {
+      return res.render('admin/reservas/_shell', Object.assign({ layout: false }, datos));
+    }
+
+    res.render('admin/reservas/index', Object.assign({
+      title: 'Reservas',
+      pageClass: 'admin-reservas-page'
+    }, datos));
   } catch (error) {
     next(error);
   }
@@ -63,7 +141,8 @@ exports.nueva = async (req, res, next) => {
     res.render('admin/reservas/nueva', {
       title: 'Nueva reserva',
       usuarios,
-      recursos
+      recursos,
+      pageClass: 'admin-reservas-page'
     });
   } catch (error) {
     next(error);
@@ -72,6 +151,8 @@ exports.nueva = async (req, res, next) => {
 
 exports.crear = async (req, res, next) => {
   try {
+    const volver = '/admin/reservas/nueva';
+
     const [usuario, recurso, config] = await Promise.all([
       Usuario.findById(req.body.usuario_id),
       Recurso.findById(req.body.recurso_id),
@@ -79,13 +160,11 @@ exports.crear = async (req, res, next) => {
     ]);
 
     if (!usuario || usuario.estado !== 'Activo') {
-      flash(req, 'error', 'El usuario no está activo o no existe.');
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: 'El usuario no está activo o no existe.' });
     }
 
     if (!recurso) {
-      flash(req, 'error', 'El recurso no existe.');
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: 'El recurso no existe.' });
     }
 
     const now = new Date();
@@ -100,14 +179,12 @@ exports.crear = async (req, res, next) => {
       ]
     });
     if (tieneSancionBloqueante) {
-      flash(req, 'error', 'El usuario tiene sanciones activas.');
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: 'El usuario tiene sanciones activas.' });
     }
 
     const maxReservas = config?.reservas?.max_reservas_por_usuario || 3;
     if ((usuario.reservas_activas || 0) >= maxReservas) {
-      flash(req, 'error', `El usuario supera el máximo de ${maxReservas} reservas activas.`);
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: `El usuario supera el máximo de ${maxReservas} reservas activas.` });
     }
 
     const reservaDuplicada = await Reserva.exists({
@@ -116,8 +193,7 @@ exports.crear = async (req, res, next) => {
       estado: { $in: ['Pendiente', 'Disponible para reclamar'] }
     });
     if (reservaDuplicada) {
-      flash(req, 'error', 'El usuario ya tiene una reserva activa sobre este recurso.');
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: 'El usuario ya tiene una reserva activa sobre este recurso.' });
     }
 
     const yaTieneRecurso = await Prestamo.exists({
@@ -131,8 +207,7 @@ exports.crear = async (req, res, next) => {
       }
     });
     if (yaTieneRecurso) {
-      flash(req, 'error', 'El usuario ya tiene un prÃ©stamo activo de este recurso.');
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: 'El usuario ya tiene un préstamo activo de este recurso.' });
     }
 
     const ejemplaresDisponibles = await Ejemplar.countDocuments({
@@ -140,8 +215,7 @@ exports.crear = async (req, res, next) => {
       estado: 'Disponible'
     });
     if (ejemplaresDisponibles > 0) {
-      flash(req, 'error', 'Solo se pueden reservar recursos sin disponibilidad inmediata.');
-      return res.redirect('/admin/reservas/nueva');
+      return fail(req, res, { redirect: volver, message: 'Solo se pueden reservar recursos sin disponibilidad inmediata.' });
     }
 
     await reservaService.crearReserva({
@@ -156,8 +230,11 @@ exports.crear = async (req, res, next) => {
     await usuario.save();
     await Recurso.findByIdAndUpdate(recurso._id, { $inc: { total_reservas: 1 }, actualizado_en: new Date() });
 
-    flash(req, 'success', 'Reserva registrada correctamente.');
-    return res.redirect('/admin/reservas');
+    return ok(req, res, {
+      redirect: '/admin/reservas',
+      message: 'Reserva registrada correctamente.',
+      extra: { redirectTo: '/admin/reservas' }
+    });
   } catch (error) {
     next(error);
   }
@@ -167,8 +244,7 @@ exports.cancelar = async (req, res, next) => {
   try {
     const reserva = await Reserva.findById(req.params.id);
     if (!reserva) {
-      flash(req, 'error', 'La reserva no existe.');
-      return res.redirect('/admin/reservas');
+      return fail(req, res, { redirect: '/admin/reservas', message: 'La reserva no existe.' });
     }
 
     reserva.estado = 'Cancelada';
@@ -183,8 +259,7 @@ exports.cancelar = async (req, res, next) => {
       actualizado_en: new Date()
     });
 
-    flash(req, 'success', 'Reserva cancelada.');
-    return res.redirect('/admin/reservas');
+    return ok(req, res, { redirect: '/admin/reservas', message: 'Reserva cancelada.' });
   } catch (error) {
     next(error);
   }
@@ -194,13 +269,11 @@ exports.liberar = async (req, res, next) => {
   try {
     const reserva = await Reserva.findById(req.params.id);
     if (!reserva || reserva.estado !== 'Pendiente') {
-      flash(req, 'error', 'Solo se puede liberar una reserva pendiente.');
-      return res.redirect('/admin/reservas');
+      return fail(req, res, { redirect: '/admin/reservas', message: 'Solo se puede liberar una reserva pendiente.' });
     }
 
     await reservaService.marcarDisponible(reserva, req.session.adminId);
-    flash(req, 'success', 'Turno marcado como disponible para reclamar.');
-    return res.redirect('/admin/reservas');
+    return ok(req, res, { redirect: '/admin/reservas', message: 'Turno marcado como disponible para reclamar.' });
   } catch (error) {
     next(error);
   }
@@ -210,14 +283,12 @@ exports.procesar = async (req, res, next) => {
   try {
     const reserva = await Reserva.findById(req.params.id);
     if (!reserva || reserva.estado !== 'Disponible para reclamar') {
-      flash(req, 'error', 'La reserva no está disponible para reclamar.');
-      return res.redirect('/admin/reservas');
+      return fail(req, res, { redirect: '/admin/reservas', message: 'La reserva no está disponible para reclamar.' });
     }
 
     const ejemplar = await Ejemplar.findOne({ recurso_id: reserva.recurso_id, estado: 'Disponible' });
     if (!ejemplar) {
-      flash(req, 'error', 'No hay ejemplares disponibles para procesar esta reserva.');
-      return res.redirect('/admin/reservas');
+      return fail(req, res, { redirect: '/admin/reservas', message: 'No hay ejemplares disponibles para procesar esta reserva.' });
     }
 
     const usuario = await Usuario.findById(reserva.usuario_id);
@@ -232,8 +303,7 @@ exports.procesar = async (req, res, next) => {
       }
     });
     if (yaTieneRecurso) {
-      flash(req, 'error', 'El usuario ya tiene un prÃ©stamo activo de este recurso.');
-      return res.redirect('/admin/reservas');
+      return fail(req, res, { redirect: '/admin/reservas', message: 'El usuario ya tiene un préstamo activo de este recurso.' });
     }
 
     const config = await Configuracion.findOne().lean();
@@ -297,8 +367,56 @@ exports.procesar = async (req, res, next) => {
       await notifService.prestamoAprobado(usuario, prestamo, [reserva.recurso_titulo]);
     } catch (_e) { }
 
-    flash(req, 'success', 'Reserva procesada y préstamo generado.');
-    return res.redirect(`/admin/prestamos/${prestamo._id}`);
+    // Este flujo SÍ cambia de sección (termina en la ficha del préstamo),
+    // por eso extra.redirectTo le pide al cliente navegar de página completa.
+    return ok(req, res, {
+      redirect: `/admin/prestamos/${prestamo._id}`,
+      message: 'Reserva procesada y préstamo generado.',
+      extra: { redirectTo: `/admin/prestamos/${prestamo._id}` }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.notificar = async (req, res, next) => {
+  try {
+    const reserva = await Reserva.findById(req.params.id);
+    if (!reserva) {
+      return fail(req, res, { redirect: '/admin/reservas', message: 'La reserva no existe.' });
+    }
+
+    const usuario = await Usuario.findById(reserva.usuario_id);
+    if (usuario) {
+      await notifService.recordatorioReserva(usuario, reserva);
+    }
+
+    // No cambia ningún estado: no hace falta refrescar la lista.
+    return ok(req, res, { redirect: '/admin/reservas', message: `Se notificó a ${reserva.usuario_nombre}.` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.notificarTodos = async (req, res, next) => {
+  try {
+    const reservas = await Reserva.find({
+      recurso_id: req.params.recursoId,
+      estado: { $in: ['Pendiente', 'Disponible para reclamar'] }
+    });
+
+    let notificados = 0;
+    for (const reserva of reservas) {
+      const usuario = await Usuario.findById(reserva.usuario_id);
+      if (usuario) {
+        try {
+          await notifService.recordatorioReserva(usuario, reserva);
+          notificados += 1;
+        } catch (_e) { /* continua con los demás */ }
+      }
+    }
+
+    return ok(req, res, { redirect: '/admin/reservas', message: `Se notificó a ${notificados} usuario(s) en la cola.` });
   } catch (error) {
     next(error);
   }

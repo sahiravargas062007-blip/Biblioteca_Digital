@@ -121,3 +121,11 @@ Si necesitas agregar estilos para más páginas, crea archivos en `pages/`:
 2. **Nuevas páginas con estilos complejos** → Crea `pages/[nombre].css` y referencia en el EJS
 3. **Componentes reutilizables** → Agrégalos a `components/`
 4. **Cambios globales** → Modifica `main.css`, `admin.css` o `user.css`
+5. **Un archivo de `pages/` que crece por bundlear más de una vista** → sepáralo en el punto donde ya
+   cambia de tema (busca los banners `/* ═══ */` que marcan inicio de sección) y agrega el nuevo
+   archivo con `@import` justo después del original en `main.css`. Ejemplo real: `catalogo-browse.css`
+   mezclaba el grid/filtros del catálogo con las secciones de Novedades/Más leídos; esta última se
+   movió a `pages/biblioteca-secciones.css`.
+   No apliques este split solo por conteo de líneas: si el archivo usa variables CSS locales propias
+   (ver `.rd-page` en `detalle-recurso.css`) para una sola vista genuinamente cohesiva, está bien que
+   sea largo — partirlo ahí solo introduce fragilidad de orden de `@import` sin beneficio real.

@@ -3,84 +3,6 @@
   function isActive(prefix) { if (typeof currentPath==='undefined' ) return '' ; return currentPath.startsWith(prefix)
   ? 'is-active' : '' ; } %>
 
-  <!-- ── Sidebar Navigation (Admin Only) ── -->
-  <% if (isAdmin) { %>
-    <aside class="cat-sidebar is-collapsed" id="cat-sidebar">
-      <div class="cat-sidebar__header">
-        <a class="cat-sidebar__brand" href="/admin/recursos">
-          BiblioNet
-          <small>Conecta con el conocimiento</small>
-        </a>
-      </div>
-      <nav class="cat-sidebar__nav">
-        <a class="cat-sidebar__link <%= isActive('/admin/recursos') %>" href="/admin/recursos">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-          </svg>
-          Materiales
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/categorias') %>" href="/admin/categorias">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-          </svg>
-          Categorías
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/usuarios') %>" href="/admin/usuarios">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 00-3-3.87" />
-            <path d="M16 3.13a4 4 0 010 7.75" />
-          </svg>
-          Usuarios
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/prestamos') %>" href="/admin/prestamos">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-          </svg>
-          Préstamos
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/reservas') %>" href="/admin/reservas">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          Reservas
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/sanciones') %>" href="/admin/sanciones">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          Sanciones
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/reportes') %>" href="/admin/reportes">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-          </svg>
-          Reportes
-        </a>
-        <a class="cat-sidebar__link <%= isActive('/admin/configuracion') %>" href="/admin/configuracion">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-          </svg>
-          Configuración
-        </a>
-      </nav>
-    </aside>
-    <% } %>
-
-      <div class="cat-sidebar-overlay" id="cat-overlay"></div>
-
       <!-- ── Top Bar ── -->
       <header class="cat-topbar <%= isHero ? 'topbar--hero' : '' %>" id="cat-topbar">
         <div class="cat-topbar__left">
@@ -106,12 +28,12 @@
                 class="<%= currentPath && currentPath === '/catalogo/novedades' ? 'is-active' : '' %>">Novedades</a>
               <a href="/catalogo/mas-leidos"
                 class="<%= currentPath && currentPath === '/catalogo/mas-leidos' ? 'is-active' : '' %>">Más leídos</a>
-              <% } %>
+            <% } %>
         </nav>
         <div class="cat-topbar__right">
           <% if (isAdmin || isUser) { %>
             <div class="user-dropdown-wrapper">
-              <button class="cat-topbar__toggle" id="<%= isAdmin ? 'sidebar-toggle' : 'dropdown-toggle' %>"
+              <button class="cat-topbar__toggle" id="<%= isAdmin ? 'admin-dropdown-toggle' : 'dropdown-toggle' %>"
                 aria-label="Toggle menu">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <line x1="3" y1="6" x2="21" y2="6" />
@@ -119,7 +41,72 @@
                   <line x1="3" y1="18" x2="21" y2="18" />
                 </svg>
               </button>
-              <% if (!isAdmin) { %>
+              <% if (isAdmin) { %>
+                <div class="user-dropdown-menu" id="admin-dropdown">
+                  <a class="user-dropdown__link <%= isActive('/admin/recursos') %>" href="/admin/recursos">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                    </svg>
+                    Materiales
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/categorias') %>" href="/admin/categorias">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                    </svg>
+                    Categorías
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/usuarios') %>" href="/admin/usuarios">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                      <path d="M16 3.13a4 4 0 010 7.75" />
+                    </svg>
+                    Usuarios
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/prestamos') %>" href="/admin/prestamos">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                    </svg>
+                    Préstamos
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/reservas') %>" href="/admin/reservas">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Reservas
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/sanciones') %>" href="/admin/sanciones">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    Sanciones
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/reportes') %>" href="/admin/reportes">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="20" x2="18" y2="10" />
+                      <line x1="12" y1="20" x2="12" y2="4" />
+                      <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    Reportes
+                  </a>
+                  <a class="user-dropdown__link <%= isActive('/admin/configuracion') %>" href="/admin/configuracion">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3" />
+                      <path
+                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                    </svg>
+                    Configuración
+                  </a>
+                </div>
+              <% } else { %>
                 <div class="user-dropdown-menu" id="user-dropdown">
                   <a class="user-dropdown__link <%= currentPath === '/catalogo' ? 'is-active' : '' %>" href="/catalogo">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -128,30 +115,47 @@
                     </svg>
                     Explorar
                   </a>
-                  <a class="user-dropdown__link <%= currentPath && currentPath.startsWith('/catalogo/categorias') ? 'is-active' : '' %>"
-                    href="/catalogo/categorias">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-                    </svg>
-                    Categorías
-                  </a>
-                  <a class="user-dropdown__link <%= currentPath === '/catalogo/novedades' ? 'is-active' : '' %>"
-                    href="/catalogo/novedades">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path
-                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                    Novedades
-                  </a>
-                  <a class="user-dropdown__link <%= currentPath === '/catalogo/mas-leidos' ? 'is-active' : '' %>"
-                    href="/catalogo/mas-leidos">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-                    </svg>
-                    Más leídos
-                  </a>
+
+                  <!-- Recursos Dropdown Submenu -->
+                  <div class="user-dropdown__link has-submenu user-catalog-mobile-only">
+                    <div class="has-submenu-trigger">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                      </svg>
+                      Recursos
+                      <svg class="submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </div>
+                    <div class="user-dropdown-submenu">
+                      <a class="user-dropdown__link <%= currentPath && currentPath.startsWith('/catalogo/categorias') ? 'is-active' : '' %>"
+                        href="/catalogo/categorias">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                        </svg>
+                        Categorías
+                      </a>
+                      <a class="user-dropdown__link <%= currentPath === '/catalogo/novedades' ? 'is-active' : '' %>"
+                        href="/catalogo/novedades">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                        Novedades
+                      </a>
+                      <a class="user-dropdown__link <%= currentPath === '/catalogo/mas-leidos' ? 'is-active' : '' %>"
+                        href="/catalogo/mas-leidos">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                        </svg>
+                        Más leídos
+                      </a>
+                    </div>
+                  </div>
+
                   <a class="user-dropdown__link <%= isActive('/prestamos') %>" href="/prestamos">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -183,11 +187,18 @@
                     </svg>
                     Sanciones
                   </a>
+                  <a class="user-dropdown__link user-profile-mobile-only <%= isActive('/perfil') %>" href="/perfil">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    Mi perfil
+                  </a>
                 </div>
-                <% } %>
+              <% } %>
             </div>
             <% if (isUser) { %>
-              <a href="/perfil" class="cat-topbar__icon" aria-label="Mi perfil">
+              <a href="/perfil" class="cat-topbar__icon cat-topbar__profile" aria-label="Mi perfil">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
@@ -208,6 +219,46 @@
                               </svg>
                             </button>
                             <% } else if (!isLogin) { %>
+                              <!-- Hamburguesa Invitado para Celular -->
+                              <div class="user-dropdown-wrapper guest-mobile-only">
+                                <button class="cat-topbar__toggle" id="guest-dropdown-toggle" aria-label="Toggle menu">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                    <line x1="3" y1="6" x2="21" y2="6" />
+                                    <line x1="3" y1="12" x2="21" y2="12" />
+                                    <line x1="3" y1="18" x2="21" y2="18" />
+                                  </svg>
+                                </button>
+                                <div class="user-dropdown-menu" id="guest-dropdown">
+                                  <a class="user-dropdown__link <%= currentPath === '/catalogo' ? 'is-active' : '' %>" href="/catalogo">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                      <circle cx="11" cy="11" r="8" />
+                                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                    </svg>
+                                    Explorar
+                                  </a>
+                                  <a class="user-dropdown__link <%= currentPath && currentPath.startsWith('/catalogo/categorias') ? 'is-active' : '' %>" href="/catalogo/categorias">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                                    </svg>
+                                    Categorías
+                                  </a>
+                                  <a class="user-dropdown__link <%= currentPath === '/catalogo/novedades' ? 'is-active' : '' %>" href="/catalogo/novedades">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                    Novedades
+                                  </a>
+                                  <a class="user-dropdown__link <%= currentPath === '/catalogo/mas-leidos' ? 'is-active' : '' %>" href="/catalogo/mas-leidos">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                      <circle cx="9" cy="7" r="4" />
+                                      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                    Más leídos
+                                  </a>
+                                </div>
+                              </div>
+
                               <a href="/login" class="cat-topbar__login-btn"
                                 style="display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; text-decoration:none; padding:8px 16px; border-radius:999px; font-family:'Poppins', sans-serif; font-weight:500; font-size:0.92rem; transition:background 0.3s;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
@@ -244,24 +295,19 @@
 
           <script>
             (function () {
-              /* ── Sidebar (Admin) ── */
-              var sidebarToggle = document.getElementById('sidebar-toggle');
-              var sidebar = document.getElementById('cat-sidebar');
-              var overlay = document.getElementById('cat-overlay');
-
-              if (sidebarToggle && sidebar) {
-                sidebarToggle.addEventListener('click', function (e) {
+              /* ── Dropdown (Admin) ── */
+              var adminToggle = document.getElementById('admin-dropdown-toggle');
+              var adminMenu = document.getElementById('admin-dropdown');
+              if (adminToggle && adminMenu) {
+                adminToggle.addEventListener('click', function (e) {
                   e.stopPropagation();
-                  var isCollapsed = sidebar.classList.toggle('is-collapsed');
-                  if (overlay) overlay.classList.toggle('is-active', !isCollapsed);
+                  adminMenu.classList.toggle('is-open');
                 });
-
-                if (overlay) {
-                  overlay.addEventListener('click', function () {
-                    sidebar.classList.add('is-collapsed');
-                    overlay.classList.remove('is-active');
-                  });
-                }
+                document.addEventListener('click', function (e) {
+                  if (!adminToggle.contains(e.target) && !adminMenu.contains(e.target)) {
+                    adminMenu.classList.remove('is-open');
+                  }
+                });
               }
 
               /* ── Dropdown (User) ── */
@@ -275,6 +321,21 @@
                 document.addEventListener('click', function (e) {
                   if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
                     dropdownMenu.classList.remove('is-open');
+                  }
+                });
+              }
+
+              /* ── Dropdown (Guest) ── */
+              var guestToggle = document.getElementById('guest-dropdown-toggle');
+              var guestMenu = document.getElementById('guest-dropdown');
+              if (guestToggle && guestMenu) {
+                guestToggle.addEventListener('click', function (e) {
+                  e.stopPropagation();
+                  guestMenu.classList.toggle('is-open');
+                });
+                document.addEventListener('click', function (e) {
+                  if (!guestToggle.contains(e.target) && !guestMenu.contains(e.target)) {
+                    guestMenu.classList.remove('is-open');
                   }
                 });
               }

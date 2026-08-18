@@ -1,9 +1,6 @@
 const Usuario = require('../../models/Usuario');
 const Notificacion = require('../../models/Notificacion');
-
-function flash(req, type, message) {
-  req.session.flash = { type, message };
-}
+const { esAjax, ok, fail } = require('../../utils/responder');
 
 exports.index = async (req, res, next) => {
   try {
@@ -40,19 +37,22 @@ exports.index = async (req, res, next) => {
       .limit(limite)
       .lean();
 
-    res.render('admin/usuarios/index', {
-      title: 'Usuarios',
+    const datos = {
       usuarios,
       filtros: { q, estado },
-      pageClass: 'admin-users-page',
-      paginacion: {
-        pagina,
-        totalPaginas,
-        limite,
-        totalRegistros,
-        limitesPermitidos
-      }
-    });
+      paginacion: { pagina, totalPaginas, limite, totalRegistros, limitesPermitidos }
+    };
+
+    // Petición de nuestro fetch(): solo el fragmento de tabla+paginación,
+    // sin layout ni el resto de la página (evita recargar todo).
+    if (esAjax(req)) {
+      return res.render('admin/usuarios/_tabla', Object.assign({ layout: false }, datos));
+    }
+
+    res.render('admin/usuarios/index', Object.assign({
+      title: 'Usuarios',
+      pageClass: 'admin-users-page'
+    }, datos));
   } catch (error) {
     next(error);
   }
@@ -62,8 +62,7 @@ exports.aprobar = async (req, res, next) => {
   try {
     const usuario = await Usuario.findById(req.params.id);
     if (!usuario) {
-      flash(req, 'error', 'El usuario no existe.');
-      return res.redirect('/admin/usuarios');
+      return fail(req, res, { redirect: '/admin/usuarios', message: 'El usuario no existe.' });
     }
 
     usuario.estado = 'Activo';
@@ -83,8 +82,11 @@ exports.aprobar = async (req, res, next) => {
       creado_en: new Date()
     });
 
-    flash(req, 'success', 'Usuario aprobado correctamente.');
-    return res.redirect('/admin/usuarios');
+    return ok(req, res, {
+      redirect: '/admin/usuarios',
+      message: 'Usuario aprobado correctamente.',
+      extra: { estado: usuario.estado }
+    });
   } catch (error) {
     next(error);
   }
@@ -98,12 +100,14 @@ exports.rechazar = async (req, res, next) => {
     }, { new: true });
 
     if (!usuario) {
-      flash(req, 'error', 'El usuario no existe.');
-      return res.redirect('/admin/usuarios');
+      return fail(req, res, { redirect: '/admin/usuarios', message: 'El usuario no existe.' });
     }
 
-    flash(req, 'success', 'Usuario rechazado correctamente.');
-    return res.redirect('/admin/usuarios');
+    return ok(req, res, {
+      redirect: '/admin/usuarios',
+      message: 'Usuario rechazado correctamente.',
+      extra: { estado: usuario.estado }
+    });
   } catch (error) {
     next(error);
   }
@@ -111,12 +115,56 @@ exports.rechazar = async (req, res, next) => {
 
 exports.suspender = async (req, res, next) => {
   try {
-    await Usuario.findByIdAndUpdate(req.params.id, {
+    const usuario = await Usuario.findByIdAndUpdate(req.params.id, {
       estado: 'Suspendido',
       actualizado_en: new Date()
+    }, { new: true });
+
+    if (!usuario) {
+      return fail(req, res, { redirect: '/admin/usuarios', message: 'El usuario no existe.' });
+    }
+
+    return ok(req, res, {
+      redirect: '/admin/usuarios',
+      message: 'Usuario suspendido.',
+      extra: { estado: usuario.estado }
     });
-    flash(req, 'success', 'Usuario suspendido.');
-    return res.redirect('/admin/usuarios');
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.restablecer = async (req, res, next) => {
+  try {
+    const usuario = await Usuario.findOneAndUpdate(
+      { _id: req.params.id, estado: 'Suspendido' },
+      { estado: 'Activo', actualizado_en: new Date() },
+      { new: true }
+    );
+
+    if (!usuario) {
+      return fail(req, res, {
+        redirect: '/admin/usuarios',
+        message: 'No se encontró un usuario suspendido para restablecer.'
+      });
+    }
+
+    await Notificacion.create({
+      destinatario_tipo: 'usuario',
+      destinatario_id: usuario._id,
+      tipo: 'acceso_aprobado',
+      titulo: 'Acceso restablecido',
+      mensaje: 'Su acceso a la Biblioteca Digital fue restablecido.',
+      referencia_tipo: 'usuario',
+      referencia_id: usuario._id,
+      creado_en: new Date()
+    });
+
+    return ok(req, res, {
+      redirect: '/admin/usuarios',
+      message: 'Acceso del usuario restablecido correctamente.',
+      extra: { estado: usuario.estado }
+    });
   } catch (error) {
     next(error);
   }

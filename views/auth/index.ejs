@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autenticación | BiblioNet</title>
+  <link rel="stylesheet" href="/css/base/variables.css?v=2">
+  <link rel="stylesheet" href="/css/base/reset.css?v=2">
+  <link rel="stylesheet" href="/css/base/tipografia.css?v=2">
+  <link rel="stylesheet" href="/css/pages/login.css?v=2">
+  <link rel="stylesheet" href="/css/components/badges.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/layouts/topbar.css">
+  <style>
+    /* SPA Transition Styles */
+    .auth-section {
+      display: none;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .auth-section.active {
+      display: block;
+      animation: slideUpFade 0.5s forwards;
+    }
+    @keyframes slideUpFade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/topbar', { topbarHero: false }) %>
+  <div class="login-layout">
+    <!-- Left Side: Hero / Branding -->
+    <div class="login-hero">
+      <div class="login-hero__overlay"></div>
+      <div class="login-hero__content">
+        <div class="login-hero__logo-wrapper">
+          <img src="/img/biblionet-logo.png" alt="BiblioNet Icon" class="login-hero__icon">
+          <h1 class="login-hero__title">BiblioNet</h1>
+          <hr class="login-hero__divider">
+          <p class="login-hero__subtitle">Conecta con el conocimiento</p>
+        </div>
+        
+        <div class="login-hero__features">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="feature-text">
+              <strong>Explora</strong>
+              <span>Miles de libros a tu alcance.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="feature-text">
+              <strong>Aprende</strong>
+              <span>Recursos para cada etapa de tu vida.</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            </div>
+            <div class="feature-text">
+              <strong>Conecta</strong>
+              <span>Ideas que inspiran y transforman.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Forms Container -->
+    <div class="login-panel">
+      <div class="login-card" style="max-height: 90vh; overflow-y: auto;">
+        
+        <%- include('../partials/alertas') %>
+
+        <% 
+           // Si el controlador no pasa activeForm, asume 'login'
+           let active = typeof activeForm !== 'undefined' ? activeForm : 'login'; 
+        %>
+
+        <!-- =================== LOGIN FORM =================== -->
+        <div id="form-login" class="auth-section <%= active === 'login' ? 'active' : '' %>">
+          <div class="login-card__header">
+            <div class="login-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <h2 class="login-card__title">Iniciar sesión</h2>
+            <p class="login-card__desc">Inicia sesión para continuar explorando el conocimiento.</p>
+          </div>
+
+          <form class="login-form" action="/login" method="POST">
+            <div class="form-group">
+              <label for="correo_login">Correo electrónico</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="correo_login" name="correo" placeholder="Ingresa tu correo" required autocomplete="off" autofocus>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password_login">Contraseña</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="password_login" name="password" placeholder="Ingresa tu contraseña" required autocomplete="off">
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <a href="/recuperar-password" data-target="form-forgot" class="forgot-link">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="btn-submit">Iniciar sesión</button>
+
+            <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 1.5rem; position: relative;">
+              <hr style="border-top: 1px solid var(--border); margin: 0;">
+              <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 0 10px; color: var(--muted-fg); font-size: 0.9rem;">O</span>
+            </div>
+
+            <a href="/auth/google" class="btn-submit" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #fff; color: #444; border: 1px solid #ccc; text-decoration: none;">
+              <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+              Continuar con Google
+            </a>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+              <a href="/registro" data-target="form-register" class="forgot-link" style="color: var(--primary); font-weight: 500;">¿No tienes cuenta? Regístrate</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- =================== REGISTER FORM =================== -->
+        <div id="form-register" class="auth-section <%= active === 'register' ? 'active' : '' %>">
+          <div class="login-card__header">
+            <h2 class="login-card__title">Crear cuenta</h2>
+            <p class="login-card__desc">Regístrate para acceder a los recursos y servicios de la biblioteca.</p>
+          </div>
+
+          <form class="login-form" action="/registro" method="POST">
+            <div class="form-group">
+              <label for="nombre">Nombre completo</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="nombre" name="nombre" placeholder="Tu nombre completo" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.nombre : '' %>">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="correo_reg">Correo electrónico</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="correo_reg" name="correo" placeholder="correo@ejemplo.com" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.correo : '' %>">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <input type="text" id="telefono" name="telefono" placeholder="Tu número de teléfono" required autocomplete="off" value="<%= typeof formData !== 'undefined' ? formData.telefono : '' %>">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password_reg">Contraseña</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="password_reg" name="password" placeholder="Mínimo 8 caracteres" required autocomplete="off" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,20}" title="La contraseña debe tener entre 8 y 20 caracteres, e incluir al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.">
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirmar contraseña</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirma tu contraseña" required autocomplete="off">
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit" style="margin-top: 1rem;">Registrarse</button>
+
+            <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 1.5rem; position: relative;">
+              <hr style="border-top: 1px solid var(--border); margin: 0;">
+              <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); padding: 0 10px; color: var(--muted-fg); font-size: 0.9rem;">O</span>
+            </div>
+
+            <a href="/auth/google" class="btn-submit" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #fff; color: #444; border: 1px solid #ccc; text-decoration: none;">
+              <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+              Continuar con Google
+            </a>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+              <a href="/login" data-target="form-login" class="forgot-link">¿Ya tienes cuenta? Inicia sesión</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- =================== FORGOT PASSWORD =================== -->
+        <div id="form-forgot" class="auth-section <%= active === 'forgot' ? 'active' : '' %>">
+          <div class="login-card__header">
+            <h2 class="login-card__title">Recuperar contraseña</h2>
+            <p class="login-card__desc">Ingresa tu correo para recibir un código de recuperación.</p>
+          </div>
+          
+          <div style="margin-bottom: 1rem; color: var(--muted-fg); font-size: 0.9rem; text-align: center;">
+             <i>Si estás probando el sistema de forma local, el código podría aparecer en la consola.</i>
+          </div>
+
+          <form class="login-form" action="/recuperar-password" method="POST">
+            <div class="form-group">
+              <label for="correo_forgot">Correo electrónico</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="correo_forgot" name="correo" placeholder="Ingresa tu correo electrónico" required>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">Enviar código</button>
+
+            <div class="form-actions" style="justify-content: center; margin-top: 1.5rem;">
+              <a href="/login" data-target="form-login" class="forgot-link">Volver al inicio de sesión</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- =================== VERIFY EMAIL =================== -->
+        <div id="form-verifyEmail" class="auth-section <%= active === 'verifyEmail' ? 'active' : '' %>">
+          <div class="login-card__header">
+            <h2 class="login-card__title">Verificar tu cuenta</h2>
+            <p class="login-card__desc">Ingresa el código de 6 dígitos que enviamos a tu correo.</p>
+          </div>
+
+          <form class="login-form" action="/verificar-correo" method="POST">
+            <div class="form-group">
+              <label for="codigo_verify">Código de verificación</label>
+              <div class="input-wrapper">
+                <input type="text" id="codigo_verify" name="codigo" placeholder="000000" maxlength="6" required autocomplete="off" style="text-align: center; letter-spacing: 0.5rem; font-size: 1.5rem;">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit" style="margin-top: 1rem;">Verificar código</button>
+          </form>
+          
+          <form action="/reenviar-codigo" method="POST" style="margin-top: 1.5rem; text-align: center;">
+              <p>¿No recibiste el código o expiró?</p>
+              <button type="submit" class="forgot-link" style="background: none; border: none; padding: 0; font: inherit; cursor: pointer;">Reenviar código</button>
+          </form>
+          <div class="form-actions" style="justify-content: center; margin-top: 1.5rem;">
+              <a href="/login" class="forgot-link">Volver al inicio de sesión</a>
+          </div>
+        </div>
+
+        <!-- =================== VERIFY RESET CODE =================== -->
+        <div id="form-verifyResetCode" class="auth-section <%= active === 'verifyResetCode' ? 'active' : '' %>">
+          <div class="login-card__header">
+            <h2 class="login-card__title">Código de recuperación</h2>
+            <p class="login-card__desc">Ingresa el código de 6 dígitos que enviamos a tu correo.</p>
+          </div>
+
+          <form class="login-form" action="/recuperar-password/verificar" method="POST">
+            <div class="form-group">
+              <label for="codigo_reset">Código</label>
+              <div class="input-wrapper">
+                <input type="text" id="codigo_reset" name="codigo" placeholder="000000" maxlength="6" required autocomplete="off" style="text-align: center; letter-spacing: 0.5rem; font-size: 1.5rem;">
+              </div>
+            </div>
+            <button type="submit" class="btn-submit" style="margin-top: 1rem;">Validar código</button>
+          </form>
+          <div class="form-actions" style="justify-content: center; margin-top: 1.5rem;">
+              <a href="/login" class="forgot-link">Cancelar y volver al inicio</a>
+          </div>
+        </div>
+
+        <!-- =================== RESET PASSWORD =================== -->
+        <div id="form-resetPassword" class="auth-section <%= active === 'resetPassword' ? 'active' : '' %>">
+          <div class="login-card__header">
+            <h2 class="login-card__title">Nueva contraseña</h2>
+            <p class="login-card__desc">Crea una nueva contraseña segura para tu cuenta.</p>
+          </div>
+
+          <form class="login-form" action="/recuperar-password/nueva" method="POST">
+            <div class="form-group">
+              <label for="new_password">Nueva contraseña</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="new_password" name="password" placeholder="Mínimo 8 caracteres" required autocomplete="off" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,20}" title="La contraseña debe tener entre 8 y 20 caracteres, e incluir al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.">
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="new_confirm">Confirmar contraseña</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="new_confirm" name="confirmPassword" placeholder="Confirma tu contraseña" required autocomplete="off">
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn-submit" style="margin-top: 1rem;">Guardar contraseña</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // SPA Navigation Handler
+    document.querySelectorAll('[data-target]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const targetId = e.currentTarget.getAttribute('data-target');
+        if (!targetId) return; 
+
+        e.preventDefault();
+        
+        // Hide all
+        document.querySelectorAll('.auth-section').forEach(sec => {
+          sec.classList.remove('active');
+        });
+
+        // Clear server alerts
+        const alertBox = document.querySelector('.alert');
+        if (alertBox) alertBox.remove();
+
+        // Show target
+        const targetSec = document.getElementById(targetId);
+        if (targetSec) {
+          targetSec.classList.add('active');
+          
+          let newUrl = '/login';
+          if (targetId === 'form-register') newUrl = '/registro';
+          if (targetId === 'form-forgot') newUrl = '/recuperar-password';
+          window.history.pushState({}, '', newUrl);
+        }
+      });
+    });
+
+    // Handle initial state from back/forward buttons
+    window.addEventListener('popstate', (event) => {
+      let targetId = 'form-login';
+      if (window.location.pathname === '/registro') targetId = 'form-register';
+      if (window.location.pathname === '/recuperar-password') targetId = 'form-forgot';
+      
+      document.querySelectorAll('.auth-section').forEach(sec => sec.classList.remove('active'));
+      const targetSec = document.getElementById(targetId);
+      if (targetSec) targetSec.classList.add('active');
+    });
+
+    // Unified password visibility toggle
+    document.querySelectorAll('.password-toggle').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        if (input.type === 'password') {
+          input.type = 'text';
+          this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        } else {
+          input.type = 'password';
+          this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

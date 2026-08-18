@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title || 'Administrador' %> | Biblioteca Digital</title>
   <!-- CSS Único -->
-  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/main.css?v=3">
   <!-- Estilos de Admin -->
-  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/admin.css?v=3">
   <%- style %>
 </head>
 <body class="admin-shell <%= typeof pageClass !== 'undefined' ? pageClass : '' %>">
@@ -16,6 +16,9 @@
     <%- include('../partials/alertas') %>
     <%- body %>
   </main>
+  <% if (session && (session.userId || session.adminId)) { %>
+    <script src="/js/session-inactivity.js"></script>
+  <% } %>
   <%- script %>
 </body>
 </html>

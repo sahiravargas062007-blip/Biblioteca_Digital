@@ -2,73 +2,25 @@
 <link rel="stylesheet" href="/css/components/badges.css">
 
 <section class="panel page-header">
-      <div>
-        <p class="eyebrow">Colas de espera</p>
-        <h1>Reservas</h1>
-      </div>
-      <a class="button-link" href="/admin/reservas/nueva">Nueva reserva</a>
-    </section>
+  <div>
+    <p class="eyebrow">Colas de reserva</p>
+    <h1>Reservas</h1>
+    <p class="muted">Consulta y gestiona las reservas por recurso físico o digital.</p>
+  </div>
+  <a class="button-link reservas-new-btn" href="/admin/reservas/nueva">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="16" />
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </svg>
+    Nueva reserva
+  </a>
+</section>
 
-    <% if (!grupos.length) { %>
-      <section class="panel"><p>No hay reservas activas.</p></section>
-    <% } %>
+<div class="reservas-shell" id="reservas-shell" data-ajax-list="#reservas-shell">
+  <%- include('_shell', { grupos, filtros, paginacion }) %>
+</div>
 
-    <section class="reservation-grid">
-      <% grupos.forEach((grupo) => { %>
-        <article class="panel reservation-card">
-          <div class="reservation-head">
-            <img src="<%= grupo.recurso_imagen || '/img/placeholder.png' %>" alt="">
-            <div>
-              <h2><%= grupo.recurso_titulo %></h2>
-              <p><%= grupo.tipo %> · <%= grupo.reservas.length %> reserva(s)</p>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Posición</th>
-                  <th>Usuario</th>
-                  <th>Estado</th>
-                  <th>Límite reclamo</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% grupo.reservas.forEach((reserva) => { %>
-                  <tr>
-                    <td><%= reserva.posicion %></td>
-                    <td><strong><%= reserva.usuario_nombre %></strong><small><%= reserva.usuario_documento %></small></td>
-                    <td>
-                      <span class="badge <%= reserva.estado === 'Disponible para reclamar' ? 'badge-disponible' : 'badge-prestado' %>">
-                        <%= reserva.estado %>
-                      </span>
-                    </td>
-                    <td><%= reserva.fecha_limite_reclamo ? new Date(reserva.fecha_limite_reclamo).toLocaleString('es-CO') : 'No asignado' %></td>
-                    <td>
-                      <div class="actions">
-                        <% if (reserva.estado === 'Pendiente') { %>
-                          <form method="post" action="/admin/reservas/<%= reserva._id %>/liberar">
-                            <button type="submit">Liberar turno</button>
-                          </form>
-                        <% } %>
-                        <% if (reserva.estado === 'Disponible para reclamar') { %>
-                          <form method="post" action="/admin/reservas/<%= reserva._id %>/procesar">
-                            <button type="submit">Procesar préstamo</button>
-                          </form>
-                        <% } %>
-                        <form method="post" action="/admin/reservas/<%= reserva._id %>/cancelar">
-                          <input type="hidden" name="motivo_cancelacion" value="Cancelada desde panel administrativo">
-                          <button class="danger-button" type="submit">Cancelar</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        </article>
-      <% }) %>
-    </section>
+<script src="/js/admin/row-menu.js"></script>
+<script src="/js/admin/reservas.js"></script>
+<script src="/js/admin/ajax-page.js"></script>

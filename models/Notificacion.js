@@ -20,8 +20,10 @@ const notificacionSchema = new mongoose.Schema({
       'reserva_expirada',
       'nuevo_usuario_pendiente',
       'recursos_proximos_vencer',
-      'reserva_sin_siguiente_usuario'
-      , 'acceso_aprobado'
+      'reserva_sin_siguiente_usuario',
+      'recordatorio_reserva',
+      'acceso_aprobado',
+      'documento_faltante'
     ],
     required: true
   },

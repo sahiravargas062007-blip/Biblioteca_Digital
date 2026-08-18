@@ -7,6 +7,7 @@ const configuracionSchema = new mongoose.Schema({
     dias_renovacion: { type: Number, default: 7 },
     max_renovaciones: { type: Number, default: 1 },
     dias_tolerancia: { type: Number, default: 2 },
+    dias_considerar_perdida: { type: Number, default: 30 },
     tiempos_por_categoria: [{
       categoria_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Categoria' },
       categoria_nombre: String,

@@ -1,42 +1,66 @@
 <link rel="stylesheet" href="/css/components/forms.css">
+<link rel="stylesheet" href="/css/components/badges.css">
 
 <section class="panel page-header">
-      <div>
-        <p class="eyebrow">Reserva directa</p>
-        <h1>Nueva reserva</h1>
-      </div>
-      <a class="secondary-link" href="/admin/reservas">Volver</a>
-    </section>
+  <div>
+    <p class="eyebrow">Reserva directa</p>
+    <h1>Nueva reserva</h1>
+    <p class="muted">Crea una nueva reserva de un recurso físico para un usuario.</p>
+  </div>
+  <a class="secondary-link" href="/admin/reservas">← Volver a reservas</a>
+</section>
 
-    <section class="panel">
-      <form method="post" action="/admin/reservas" class="form-stack">
-        <label>
-          Usuario activo
-          <select name="usuario_id" required>
-            <option value="">Seleccione</option>
-            <% usuarios.forEach((usuario) => { %>
-              <option value="<%= usuario._id %>"><%= usuario.nombre %> · <%= usuario.documento %> · reservas activas: <%= usuario.reservas_activas || 0 %></option>
-            <% }) %>
-          </select>
-        </label>
+<form method="post" action="/admin/reservas" class="panel reserva-steps" id="nueva-reserva-form" data-ajax>
+  <div class="reserva-step" data-combobox="usuario">
+    <h3><span class="reserva-step__num">1</span> Seleccionar usuario</h3>
+    <label>Usuario</label>
+    <div class="combobox-input-wrap">
+      <input type="text" data-combobox-input autocomplete="off" placeholder="Buscar por nombre, documento o correo...">
+      <div class="combobox-menu" data-combobox-menu hidden></div>
+    </div>
+    <input type="hidden" name="usuario_id" data-combobox-value required>
+    <div class="combobox-preview" data-combobox-preview hidden></div>
+  </div>
 
-        <label>
-          Recurso físico o mixto
-          <select name="recurso_id" required>
-            <option value="">Seleccione</option>
-            <% recursos.forEach((recurso) => { %>
-              <option value="<%= recurso._id %>"><%= recurso.titulo %> · disponibles: <%= recurso.fisico?.ejemplares_disponibles || 0 %></option>
-            <% }) %>
-          </select>
-        </label>
+  <div class="reserva-step" data-combobox="recurso">
+    <h3><span class="reserva-step__num">2</span> Seleccionar recurso</h3>
+    <label>Recurso físico o mixto</label>
+    <div class="combobox-input-wrap">
+      <input type="text" data-combobox-input autocomplete="off" placeholder="Buscar por título, autor o ISBN...">
+      <div class="combobox-menu" data-combobox-menu hidden></div>
+    </div>
+    <input type="hidden" name="recurso_id" data-combobox-value required>
+    <div class="combobox-preview" data-combobox-preview hidden></div>
+  </div>
 
-        <div class="panel-note">
-          La reserva solo será aceptada si el recurso no tiene ejemplares disponibles y el usuario no tiene sanciones ni supera el límite configurado.
-        </div>
+  <div class="reserva-step">
+    <h3><span class="reserva-step__num">3</span> Confirmar reserva</h3>
+    <p class="muted">La reserva solo será aceptada si el recurso no tiene ejemplares disponibles y el usuario no tiene sanciones ni supera el límite configurado. El usuario será agregado a la cola de espera del recurso seleccionado.</p>
+    <div class="form-actions">
+      <a class="secondary-link" href="/admin/reservas">Cancelar</a>
+      <button type="submit">Confirmar reserva</button>
+    </div>
+  </div>
+</form>
 
-        <div class="form-actions">
-          <button type="submit">Registrar reserva</button>
-          <a class="secondary-link" href="/admin/reservas">Cancelar</a>
-        </div>
-      </form>
-    </section>
+<script type="application/json" id="usuarios-data"><%- JSON.stringify(usuarios.map((u) => ({
+  id: u._id,
+  nombre: u.nombre,
+  documento: u.documento,
+  correo: u.correo,
+  programa: u.programa_formacion || 'No registrado',
+  estado: u.estado,
+  reservas_activas: u.reservas_activas || 0
+}))).replace(/</g, '\u003c') %></script>
+<script type="application/json" id="recursos-data"><%- JSON.stringify(recursos.map((r) => ({
+  id: r._id,
+  titulo: r.titulo,
+  autor: r.autor,
+  isbn: r.isbn || 'N/D',
+  tipo: r.tipo_naturaleza,
+  imagen: r.imagen && r.imagen.url,
+  disponibles: (r.fisico && r.fisico.ejemplares_disponibles) || 0
+}))).replace(/</g, '\u003c') %></script>
+
+<script src="/js/admin/reservas.js"></script>
+<script src="/js/admin/ajax-page.js"></script>

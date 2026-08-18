@@ -1,6 +1,8 @@
-# 📚 Biblioteca Digital SENA
+# 📚 BiblioNet
 
-Sistema web de gestión de biblioteca para el SENA que permite administrar recursos bibliográficos físicos y digitales, préstamos, reservas, sanciones y notificaciones. Está orientado a aprendices, instructores y funcionarios autenticados mediante LDAP institucional.
+Sistema web de gestión de biblioteca que permite administrar recursos bibliográficos físicos y digitales, préstamos, reservas, sanciones y notificaciones.
+
+> **Nota sobre el alcance del proyecto:** este es un proyecto de demostración/portafolio. Simula cómo funcionaría BiblioNet para una entidad privada o educativa que autentica usuarios contra un directorio LDAP propio (aprendices/instructores son solo la terminología usada como ejemplo de dominio). No está afiliado a, ni se conecta con, la infraestructura real de ninguna institución. Todos los datos, credenciales y el modo `LDAP_MODE=mock` son simulados para desarrollo y evaluación local.
 
 ---
 
@@ -175,7 +177,7 @@ GMAIL_APP_PASSWORD=tu_contraseña_de_aplicacion
 CRON_ENABLED=false
 ```
 
-> **Nota:** `LDAP_MODE=mock` hace que el sistema use usuarios de prueba almacenados en la base de datos local en lugar de conectarse al servidor LDAP del SENA. Es el modo correcto para desarrollo.
+> **Nota:** `LDAP_MODE=mock` hace que el sistema use usuarios de prueba almacenados en la base de datos local en lugar de conectarse a un servidor LDAP real. Es el modo correcto para desarrollo y para esta demo (no existe un servidor LDAP institucional real detrás de este proyecto).
 
 ---
 
@@ -213,6 +215,27 @@ npm start
 ```
 
 La aplicación estará disponible en `http://localhost:3000`
+
+---
+
+## Pruebas
+
+El proyecto usa **Jest**, **Supertest** y **mongodb-memory-server** (Mongo en
+memoria, no toca tu base de datos real ni requiere Docker).
+
+```bash
+npm test          # corre toda la suite una vez
+npm run test:watch  # modo watch para desarrollo
+npm run lint         # análisis estático con ESLint
+```
+
+Estructura de `tests/`:
+- `tests/unit/` — middlewares de validación (`express-validator`), sin base de datos.
+- `tests/integration/` — reglas de negocio y auth contra un Mongo real (en memoria).
+- `tests/setup/` — helpers de conexión y variables de entorno para test.
+
+Esto también corre automáticamente en cada push/PR vía GitHub Actions
+(`.github/workflows/ci.yml`).
 
 ---
 
@@ -310,5 +333,4 @@ Los archivos PDF, MP3 y MP4 se entregan con el nombre del recurso para que la de
 
 ## Licencia
 
-Proyecto académico desarrollado para el SENA. Uso interno institucional.
-# Biblioteca_Digital
+MIT. Ver [LICENSE](./LICENSE). Este es un proyecto de demostración/portafolio, no software propietario de ninguna institución real.

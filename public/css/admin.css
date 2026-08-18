@@ -1,11 +1,13 @@
 /* ── ADMIN SPECIFIC IMPORTS ── */
-@import url('./pages/admin-dashboard.css');
-@import url('./pages/admin-recursos.css');
-@import url('./pages/admin-usuarios.css');
+@import url('./components/toast.css?v=3');
+@import url('./pages/admin-dashboard.css?v=3');
+@import url('./pages/admin-recursos.css?v=3');
+@import url('./pages/admin-panel-shared.css?v=3');
+@import url('./pages/admin-usuarios.css?v=3');
+@import url('./pages/admin-reservas.css?v=3');
 
 .admin-shell {
   min-height: 100vh;
-  background: var(--color-background, #f8fafc);
 }
 
 /* FIX: .cat-topbar es position:fixed con height:72px.
@@ -35,8 +37,6 @@
   text-transform: uppercase;
 }
 
-.toolbar,
-.import-form,
 .form-stack {
   display: grid;
   gap: 16px;
@@ -44,9 +44,18 @@
 
 .toolbar,
 .import-form {
-  align-items: end;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
 }
+
+.toolbar > label:first-of-type,
+.import-form > label:first-of-type {
+  flex: 1;
+  min-width: 260px;
+}
+
 
 .button-link,
 .secondary-link {

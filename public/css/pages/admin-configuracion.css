@@ -38,14 +38,7 @@
   position: relative;
   margin: -88px -24px -24px;
   padding: 40px 32px 56px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(18, 12, 5, 0.62) 0%,
-      rgba(18, 12, 5, 0.72) 45%,
-      rgba(12, 8, 4, 0.8) 100%
-    ),
-    url("/img/hero-library.png") center 30% / cover no-repeat fixed;
+  background: transparent;
   min-height: calc(100vh - 64px);
 }
 
@@ -783,8 +776,14 @@
 
 /* ── RESPONSIVIDAD DE MAQUETADO ── */
 @media (max-width: 768px) {
+  .admin-main.admin-configuration-page {
+    width: 100%;
+    margin: 72px 0 0 !important;
+    padding: 0;
+  }
+
   .config-page {
-    margin: -88px -16px -16px;
+    margin: 0;
     padding: 24px 12px 40px;
     background-attachment: scroll;
   }

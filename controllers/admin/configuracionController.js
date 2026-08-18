@@ -15,6 +15,7 @@ exports.index = async (req, res, next) => {
 
     res.render('admin/configuracion/index', {
       title: 'Configuración',
+      pageClass: 'admin-configuration-page',
       config,
       categorias
     });
@@ -31,6 +32,7 @@ exports.actualizar = async (req, res, next) => {
       dias_renovacion,
       max_renovaciones,
       dias_tolerancia,
+      dias_considerar_perdida,
       max_prestamos_digitales,
       duracion_digital,
       renovaciones_digitales,
@@ -54,6 +56,7 @@ exports.actualizar = async (req, res, next) => {
     config.prestamos_fisicos.dias_renovacion = Number(dias_renovacion) || 7;
     config.prestamos_fisicos.max_renovaciones = Number(max_renovaciones) || 1;
     config.prestamos_fisicos.dias_tolerancia = Number(dias_tolerancia) || 2;
+    config.prestamos_fisicos.dias_considerar_perdida = Number(dias_considerar_perdida) || 30;
 
     // Procesar tiempos por categoría / subcategoría
     let tiemposInput = req.body.tiempos_por_categoria || [];

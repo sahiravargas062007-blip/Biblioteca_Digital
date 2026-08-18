@@ -1,29 +1,30 @@
 /* ═══════════════════════════════════════════════════════════════
-   BiblioNet — main.css
+   BiblioNet — main.css?v=3
    Punto de entrada único. Todos los archivos CSS del sistema
    se importan desde aquí. Las vistas sólo necesitan este archivo.
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── BASE ──────────────────────────────────────────────────────── */
-@import url('./base/variables.css');
-@import url('./base/reset.css');
-@import url('./base/tipografia.css');
+@import url('./base/variables.css?v=3');
+@import url('./base/reset.css?v=3');
+@import url('./base/tipografia.css?v=3');
 
 /* ── COMPONENTES ───────────────────────────────────────────────── */
-@import url('./components/botones.css');
-@import url('./components/cards.css');
-@import url('./components/tables.css');
-@import url('./components/forms.css');
-@import url('./components/badges.css');
-@import url('./components/modals.css');
+@import url('./components/botones.css?v=3');
+@import url('./components/cards.css?v=3');
+@import url('./components/tables.css?v=3');
+@import url('./components/forms.css?v=3');
+@import url('./components/badges.css?v=3');
+@import url('./components/modals.css?v=3');
 
 /* ── LAYOUTS ───────────────────────────────────────────────────── */
-@import url('./layouts/topbar.css');
-@import url('./layouts/sidebar.css');
-@import url('./layouts/grid-principal.css');
+@import url('./layouts/topbar.css?v=3');
+@import url('./layouts/sidebar.css?v=3');
+@import url('./layouts/grid-principal.css?v=3');
 
 /* ── PAGES ─────────────────────────────────────────────────────── */
-@import url('./pages/catalogo-hero.css');
-@import url('./pages/catalogo-browse.css');
-@import url('./pages/visor.css');
-@import url('./pages/admin-configuracion.css');
+@import url('./pages/catalogo-hero.css?v=3');
+@import url('./pages/catalogo-browse.css?v=3');
+@import url('./pages/biblioteca-secciones.css?v=3');
+@import url('./pages/visor.css?v=3');
+@import url('./pages/admin-configuracion.css?v=3');

@@ -1,0 +1,319 @@
+<%
+  const buildLink = (overrides) => {
+    const base = {
+      q: filtros.q,
+      tipo: filtros.tipo,
+      estado: filtros.estado,
+      pagina: paginacion.pagina,
+      limite: paginacion.limite
+    };
+    const merged = Object.assign({}, base, overrides);
+    const qs = Object.keys(merged)
+      .filter((k) => merged[k] !== '' && merged[k] !== undefined && merged[k] !== null)
+      .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(merged[k])}`)
+      .join('&');
+    return `/admin/reservas?${qs}`;
+  };
+
+  const totalP = paginacion.totalPaginas;
+  const curP = paginacion.pagina;
+  const pageTokens = [];
+  if (totalP <= 7) {
+    for (let i = 1; i <= totalP; i++) pageTokens.push(i);
+  } else {
+    pageTokens.push(1);
+    if (curP > 3) pageTokens.push('...');
+    for (let i = Math.max(2, curP - 1); i <= Math.min(totalP - 1, curP + 1); i++) pageTokens.push(i);
+    if (curP < totalP - 2) pageTokens.push('...');
+    pageTokens.push(totalP);
+  }
+
+  const formatFecha = (fecha) => fecha ? new Date(fecha).toLocaleDateString('es-CO') : 'Por confirmar';
+%>
+
+<section class="reservas-list-pane">
+  <section class="panel">
+    <form class="toolbar reservas-toolbar" method="get" action="/admin/reservas" data-ajax data-ajax-list="#reservas-shell">
+      <label>
+        Buscar
+        <span class="input-icon-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="search" name="q" value="<%= filtros.q %>" placeholder="Buscar por recurso o usuario...">
+        </span>
+      </label>
+      <label>
+        Tipo
+        <select name="tipo">
+          <option value="">Todos los recursos</option>
+          <option value="Físico" <%= filtros.tipo === 'Físico' ? 'selected' : '' %>>Físico</option>
+          <option value="Digital" <%= filtros.tipo === 'Digital' ? 'selected' : '' %>>Digital</option>
+        </select>
+      </label>
+      <label>
+        Estado
+        <select name="estado">
+          <option value="">Estado: Todos</option>
+          <option value="Pendiente" <%= filtros.estado === 'Pendiente' ? 'selected' : '' %>>En espera</option>
+          <option value="Disponible para reclamar" <%= filtros.estado === 'Disponible para reclamar' ? 'selected' : '' %>>Turno disponible</option>
+        </select>
+      </label>
+      <button type="submit" class="filter-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        Filtrar
+      </button>
+      <% if (filtros.q || filtros.tipo || filtros.estado) { %>
+        <a class="secondary-link" href="/admin/reservas">Limpiar</a>
+      <% } %>
+    </form>
+  </section>
+
+  <p class="reservas-count"><%= paginacion.totalRegistros %> recurso(s) con reservas activas</p>
+
+  <% if (!grupos.length) { %>
+    <section class="panel"><p>No hay reservas activas.</p></section>
+  <% } %>
+
+  <div class="reservas-cards">
+    <% grupos.forEach((grupo) => {
+         const badgeTurno = grupo.disponibles_para_reclamar > 0;
+    %>
+      <article class="reserva-card" id="card-<%= grupo.recurso_id %>" data-recurso-id="<%= grupo.recurso_id %>">
+        <img class="reserva-card__cover" src="<%= grupo.recurso_imagen || '/img/placeholder.png' %>" alt="">
+        <div class="reserva-card__info">
+          <h2><%= grupo.recurso_titulo %></h2>
+          <p class="reserva-card__autor"><%= grupo.autor %></p>
+          <span class="chip"><%= grupo.tipo %></span> <span class="muted-inline">ISBN: <%= grupo.isbn || 'N/D' %></span>
+        </div>
+        <div class="reserva-card__stat">
+          <span class="stat-label">En cola</span>
+          <span class="stat-value">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+            </svg>
+            <%= grupo.reservas.length %> usuarios
+          </span>
+        </div>
+        <div class="reserva-card__stat">
+          <span class="stat-label">Disponible aprox.</span>
+          <span class="stat-value">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <%= formatFecha(grupo.proxima_disponibilidad) %>
+          </span>
+        </div>
+        <div class="reserva-card__stat">
+          <span class="stat-label">Estado</span>
+          <span class="badge <%= badgeTurno ? 'badge-prestado' : 'badge-disponible' %>">
+            <span class="status-dot"></span><%= badgeTurno ? 'Turno disponible' : 'En espera' %>
+          </span>
+        </div>
+        <button type="button" class="ver-detalle-btn" data-ver-detalle="<%= grupo.recurso_id %>">
+          Ver detalle
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </article>
+    <% }) %>
+  </div>
+
+  <% if (grupos.length) { %>
+    <nav class="users-pagination" aria-label="Paginación de reservas">
+      <div class="page-nav">
+        <a class="page-btn page-btn--nav <%= curP <= 1 ? 'is-disabled' : '' %>"
+           href="<%= curP > 1 ? buildLink({ pagina: curP - 1 }) : '#' %>" aria-label="Página anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </a>
+        <% pageTokens.forEach((token) => { %>
+          <% if (token === '...') { %>
+            <span class="page-ellipsis">…</span>
+          <% } else { %>
+            <a class="page-btn <%= token === curP ? 'is-active' : '' %>" href="<%= buildLink({ pagina: token }) %>"><%= token %></a>
+          <% } %>
+        <% }) %>
+        <a class="page-btn page-btn--nav <%= curP >= totalP ? 'is-disabled' : '' %>"
+           href="<%= curP < totalP ? buildLink({ pagina: curP + 1 }) : '#' %>" aria-label="Página siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+      </div>
+      <div class="page-size">
+        <span>Mostrar</span>
+        <select data-ajax-nav>
+          <% paginacion.limitesPermitidos.forEach((l) => { %>
+            <option value="<%= buildLink({ limite: l, pagina: 1 }) %>" <%= l === paginacion.limite ? 'selected' : '' %>><%= l %></option>
+          <% }) %>
+        </select>
+        <span>por página</span>
+      </div>
+    </nav>
+  <% } %>
+</section>
+
+<aside class="reservas-detail-pane" id="reservas-detail">
+  <% grupos.forEach((grupo) => { %>
+    <div class="detail-panel" id="detalle-<%= grupo.recurso_id %>" hidden>
+      <div class="detail-panel__head">
+        <p class="eyebrow">Detalle del recurso</p>
+        <button type="button" class="detail-close" data-cerrar-detalle aria-label="Cerrar detalle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="detail-panel__resource">
+        <img src="<%= grupo.recurso_imagen || '/img/placeholder.png' %>" alt="">
+        <div>
+          <h3><%= grupo.recurso_titulo %></h3>
+          <p class="muted"><%= grupo.autor %></p>
+          <span class="chip"><%= grupo.tipo %></span> <span class="muted-inline">ISBN: <%= grupo.isbn || 'N/D' %></span>
+        </div>
+      </div>
+
+      <div class="detail-panel__stats">
+        <div>
+          <span class="stat-label">Ejemplares totales</span>
+          <span class="stat-value">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+            </svg>
+            <%= grupo.total_ejemplares %>
+          </span>
+        </div>
+        <div>
+          <span class="stat-label">Disponibles</span>
+          <span class="stat-value"><span class="status-dot status-dot--ok"></span><%= grupo.disponibles %></span>
+        </div>
+        <div>
+          <span class="stat-label">En reserva</span>
+          <span class="stat-value">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+            </svg>
+            <%= grupo.reservas.length %>
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-panel__eta">
+        <div>
+          <span>Próxima disponibilidad estimada</span>
+          <strong>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <%= formatFecha(grupo.proxima_disponibilidad) %>
+          </strong>
+        </div>
+        <p>Fecha estimada en la que el siguiente usuario en la cola podrá solicitar el material.</p>
+      </div>
+
+      <div class="detail-panel__queue-head">
+        <h4>Cola de reservas (<%= grupo.reservas.length %> usuarios)</h4>
+        <form method="post" action="/admin/reservas/recurso/<%= grupo.recurso_id %>/notificar-todos" data-ajax data-ajax-refresh="#reservas-shell">
+          <button type="submit" class="secondary-link notify-all-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" />
+            </svg>
+            Notificar a todos
+          </button>
+        </form>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Posición</th>
+              <th>Usuario</th>
+              <th>Reservado el</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% grupo.reservas.forEach((reserva) => { %>
+              <tr>
+                <td><%= reserva.posicion %></td>
+                <td><strong><%= reserva.usuario_nombre %></strong><small><%= reserva.usuario_documento %></small></td>
+                <td><%= formatFecha(reserva.fecha_reserva) %></td>
+                <td>
+                  <span class="badge <%= reserva.estado === 'Disponible para reclamar' ? 'badge-prestado' : 'badge-disponible' %>">
+                    <span class="status-dot"></span><%= reserva.estado %>
+                  </span>
+                </td>
+                <td>
+                  <div class="queue-actions">
+                    <form method="post" action="/admin/reservas/<%= reserva._id %>/notificar" data-ajax>
+                      <button type="submit" class="icon-btn" aria-label="Notificar a <%= reserva.usuario_nombre %>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M22 6l-10 7L2 6" />
+                          <path d="M2 6h20v12H2z" />
+                        </svg>
+                      </button>
+                    </form>
+                    <div class="row-menu-wrap">
+                      <button type="button" class="row-menu-toggle" data-row-menu-toggle aria-label="Más acciones">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                          <circle cx="5" cy="12" r="1.8" />
+                          <circle cx="12" cy="12" r="1.8" />
+                          <circle cx="19" cy="12" r="1.8" />
+                        </svg>
+                      </button>
+                      <div class="row-menu">
+                        <% if (reserva.estado === 'Pendiente') { %>
+                          <form method="post" action="/admin/reservas/<%= reserva._id %>/liberar" data-ajax data-ajax-refresh="#reservas-shell">
+                            <button type="submit" class="row-menu__item row-menu__item--ok">Liberar turno</button>
+                          </form>
+                        <% } %>
+                        <% if (reserva.estado === 'Disponible para reclamar') { %>
+                          <form method="post" action="/admin/reservas/<%= reserva._id %>/procesar" data-ajax>
+                            <button type="submit" class="row-menu__item row-menu__item--ok">Procesar préstamo</button>
+                          </form>
+                        <% } %>
+                        <form method="post" action="/admin/reservas/<%= reserva._id %>/cancelar" data-ajax data-ajax-refresh="#reservas-shell">
+                          <input type="hidden" name="motivo_cancelacion" value="Cancelada desde panel administrativo">
+                          <button type="submit" class="row-menu__item row-menu__item--danger">Cancelar</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <a class="button-link ficha-btn" href="/admin/recursos/<%= grupo.recurso_id %>">
+        Ver ficha del recurso
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" y1="14" x2="21" y2="3" />
+        </svg>
+      </a>
+    </div>
+  <% }) %>
+</aside>

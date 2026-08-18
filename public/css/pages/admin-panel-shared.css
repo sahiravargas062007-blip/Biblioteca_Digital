@@ -7,21 +7,19 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .admin-main.admin-users-page,
-.admin-main.admin-reservas-page,
-.admin-main.admin-prestamos-nuevo-page {
+.admin-main.admin-reservas-page {
   max-width: 1560px;
   width: calc(100% - 96px);
   margin: 92px auto 40px;
   padding: 32px 40px 40px;
-  background: #F9F6F0;
+  background: #f9f6f0;
   border: 1px solid rgba(201, 168, 76, 0.18);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
 .admin-users-page .panel,
-.admin-reservas-page .panel,
-.admin-prestamos-nuevo-page .panel {
+.admin-reservas-page .panel {
   margin-bottom: 28px;
 }
 
@@ -31,23 +29,20 @@
 
 /* ── Encabezado ─────────────────────────────────────────────── */
 .admin-users-page .page-header,
-.admin-reservas-page .page-header,
-.admin-prestamos-nuevo-page .page-header {
+.admin-reservas-page .page-header {
   border-bottom: 1px solid rgba(201, 168, 76, 0.25);
   padding-bottom: 20px;
 }
 
 .admin-users-page .page-header h1,
-.admin-reservas-page .page-header h1,
-.admin-prestamos-nuevo-page .page-header h1 {
-  font-family: 'Playfair Display', 'Poppins', serif;
+.admin-reservas-page .page-header h1 {
+  font-family: "Playfair Display", "Poppins", serif;
   font-size: 2rem;
   color: #2c1f14;
 }
 
 .admin-users-page .eyebrow,
-.admin-reservas-page .eyebrow,
-.admin-prestamos-nuevo-page .eyebrow {
+.admin-reservas-page .eyebrow {
   color: var(--color-primary);
   letter-spacing: 0.14em;
 }
@@ -407,11 +402,12 @@
 
 @media (max-width: 768px) {
   .admin-main.admin-users-page,
-  .admin-main.admin-reservas-page,
-  .admin-main.admin-prestamos-nuevo-page {
+  .admin-main.admin-reservas-page {
     width: calc(100% - 32px);
     padding: 24px 20px 28px;
     margin-top: 88px;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   .admin-users-page .users-pagination,

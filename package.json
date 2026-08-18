@@ -2,11 +2,16 @@
   "name": "biblioteca-digital",
   "version": "1.0.0",
   "description": "Sistema de gestion de biblioteca digital para recursos fisicos y digitales.",
-  "main": "app.js",
+  "main": "server.js",
+  "license": "MIT",
+  "author": "",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
-    "init-db": "node scripts/initDb.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node scripts/initDb.js",
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test:watch": "cross-env NODE_ENV=test jest --runInBand --watch",
+    "lint": "eslint ."
   },
   "dependencies": {
     "adm-zip": "^0.5.17",
@@ -31,11 +36,21 @@
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.18.0",
     "puppeteer": "^24.1.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.1.2",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

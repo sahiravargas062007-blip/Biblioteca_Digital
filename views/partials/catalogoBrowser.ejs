@@ -44,8 +44,15 @@
         </svg>
       </div>
 
-      <div class="cat-filters__section">
-        <p class="cat-filters__section-title">Categorias</p>
+      <details class="cat-filters__accordion">
+        <summary class="cat-filters__accordion-summary">
+          <span>Categorias</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="cat-filters__accordion-content">
+      <div class="cat-filters__section cat-filters__section--categories">
         <div class="cat-tree">
           <% categorias.forEach(function(cat) { %>
             <div class="cat-tree__item">
@@ -130,6 +137,8 @@
             </svg>
             Filtrar resultados
           </button>
+        </div>
+      </details>
     </aside>
 
     <section class="cat-results">
@@ -170,11 +179,7 @@
                   <span class="cat-card__cover-badge">
                     <%= recurso.tipo_material.toUpperCase() %>
                   </span>
-                  <span class="cat-card__cover-bookmark">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </span>
+
                 </a>
                 <div class="cat-card__body">
                   <% if (esAdminCatalogo) { %>

@@ -1,6 +1,14 @@
 const router = require('express').Router();
 
-router.get('/', (req, res) => res.redirect('/catalogo'));
+// El cliente autenticado llama este endpoint al detectar actividad real.
+router.post('/sesion/actividad', (req, res) => res.sendStatus(204));
+
+router.get('/', (req, res) => {
+  if (req.session.adminId) {
+    return res.redirect('/admin/recursos');
+  }
+  return res.redirect('/catalogo');
+});
 
 // Admin layout middleware
 router.use('/admin', (req, res, next) => {

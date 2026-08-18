@@ -3,14 +3,7 @@
    Paleta: verde bosque (#184e42), oro/arena (#b89568), papel marfil (#faf6ee / #fcfaf6)
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Fondo de Biblioteca para toda la página ── */
-body:has(.rd-page) {
-  background: radial-gradient(circle, rgba(20, 15, 10, 0.45) 0%, rgba(10, 8, 5, 0.88) 100%), 
-              url('/img/hero-library.png') center/cover no-repeat fixed !important;
-  min-height: 100vh;
-  margin: 0;
-}
-
+/* ── Fondo de Biblioteca para toda la página manejado por reset.css ── */
 /* ── Tokens de diseño ── */
 .rd-page {
   --rd-primary: #184e42;

@@ -36,8 +36,13 @@ exports.crear = async (req, res, next) => {
   try {
     const usuario = await Usuario.findById(req.session.userId);
     if (!usuario || usuario.estado !== 'Activo') {
-      flash(req, 'error', 'Su usuario no estÃ¡ activo para realizar reservas.');
+      flash(req, 'error', 'Su usuario no está activo para realizar reservas.');
       return res.redirect('/catalogo');
+    }
+
+    if (!usuario.documento) {
+      flash(req, 'error', 'Debes configurar tu documento de identidad en tu perfil antes de poder realizar reservas.');
+      return res.redirect('/perfil');
     }
 
     const recurso = await Recurso.findById(req.body.recurso_id).lean();
