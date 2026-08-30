@@ -14,10 +14,10 @@
       <p><strong>Registrado:</strong> <%= new Date(prestamo.creado_en).toLocaleString('es-CO') %></p>
       
       <% if (prestamo.estado === 'Pendiente de reposición') { %>
-        <div style="margin-top: 1rem; padding: 1rem; border: 1px solid var(--border-color, #e2e8f0); border-radius: 0.5rem; background-color: var(--background-secondary, #f8fafc);">
-          <p style="margin-bottom: 0.5rem;"><strong style="color: #c53030;">El usuario reportó un ejemplar perdido y se encuentra bloqueado disciplinariamente.</strong></p>
+        <div class="repo-alert-box">
+          <p><strong class="repo-alert-box__title">El usuario reportó un ejemplar perdido y se encuentra bloqueado disciplinariamente.</strong></p>
           <form method="post" action="/admin/prestamos/<%= prestamo._id %>/confirmar-reposicion">
-            <button type="submit" style="background-color: #2b6cb0; color: white; font-weight: 600; padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; cursor: pointer;">Confirmar reposición de material</button>
+            <button type="submit" class="repo-alert-box__btn">Confirmar reposición de material</button>
           </form>
         </div>
       <% } %>

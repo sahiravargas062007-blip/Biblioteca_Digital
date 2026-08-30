@@ -6,12 +6,26 @@
         <p class="eyebrow">Consulta histórica</p>
         <h1>Historial de préstamos</h1>
       </div>
-      <a class="secondary-link" href="/admin/prestamos">Volver</a>
+      <a class="secondary-link" href="/admin/prestamos">← Volver a préstamos</a>
     </section>
     <section class="panel">
       <form class="toolbar" method="get" action="/admin/prestamos/historial">
-        <label>Buscar <input type="search" name="q" value="<%= q %>"></label>
-        <button>Filtrar</button>
+        <label>
+          Buscar
+          <span class="input-icon-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="search" name="q" value="<%= q %>">
+          </span>
+        </label>
+        <button type="submit" class="filter-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          Filtrar
+        </button>
       </form>
       <div class="table-wrap">
         <table class="table">

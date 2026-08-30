@@ -20,7 +20,8 @@ exports.index = async (req, res, next) => {
     res.render('user/perfil/index', {
       title: 'Perfil',
       usuario,
-      perfilIncompleto
+      perfilIncompleto,
+      pageClass: 'perfil-page'
     });
   } catch (error) {
     next(error);

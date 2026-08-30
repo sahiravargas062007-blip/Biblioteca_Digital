@@ -1,38 +1,37 @@
-<section class="page-title-panel" style="padding: 2rem 0; margin-bottom: 2rem;">
-  <h1 style="color: #2c2518; font-size: 2.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; font-family: 'Playfair Display', serif;">
-    Mi perfil <svg width="40" height="20" viewBox="0 0 100 20" fill="none" style="vertical-align: middle; stroke: #c9a84c;"><path d="M10 10 Q 25 20, 40 10 T 70 10 T 90 10" stroke-width="2" fill="none"/></svg>
+<section class="page-title-panel">
+  <h1>
+    Mi perfil
+    <svg width="40" height="20" viewBox="0 0 100 20" fill="none"><path d="M10 10 Q 25 20, 40 10 T 70 10 T 90 10" stroke-width="2" fill="none"/></svg>
   </h1>
-  <p style="color: #5c5548; font-size: 1.1rem; max-width: 600px;">Gestiona tu información personal y las preferencias de tu cuenta.</p>
+  <p>Gestiona tu información personal y las preferencias de tu cuenta.</p>
 </section>
 
 <%- include('../../partials/alertas') %>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
-  
-  <!-- Columna Izquierda: Información y Contacto -->
-  <div style="display: flex; flex-direction: column; gap: 2rem;">
+<div class="perfil-grid">
 
-    <section class="panel" style="background: #fdf8f0; border-radius: 14px; border: 1px solid rgba(201, 168, 76, 0.2); box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06);">
-      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(201, 168, 76, 0.2); padding-bottom: 1rem;">
-        <div style="color: #8b6e35;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <h2 style="margin: 0; font-size: 1.3rem; color: #2c2518; font-family: 'Playfair Display', serif;">Información personal</h2>
+  <!-- Columna Izquierda: Información y Contacto -->
+  <div class="perfil-grid__col">
+
+    <section class="panel">
+      <div class="perfil-card__head">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h2>Información personal</h2>
       </div>
-      
+
       <form method="post" action="/perfil?_method=PUT" class="form-stack">
-        <label style="color: #2c2518; font-weight: 600; font-size: 0.9rem;">
+        <label class="field-label">
           Nombre completo
-          <div class="input-wrapper" style="position: relative; margin-top: 0.5rem;">
-            <input type="text" name="nombre" value="<%= usuario.nombre %>" required style="width: 100%; padding: 0.75rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: transparent; color: #2c2518;">
+          <div class="field-input-wrap">
+            <input type="text" name="nombre" value="<%= usuario.nombre %>" required>
           </div>
         </label>
-        
-        <div style="display: grid; gap: 1rem; grid-template-columns: 1fr 2fr; margin-top: 1rem;">
-          <label style="color: #2c2518; font-weight: 600; font-size: 0.9rem;">
+
+        <div class="perfil-doc-grid">
+          <label class="field-label">
             Tipo de Documento
-            <div style="margin-top: 0.5rem;">
-              <select name="tipo_documento" <%= !perfilIncompleto ? 'disabled' : 'required' %> style="width: 100%; padding: 0.75rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: <%= !perfilIncompleto ? 'rgba(0,0,0,0.02)' : 'transparent' %>; color: #2c2518;">
+            <div class="field-input-wrap">
+              <select name="tipo_documento" class="<%= !perfilIncompleto ? 'is-locked' : '' %>" <%= !perfilIncompleto ? 'disabled' : 'required' %>>
                 <option value="CC" <%= usuario.tipo_documento === 'CC' ? 'selected' : '' %>>Cédula (CC)</option>
                 <option value="TI" <%= usuario.tipo_documento === 'TI' ? 'selected' : '' %>>Tarjeta (TI)</option>
                 <option value="CE" <%= usuario.tipo_documento === 'CE' ? 'selected' : '' %>>C. Extranjería (CE)</option>
@@ -40,40 +39,42 @@
               </select>
             </div>
           </label>
-          <label style="color: #2c2518; font-weight: 600; font-size: 0.9rem;">
+          <label class="field-label">
             Número de Documento
-            <div style="margin-top: 0.5rem;">
-              <input type="text" name="documento" value="<%= usuario.documento || '' %>" <%= !perfilIncompleto ? 'readonly' : 'required' %> placeholder="Ingresa tu documento" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: <%= !perfilIncompleto ? 'rgba(0,0,0,0.02)' : 'transparent' %>; color: #2c2518;">
+            <div class="field-input-wrap">
+              <input type="text" name="documento" value="<%= usuario.documento || '' %>" class="<%= !perfilIncompleto ? 'is-locked' : '' %>" <%= !perfilIncompleto ? 'readonly' : 'required' %> placeholder="Ingresa tu documento">
             </div>
-            <% if (!perfilIncompleto) { %><small style="color: #8b6e35; display: block; margin-top: 4px;">Este dato está protegido y no se puede editar.</small><% } %>
+            <% if (!perfilIncompleto) { %><small class="field-hint">Este dato está protegido y no se puede editar.</small><% } %>
           </label>
         </div>
 
-        <div style="margin-top: 2rem;">
-          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(201, 168, 76, 0.2); padding-bottom: 1rem;">
-            <div style="color: #8b6e35;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <h3 style="margin: 0; font-size: 1.3rem; color: #2c2518; font-family: 'Playfair Display', serif;">Información de contacto</h3>
+        <div class="field-section">
+          <div class="perfil-card__head">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <h2>Información de contacto</h2>
           </div>
-          
-          <label style="margin-bottom: 1rem; display: block; color: #2c2518; font-weight: 600; font-size: 0.9rem;">
-            Correo electrónico
-            <div class="input-wrapper" style="position: relative; margin-top: 0.5rem;">
-              <input type="email" name="correo" value="<%= usuario.correo %>" required style="width: 100%; padding: 0.75rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: transparent; color: #2c2518;">
-            </div>
-            <small style="color: #8b6e35; display: block; margin-top: 4px;">Se usará para enviar notificaciones e iniciar sesión.</small>
-          </label>
 
-          <label style="display: block; color: #2c2518; font-weight: 600; font-size: 0.9rem;">
-            Teléfono
-            <div class="input-wrapper" style="position: relative; margin-top: 0.5rem;">
-              <input type="tel" name="telefono" value="<%= usuario.telefono || '' %>" placeholder="Ingresa tu teléfono" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: transparent; color: #2c2518;">
-            </div>
-          </label>
+          <div class="field-block">
+            <label class="field-label">
+              Correo electrónico
+              <div class="field-input-wrap">
+                <input type="email" name="correo" value="<%= usuario.correo %>" required>
+              </div>
+              <small class="field-hint">Se usará para enviar notificaciones e iniciar sesión.</small>
+            </label>
+          </div>
+
+          <div class="field-block">
+            <label class="field-label">
+              Teléfono
+              <div class="field-input-wrap">
+                <input type="tel" name="telefono" value="<%= usuario.telefono || '' %>" placeholder="Ingresa tu teléfono">
+              </div>
+            </label>
+          </div>
         </div>
 
-        <button type="submit" class="btn-submit" style="margin-top: 2rem; width: 100%; background-color: #214f43; color: white; padding: 0.85rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">
+        <button type="submit" class="btn-submit">
           Guardar cambios
         </button>
       </form>
@@ -81,81 +82,83 @@
   </div>
 
   <!-- Columna Derecha: Seguridad y Estadísticas -->
-  <div style="display: flex; flex-direction: column; gap: 2rem;">
-    
-    <section class="panel" style="background: #fdf8f0; border-radius: 14px; border: 1px solid rgba(201, 168, 76, 0.2); box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06);">
-      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(201, 168, 76, 0.2); padding-bottom: 1rem;">
-        <div style="color: #8b6e35;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-        <h2 style="margin: 0; font-size: 1.3rem; color: #2c2518; font-family: 'Playfair Display', serif;">Seguridad</h2>
+  <div class="perfil-grid__col">
+
+    <section class="panel">
+      <div class="perfil-card__head">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h2>Seguridad</h2>
       </div>
-      <p style="color: #5c5548; font-size: 0.95rem; margin-bottom: 1.5rem; margin-top: -0.5rem;">Cambia tu contraseña periódicamente para mantener tu cuenta segura.</p>
+      <p class="perfil-card__desc">Cambia tu contraseña periódicamente para mantener tu cuenta segura.</p>
 
       <form method="post" action="/perfil/password" class="form-stack">
-        <label style="margin-bottom: 1rem; display: block; color: #2c2518; font-weight: 600; font-size: 0.9rem;">
-          Contraseña actual
-          <div style="position: relative; margin-top: 0.5rem;">
-            <span style="position: absolute; left: 12px; top: 12px; color: #8b6e35;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-            <input type="password" name="passwordActual" required placeholder="Ingresa tu contraseña actual" style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: transparent; color: #2c2518;">
-          </div>
-        </label>
-        <label style="margin-bottom: 1rem; display: block; color: #2c2518; font-weight: 600; font-size: 0.9rem;">
-          Nueva contraseña
-          <div style="position: relative; margin-top: 0.5rem;">
-            <span style="position: absolute; left: 12px; top: 12px; color: #8b6e35;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-            <input type="password" name="nuevaPassword" required minlength="8" placeholder="De 8 a 20 caracteres" style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: transparent; color: #2c2518;">
-          </div>
-        </label>
-        <label style="display: block; color: #2c2518; font-weight: 600; font-size: 0.9rem;">
-          Confirmar nueva contraseña
-          <div style="position: relative; margin-top: 0.5rem;">
-            <span style="position: absolute; left: 12px; top: 12px; color: #8b6e35;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-            <input type="password" name="confirmarPassword" required minlength="8" placeholder="Repite la nueva contraseña" style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 6px; background: transparent; color: #2c2518;">
-          </div>
-        </label>
-        <button type="submit" class="btn-submit" style="margin-top: 1.5rem; width: 100%; background-color: #214f43; color: white; padding: 0.85rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <div class="field-block">
+          <label class="field-label">
+            Contraseña actual
+            <div class="field-input-wrap field-input-wrap--icon">
+              <span class="field-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" name="passwordActual" required placeholder="Ingresa tu contraseña actual">
+            </div>
+          </label>
+        </div>
+        <div class="field-block">
+          <label class="field-label">
+            Nueva contraseña
+            <div class="field-input-wrap field-input-wrap--icon">
+              <span class="field-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" name="nuevaPassword" required minlength="8" placeholder="De 8 a 20 caracteres">
+            </div>
+          </label>
+        </div>
+        <div class="field-block">
+          <label class="field-label">
+            Confirmar nueva contraseña
+            <div class="field-input-wrap field-input-wrap--icon">
+              <span class="field-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input type="password" name="confirmarPassword" required minlength="8" placeholder="Repite la nueva contraseña">
+            </div>
+          </label>
+        </div>
+        <button type="submit" class="btn-submit">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Actualizar contraseña
         </button>
       </form>
     </section>
 
-    <section class="panel" style="background: #fdf8f0; border-radius: 14px; border: 1px solid rgba(201, 168, 76, 0.2); box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06);">
-      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-        <div style="color: #8b6e35;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-        <h2 style="margin: 0; font-size: 1.3rem; color: #2c2518; font-family: 'Playfair Display', serif;">Estadísticas</h2>
+    <section class="panel">
+      <div class="perfil-card__head perfil-card__head--tight">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <h2>Estadísticas</h2>
       </div>
-      <p style="color: #5c5548; font-size: 0.95rem; margin-bottom: 1.5rem; margin-top: -0.5rem;">Resumen de tu actividad en BiblioNet</p>
+      <p class="perfil-card__desc">Resumen de tu actividad en BiblioNet</p>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; text-align: center;">
-        <div style="background: rgba(201, 168, 76, 0.05); padding: 1.5rem 0.5rem; border-radius: 8px; border: 1px solid rgba(201, 168, 76, 0.2);">
-          <div style="color: #8b6e35; margin-bottom: 0.5rem;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-          <span style="font-size: 1.5rem; font-weight: 700; color: #2c2518; display: block;"><%= usuario.prestamos_activos || 0 %></span>
-          <span style="color: #5c5548; font-size: 0.8rem;">Préstamos activos</span>
+      <div class="perfil-stats">
+        <div class="perfil-stat">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <strong><%= usuario.prestamos_activos || 0 %></strong>
+          <span>Préstamos activos</span>
         </div>
-        <div style="background: rgba(201, 168, 76, 0.05); padding: 1.5rem 0.5rem; border-radius: 8px; border: 1px solid rgba(201, 168, 76, 0.2);">
-          <div style="color: #8b6e35; margin-bottom: 0.5rem;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-          <span style="font-size: 1.5rem; font-weight: 700; color: #2c2518; display: block;"><%= usuario.reservas_activas || 0 %></span>
-          <span style="color: #5c5548; font-size: 0.8rem;">Reservas activas</span>
+        <div class="perfil-stat">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <strong><%= usuario.reservas_activas || 0 %></strong>
+          <span>Reservas activas</span>
         </div>
-        <div style="background: rgba(201, 168, 76, 0.05); padding: 1.5rem 0.5rem; border-radius: 8px; border: 1px solid rgba(201, 168, 76, 0.2);">
-          <div style="color: #8b6e35; margin-bottom: 0.5rem;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <span style="font-size: 1.5rem; font-weight: 700; color: #2c2518; display: block;">
-            <% 
+        <div class="perfil-stat">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <strong>
+            <%
               const createdAt = new Date(usuario.creado_en);
               const now = new Date();
               const diffTime = Math.abs(now - createdAt);
               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             %>
             <%= diffDays %>
-          </span>
-          <span style="color: #5c5548; font-size: 0.8rem;">Días como usuario</span>
+          </strong>
+          <span>Días como usuario</span>
         </div>
       </div>
-      
+
     </section>
 
   </div>

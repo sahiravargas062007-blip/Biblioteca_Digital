@@ -116,6 +116,7 @@ exports.index = async (req, res, next) => {
       title: "Préstamos activos",
       prestamos,
       filtros: { q, estado },
+      pageClass: "admin-prestamos-page",
     });
   } catch (error) {
     next(error);
@@ -141,6 +142,7 @@ exports.historial = async (req, res, next) => {
       title: "Historial de préstamos",
       prestamos,
       q,
+      pageClass: "admin-prestamos-page",
     });
   } catch (error) {
     next(error);
@@ -160,6 +162,7 @@ exports.nuevo = async (req, res, next) => {
       title: "Nuevo préstamo",
       usuarios,
       ejemplares,
+      pageClass: "admin-prestamos-page",
     });
   } catch (error) {
     next(error);
@@ -176,6 +179,7 @@ exports.detalle = async (req, res, next) => {
     return res.render("admin/prestamos/detalle", {
       title: "Detalle préstamo",
       prestamo,
+      pageClass: "admin-prestamos-page",
     });
   } catch (error) {
     next(error);

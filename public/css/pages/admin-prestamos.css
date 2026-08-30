@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════
+   admin-prestamos.css
+   Diseño propio de Préstamos: formulario por pasos de "Nuevo
+   préstamo" y las tarjetas del detalle de préstamo. Lo compartido
+   con Usuarios/Reservas (fondo crema, filtros, tabla, paginación)
+   vive en admin-panel-shared.css. El combobox de usuario reutiliza
+   los estilos ya definidos en admin-reservas.css (.combobox-*).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* El combobox de usuario reutiliza .combobox-preview / .combobox-menu
+   de admin-reservas.css, pero esas clases fijan un `display` propio
+   que empata en especificidad con la regla UA de [hidden] y puede
+   ganarle. Se refuerza aquí, sin tocar el archivo compartido. */
+[data-combobox-preview][hidden],
+[data-combobox-menu][hidden] {
+  display: none !important;
+}
+
+/* ── Nuevo préstamo: formulario por pasos ─────────────────────── */
+.prestamo-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.prestamo-step {
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.prestamo-step:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.prestamo-step h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  color: #2c1f14;
+  margin: 0 0 14px;
+}
+
+.prestamo-step__num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #b07d2b;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prestamo-step > label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2c1f14;
+  margin-bottom: 8px;
+}
+
+.prestamo-count-badge {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+
+.prestamo-empty-msg {
+  margin: 10px 2px 0;
+}
+
+/* ── Listado de ejemplares disponibles ────────────────────────── */
+.prestamo-ejemplares-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding-right: 4px;
+}
+
+.prestamo-ejemplar-row[hidden] {
+  display: none !important;
+}
+
+.prestamo-ejemplar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.prestamo-ejemplar-row:hover {
+  border-color: var(--color-primary);
+}
+
+.prestamo-ejemplar-row:has([data-ejemplar-checkbox]:checked) {
+  background: #eef6f4;
+  border-color: var(--color-primary);
+}
+
+.prestamo-ejemplar-row [data-ejemplar-checkbox] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.prestamo-ejemplar-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #f3ede1;
+  color: #b07d2b;
+  flex-shrink: 0;
+}
+
+.prestamo-ejemplar-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.prestamo-ejemplar-row__info strong {
+  font-size: 0.9rem;
+  color: #2c1f14;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prestamo-ejemplar-row__info small {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .prestamo-ejemplar-row {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Detalle de préstamo ───────────────────────────────────────── */
+.admin-prestamos-page .detail-info {
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.admin-prestamos-page .detail-info p {
+  font-size: 0.92rem;
+  color: #2c1f14;
+}
+
+.admin-prestamos-page .loan-item-grid {
+  margin-top: 4px;
+}
+
+.admin-prestamos-page .loan-item {
+  background: #fff;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.admin-prestamos-page .loan-item h2 {
+  color: #2c1f14;
+  font-family: 'Playfair Display', 'Poppins', serif;
+}
+
+.admin-prestamos-page .resource-card-meta {
+  margin-bottom: 2px;
+}
+
+.admin-prestamos-page .sanction-box {
+  background: #fdf9f0;
+  border-color: rgba(201, 168, 76, 0.3);
+}
+
+.admin-prestamos-page .sanction-box summary {
+  color: #2c1f14;
+}
+
+.admin-prestamos-page .secondary-action {
+  border-radius: var(--radius);
+}
+
+/* Alerta de material perdido pendiente de reposición (reemplaza los
+   estilos inline que traía la vista) */
+.repo-alert-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 10px;
+  background-color: #fdf3ec;
+}
+
+.repo-alert-box p {
+  margin-bottom: 0.5rem;
+}
+
+.repo-alert-box__title {
+  color: #c53030;
+}
+
+.repo-alert-box__btn {
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.repo-alert-box__btn:hover {
+  background-color: #0f5a4f;
+}
