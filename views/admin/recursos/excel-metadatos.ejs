@@ -1,19 +1,34 @@
 <link rel="stylesheet" href="/css/components/forms.css">
 <link rel="stylesheet" href="/css/components/tables.css">
 <link rel="stylesheet" href="/css/pages/admin-recursos.css">
+<style>
+  .import-panel {
+    background: #fdf8f0;
+    border-radius: 14px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06);
+    margin-bottom: 24px;
+  }
+  .import-panel h2 {
+    color: #2c2518;
+    font-family: 'Playfair Display', serif;
+    margin-top: 0;
+  }
+</style>
 
-<section class="panel page-header">
+<section class="panel page-header import-panel">
       <div>
         <p class="eyebrow">Actualización por lotes</p>
-        <h1>Importar metadatos desde Excel</h1>
+        <h1 style="color: #2c2518; font-family: 'Playfair Display', serif;">Importar metadatos desde Excel</h1>
       </div>
-      <a class="secondary-link" href="/admin/recursos">Volver</a>
+      <a class="secondary-link" href="/admin/recursos" style="border: 1px solid rgba(201, 168, 76, 0.4); color: #2c2518;">Volver</a>
     </section>
 
     <% if (typeof resultados === 'undefined' || !resultados) { %>
-    <section class="panel">
+    <section class="panel import-panel">
       <h2>Subir archivo Excel</h2>
-      <p class="form-hint" style="margin-bottom:1rem">
+      <p class="form-hint" style="margin-bottom:1rem; color: #5c5548;">
         Cargue un archivo <code>.xlsx</code> o <code>.csv</code> con los metadatos de sus recursos.<br>
         <strong>Columna clave:</strong> "Nombre del Archivo" (sin extensión, ej: libro1, video1).<br>
         <strong>Campos actualizables:</strong> Título, Autor, Descripción, ISBN, Clasificación, Editorial, Fecha Publicación, Duración, Idioma, Páginas, Narrador (para audio), Director (para video), Productora (para video), URL de imagen.<br>
@@ -59,7 +74,7 @@
     </section>
 
     <% } else { %>
-    <section class="panel">
+    <section class="panel import-panel">
       <h2>Resultados de la importación</h2>
 
       <%

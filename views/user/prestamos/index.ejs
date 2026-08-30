@@ -6,8 +6,24 @@
   </section>
 
   <% if (!prestamos.length) { %>
-    <section class="panel">
-      <p>No tienes préstamos activos en este momento.</p>
+    <section class="empty-state">
+      <div class="empty-state-icon-wrapper">
+        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+      </div>
+      <h2 class="empty-state-title">Aún no tienes préstamos</h2>
+      <p class="empty-state-text">Cuando solicites y retires materiales, aparecerán aquí para que puedas hacer seguimiento.</p>
+      <div class="empty-state-divider">
+        <span></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 12l10 10 10-10L12 2z"/></svg>
+        <span></span>
+      </div>
+      <a href="/catalogo" class="empty-state-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        Explorar materiales
+      </a>
     </section>
   <% } else { %>
     <% prestamos.forEach((prestamo) => { %>

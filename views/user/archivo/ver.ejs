@@ -1,7 +1,242 @@
+﻿<% if (recurso.tipo_contenido === 'Audio') { %>
+<link rel="stylesheet" href="/css/pages/audio-player.css">
+<div class="audio-player-wrapper">
+  <!-- Reproductor oculto nativo -->
+  <audio id="native-audio" src="<%= archivo.url %>"></audio>
+
+  <!-- Header -->
+  <header class="ap-header">
+    <a href="<%= backUrl %>" class="ap-back">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Volver al recurso
+    </a>
+    <div class="ap-title-box">
+      <span class="ap-badge">AUDIOLIBRO</span>
+      <h1><%= recurso.titulo %></h1>
+      <p><%= recurso.autor %></p>
+    </div>
+    <div class="ap-header-right">
+      <!-- Placeholder for symmetry -->
+    </div>
+  </header>
+
+  <!-- Contenido Central (Vinilo y Side Panel Toggle) -->
+  <main class="ap-main">
+    <div class="ap-side-toggles">
+      <button id="btn-info" class="ap-toggle-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+        <span>Información</span>
+      </button>
+    </div>
+
+    <div class="ap-vinyl-container">
+      <div class="disco" id="vinyl-disc">
+        <% if (recurso.imagen_url) { %>
+          <img src="<%= recurso.imagen_url %>" class="portada" alt="Portada">
+        <% } else { %>
+          <div class="portada placeholder-portada"></div>
+        <% } %>
+        <!-- Agujero central -->
+        <div class="disco-hole"></div>
+      </div>
+    </div>
+    
+    <div class="ap-side-right">
+      <div class="ap-info-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#146c5f" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <div>
+          <small>Duración total</small>
+          <span id="ap-total-time">00:00</span>
+        </div>
+      </div>
+      <% if (recurso.narrador) { %>
+      <div class="ap-info-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#146c5f" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <div>
+          <small>Narrador</small>
+          <span><%= recurso.narrador %></span>
+        </div>
+      </div>
+      <% } %>
+      <div class="ap-info-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#146c5f" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+        <div>
+          <small>Clasificación</small>
+          <span><%= recurso.clasificacion || 'No especificada' %></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Panel Lateral (Oculto por defecto) -->
+  <aside id="ap-side-panel" class="ap-side-panel">
+    <div class="ap-side-header">
+      <h2>Información del audiolibro</h2>
+      <button id="btn-close-info" class="ap-close-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="ap-side-content">
+      <h3>Sinopsis</h3>
+      <p><%= recurso.descripcion || 'No hay descripción disponible.' %></p>
+      
+      <h3>Detalles</h3>
+      <ul class="ap-details-list">
+        <li><strong>Autor:</strong> <%= recurso.autor %></li>
+        <li><strong>Narrador:</strong> <%= recurso.narrador || 'N/A' %></li>
+        <li><strong>Publicado:</strong> <%= recurso.fecha_publicacion ? new Date(recurso.fecha_publicacion).getFullYear() : 'N/A' %></li>
+        <li><strong>Categoría:</strong> <%= recurso.clasificacion || 'N/A' %></li>
+        <li><strong>Idioma:</strong> <%= recurso.idioma || 'N/A' %></li>
+        <li><strong>ISBN:</strong> <%= recurso.isbn || 'N/A' %></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Controles inferiores -->
+  <footer class="ap-controls">
+    <div class="ap-progress-area">
+      <span id="ap-current-time">00:00</span>
+      <input type="range" id="ap-progress-bar" class="ap-slider ap-progress-slider" value="0" step="0.1" min="0" max="100">
+      <span id="ap-duration">00:00</span>
+    </div>
+    
+    <div class="ap-buttons-area">
+      <div class="ap-volume-control">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        <input type="range" id="ap-volume-slider" class="ap-slider" value="1" step="0.05" min="0" max="1">
+      </div>
+      
+      <div class="ap-main-buttons">
+        <button id="btn-prev-chap" class="ap-ctrl-btn" title="Anterior">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+        </button>
+        <button id="btn-backward" class="ap-ctrl-btn ap-skip-btn" title="Retroceder 15s">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          <span>15</span>
+        </button>
+        
+        <button id="btn-play-pause" class="ap-play-btn">
+          <svg id="icon-play" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg id="icon-pause" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        
+        <button id="btn-forward" class="ap-ctrl-btn ap-skip-btn" title="Avanzar 15s">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11V9a4 4 0 0 0-4-4H3"></path><polyline points="17 23 21 19 17 15"></polyline><path d="M3 13v2a4 4 0 0 0 4 4h14"></path></svg>
+          <span>15</span>
+        </button>
+        <button id="btn-next-chap" class="ap-ctrl-btn" title="Siguiente">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        </button>
+      </div>
+      
+      <div class="ap-extra-controls">
+        <select id="ap-speed" class="ap-speed-select">
+          <option value="0.75">0.75x</option>
+          <option value="1" selected>1.0x</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="2">2.0x</option>
+        </select>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const audio = document.getElementById("native-audio");
+  const playBtn = document.getElementById("btn-play-pause");
+  const iconPlay = document.getElementById("icon-play");
+  const iconPause = document.getElementById("icon-pause");
+  const progressBar = document.getElementById("ap-progress-bar");
+  const currentTimeEl = document.getElementById("ap-current-time");
+  const durationEl = document.getElementById("ap-duration");
+  const totalTimeEl = document.getElementById("ap-total-time");
+  const btnBackward = document.getElementById("btn-backward");
+  const btnForward = document.getElementById("btn-forward");
+  const vinylDisc = document.getElementById("vinyl-disc");
+  const volumeSlider = document.getElementById("ap-volume-slider");
+  const speedSelect = document.getElementById("ap-speed");
+  const btnInfo = document.getElementById("btn-info");
+  const btnCloseInfo = document.getElementById("btn-close-info");
+  const sidePanel = document.getElementById("ap-side-panel");
+
+  function formatTime(seconds) {
+    if (isNaN(seconds)) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) {
+      return h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    }
+    return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  audio.addEventListener("loadedmetadata", () => {
+    durationEl.textContent = formatTime(audio.duration);
+    totalTimeEl.textContent = formatTime(audio.duration);
+    progressBar.max = audio.duration;
+  });
+
+  audio.addEventListener("timeupdate", () => {
+    currentTimeEl.textContent = formatTime(audio.currentTime);
+    if(!progressBar.classList.contains("dragging")) {
+      progressBar.value = audio.currentTime;
+      updateSliderProgress(progressBar);
+    }
+  });
+
+  playBtn.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      iconPlay.style.display = "none";
+      iconPause.style.display = "block";
+      vinylDisc.classList.add("spinning");
+    } else {
+      audio.pause();
+      iconPlay.style.display = "block";
+      iconPause.style.display = "none";
+      vinylDisc.classList.remove("spinning");
+    }
+  });
+
+  btnBackward.addEventListener("click", () => { audio.currentTime = Math.max(0, audio.currentTime - 15); });
+  btnForward.addEventListener("click", () => { audio.currentTime = Math.min(audio.duration, audio.currentTime + 15); });
+
+  progressBar.addEventListener("mousedown", () => progressBar.classList.add("dragging"));
+  progressBar.addEventListener("mouseup", () => progressBar.classList.remove("dragging"));
+  progressBar.addEventListener("input", (e) => {
+    audio.currentTime = e.target.value;
+    updateSliderProgress(e.target);
+  });
+
+  volumeSlider.addEventListener("input", (e) => {
+    audio.volume = e.target.value;
+    updateSliderProgress(e.target);
+  });
+
+  speedSelect.addEventListener("change", (e) => { audio.playbackRate = parseFloat(e.target.value); });
+
+  btnInfo.addEventListener("click", () => { sidePanel.classList.add("open"); });
+  btnCloseInfo.addEventListener("click", () => { sidePanel.classList.remove("open"); });
+
+  function updateSliderProgress(slider) {
+    const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+    slider.style.setProperty('--progress', val + '%');
+  }
+
+  // Initial slider updates
+  updateSliderProgress(volumeSlider);
+  updateSliderProgress(progressBar);
+});
+</script>
+
+<% } else { %>
+<!-- AQUI VA EL VISOR NORMAL PARA PDF, VIDEO Y EPUB -->
 
 
 <section class="panel page-title-panel">
-  <a class="back-link" href="<%= backUrl %>">← Volver al recurso</a>
+  <a class="back-link" href="<%= backUrl %>">â† Volver al recurso</a>
   <h1><%= recurso.titulo %></h1>
   <p class="author"><%= recurso.autor %></p>
 </section>
@@ -12,13 +247,13 @@
 
     <% if (archivo.tipo === 'epub') { %>
       <!-- ePub: visor epub.js -->
-      <p class="acceso-label">📖 LEYENDO EN LA PLATAFORMA</p>
+      <p class="acceso-label">ðŸ“– LEYENDO EN LA PLATAFORMA</p>
       <div id="epub-visor" style="width:100%;height:650px;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#fff;">
         <p style="padding:2rem;text-align:center;color:#888;">Cargando libro...</p>
       </div>
       <div style="display:flex;gap:1rem;margin-top:1rem;">
-        <button id="prev-btn" class="btn btn-secondary">← Anterior</button>
-        <button id="next-btn" class="btn btn-primary">Siguiente →</button>
+        <button id="prev-btn" class="btn btn-secondary">â† Anterior</button>
+        <button id="next-btn" class="btn btn-primary">Siguiente â†’</button>
       </div>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
@@ -35,10 +270,10 @@
       </script>
 
     <% } else { %>
-      <!-- PDF: Google Docs Viewer como proxy de visualización -->
+      <!-- PDF: Google Docs Viewer como proxy de visualizaciÃ³n -->
       <!-- Esto resuelve el problema de que Cloudinary raw no acepta transformaciones -->
       <!-- El PDF se visualiza directamente sin descargarse -->
-      <p class="acceso-label">👁 VISUALIZANDO EN LA PLATAFORMA</p>
+      <p class="acceso-label">ðŸ‘ VISUALIZANDO EN LA PLATAFORMA</p>
       <iframe
         src="https://docs.google.com/viewer?url=<%= encodeURIComponent(archivo.url) %>&embedded=true"
         width="100%"
@@ -47,22 +282,22 @@
         title="<%= recurso.titulo %>">
       </iframe>
       <p style="font-size:0.82rem;color:#888;margin-top:0.5rem;">
-        Si el visor no carga, espera unos segundos y recarga la página.
+        Si el visor no carga, espera unos segundos y recarga la pÃ¡gina.
       </p>
 
-      <!-- Botón descarga: va al servidor que hace el proxy correcto -->
+      <!-- BotÃ³n descarga: va al servidor que hace el proxy correcto -->
       <% if (puedeDescargar && urlDescarga) { %>
         <div style="margin-top:1.25rem;">
           <a href="<%= urlDescarga %>" class="btn btn-secondary">
-            ⬇ Descargar <%= archivo.tipo ? archivo.tipo.toUpperCase() : 'archivo' %>
+            â¬‡ Descargar <%= archivo.tipo ? archivo.tipo.toUpperCase() : 'archivo' %>
           </a>
         </div>
       <% } %>
     <% } %>
 
   <% } else if (recurso.tipo_contenido === 'Audio') { %>
-    <!-- Audiolibro: reproductor HTML5 nativo — funciona directo con URL de Cloudinary -->
-    <p class="acceso-label">🎧 REPRODUCIENDO EN LA PLATAFORMA</p>
+    <!-- Audiolibro: reproductor HTML5 nativo â€” funciona directo con URL de Cloudinary -->
+    <p class="acceso-label">ðŸŽ§ REPRODUCIENDO EN LA PLATAFORMA</p>
     <audio
       controls
       src="<%= archivo.url %>"
@@ -72,14 +307,14 @@
 
   <% } else if (recurso.tipo_contenido === 'Video') { %>
     <% if (archivo.tipo === 'url') { %>
-      <p class="acceso-label">▶ RECURSO DE VIDEO</p>
+      <p class="acceso-label">â–¶ RECURSO DE VIDEO</p>
       <p style="margin-bottom:1rem;">Haz clic para ver el video en la plataforma externa.</p>
       <a href="<%= archivo.url %>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-        🔗 Ver video externo
+        ðŸ”— Ver video externo
       </a>
     <% } else { %>
       <!-- Video MP4: reproductor HTML5 nativo -->
-      <p class="acceso-label">▶ REPRODUCIENDO EN LA PLATAFORMA</p>
+      <p class="acceso-label">â–¶ REPRODUCIENDO EN LA PLATAFORMA</p>
       <video
         controls
         src="<%= archivo.url %>"
@@ -92,9 +327,10 @@
   <% } else { %>
     <p>No se puede mostrar este archivo en el visor.</p>
     <a href="<%= archivo.url %>" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-      🔗 Abrir archivo
+      ðŸ”— Abrir archivo
     </a>
   <% } %>
 
 </section>
-
+
+<% } %>

@@ -1,13 +1,28 @@
 <link rel="stylesheet" href="/css/components/forms.css">
 <link rel="stylesheet" href="/css/components/tables.css">
 <link rel="stylesheet" href="/css/pages/admin-recursos.css">
+<style>
+  .import-panel {
+    background: #fdf8f0;
+    border-radius: 14px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(98, 51, 7, 0.06);
+    margin-bottom: 24px;
+  }
+  .import-panel h2 {
+    color: #2c2518;
+    font-family: 'Playfair Display', serif;
+    margin-top: 0;
+  }
+</style>
 
-<section class="panel page-header">
+<section class="panel page-header import-panel">
       <div>
         <p class="eyebrow">Registro por lotes</p>
-        <h1>Carga masiva ZIP</h1>
+        <h1 style="color: #2c2518; font-family: 'Playfair Display', serif;">Carga masiva ZIP</h1>
       </div>
-      <a class="secondary-link" href="/admin/recursos">Volver</a>
+      <a class="secondary-link" href="/admin/recursos" style="border: 1px solid rgba(201, 168, 76, 0.4); color: #2c2518;">Volver</a>
     </section>
 
     <% if (typeof previsualizar === 'undefined' || !previsualizar) { %>
@@ -18,9 +33,9 @@
        * ─────────────────────────────────────────────────────────────────────
        */
     %>
-    <section class="panel">
+    <section class="panel import-panel">
       <h2>Subir archivo ZIP</h2>
-      <p class="form-hint" style="margin-bottom:1rem">
+      <p class="form-hint" style="margin-bottom:1rem; color: #5c5548;">
         El sistema aceptará las siguientes estructuras internas:<br>
         <strong>Estructura plana</strong> — archivos sueltos asociados por nombre (ej: <code>libro1.pdf</code> y <code>libro1.jpg</code>).<br>
         <strong>Estructura por carpetas</strong> — cada subcarpeta = 1 recurso; el nombre de la carpeta se usa como título provisional.
@@ -74,9 +89,9 @@
         const erroresDet = recursos.filter(r => r.estadoDeteccion === 'Error');
         const validos = [...nuevos, ...pendientes];
       %>
-      <section class="panel">
+      <section class="panel import-panel">
         <h2>Vista previa de la carga</h2>
-        <p class="form-hint">
+        <p class="form-hint" style="color: #5c5548;">
           Revise los recursos detectados antes de confirmar. <strong>Nuevos</strong> se crearán. <strong>Pendientes</strong> recibirán el archivo. <strong>Ya existentes</strong> se ignorarán.
         </p>
 
