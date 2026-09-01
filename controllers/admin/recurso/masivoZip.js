@@ -318,11 +318,11 @@ exports.confirmarMasivo = async (req, res, next) => {
     // Responder de inmediato al frontend
     res.json({ success: true, jobId, message: 'Procesamiento en segundo plano iniciado.' });
 
-    // Funci�n autoejecutable para procesar en segundo plano
+    // Función autoejecutable para procesar en segundo plano
     (async () => {
       const job = global.bulkJobs.get(jobId);
       
-      // Funci�n para procesar un solo recurso
+      // Función para procesar un solo recurso
       const procesarRecurso = async (recurso) => {
         job.currentTitle = recurso.titulo;
         try {
@@ -346,7 +346,7 @@ exports.confirmarMasivo = async (req, res, next) => {
                 es_principal: isPrincipal,
                 nombre_capitulo: entry.name,
                 orden:        index + 1,
-                tamaño_bytes: mainSubido.tamaño_bytes,
+                tamano_bytes: mainSubido.tamano_bytes,
                 subido_en:    new Date(),
               });
               index++;
@@ -361,7 +361,7 @@ exports.confirmarMasivo = async (req, res, next) => {
               url:          compSubido.url,
               public_id:    compSubido.public_id,
               es_principal: false,
-              tamaño_bytes: compSubido.tamaño_bytes,
+              tamano_bytes: compSubido.tamano_bytes,
               subido_en:    new Date(),
             });
           }
@@ -435,7 +435,7 @@ exports.confirmarMasivo = async (req, res, next) => {
       // Finalizar
       if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
       job.status = 'completado';
-      job.errores = [...erroresDeteccion, ...job.errores]; // sumar errores de detecci�n
+      job.errores = [...erroresDeteccion, ...job.errores]; // sumar errores de detección
       
     })();
     // ====== FIN BACKGROUND JOB ======

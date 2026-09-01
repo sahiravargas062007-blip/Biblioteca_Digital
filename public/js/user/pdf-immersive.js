@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
       });
 
-      document.getElementById('pdf-page-info').textContent = \Página \ de \\;
+      document.getElementById('pdf-page-info').textContent = \Pï¿½gina \ de \\;
     });
   };
 
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
   pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
     pdfDoc = pdfDoc_;
-    document.getElementById('pdf-page-info').textContent = \Página \ de \\;
+    document.getElementById('pdf-page-info').textContent = \Pï¿½gina \ de \\;
     renderPage(pageNum);
   }).catch(err => {
     visor.innerHTML = '<p style="color:red;padding:2rem;">Error cargando PDF: ' + err.message + '</p>';

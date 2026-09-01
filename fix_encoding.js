@@ -1,41 +1,76 @@
-const fs = require('fs');
-const file = 'C:\\Biblioteca_Digital\\controllers\\admin\\recurso\\masivoZip.js';
-let content = fs.readFileSync(file, 'utf8');
+锘縞onst fs = require('fs');
+const path = require('path');
 
-// The replacement char in utf8 might be \uFFFD. Let's just use regex to match it and replace
-content = content.replace(/Pendiente de configuracin/g, 'Pendiente de configuraci髇');
-content = content.replace(/Pendiente de configuraci\ufffdn/g, 'Pendiente de configuraci髇');
-
-content = content.replace(/ttulo/g, 'titulo');
-content = content.replace(/t\ufffdtulo/g, 'titulo'); // changed back to titulo because schema uses titulo without accent
-
-content = content.replace(/msivamente/g, 'masivamente');
-content = content.replace(/m\ufffdsivamente/g, 'masivamente');
-
-content = content.replace(/mos/g, 'm醩');
-content = content.replace(/m\u01eds/g, 'm醩');
-
-content = content.replace(/pgblico/g, 'p鷅lico');
-content = content.replace(/p\u01e7blico/g, 'p鷅lico');
-
-content = content.replace(/tamao/g, 'tama駉');
-content = content.replace(/tama\ufffdo/g, 'tama駉');
-
-content = content.replace(/aos/g, 'a駉s');
-content = content.replace(/a\ufffdos/g, 'a駉s');
-
-// Just to be extremely safe, doing explicit string replacements:
-const toReplace = [
-    ["Pendiente de configuracin", "Pendiente de configuraci髇"],
-    ["ttulo", "titulo"],
-    ["msivamente", "masivamente"],
-    ["mos", "m醩"],
-    ["pgblico", "p鷅lico"],
-    ["tamao", "tama駉"]
-];
-for(const [bad, good] of toReplace) {
-    content = content.split(bad).join(good);
+function replaceInFile(filePath, replacements) {
+    let content = fs.readFileSync(filePath, 'utf8');
+    let modified = false;
+    
+    // Fix \uFFFD based on context
+    if (content.includes('\uFFFD')) {
+        // We can just use global regex for the specific words we know got corrupted
+        content = content.replace(/Pendiente de configuraci\uFFFDn/g, 'Pendiente de configuraci贸n');
+        content = content.replace(/detecci\uFFFDn/g, 'detecci贸n');
+        content = content.replace(/tama\uFFFDo/g, 'tama帽o');
+        content = content.replace(/a\uFFFDo/g, 'a帽o');
+        content = content.replace(/dise\uFFFDo/g, 'dise帽o');
+        content = content.replace(/Funci\uFFFDn/g, 'Funci贸n');
+        content = content.replace(/Categor\uFFFDa/g, 'Categor铆a');
+        content = content.replace(/Subcategor\uFFFDa/g, 'Subcategor铆a');
+        content = content.replace(/Gesti\uFFFDn/g, 'Gesti贸n');
+        content = content.replace(/colecci\uFFFDn/g, 'colecci贸n');
+        content = content.replace(/informaci\uFFFDn/g, 'informaci贸n');
+        content = content.replace(/versi\uFFFDn/g, 'versi贸n');
+        content = content.replace(/edici\uFFFDn/g, 'edici贸n');
+        content = content.replace(/p\uFFFDgina/g, 'p谩gina');
+        content = content.replace(/t\uFFFDtulo/g, 't铆tulo');
+        content = content.replace(/T\uFFFDtulo/g, 'T铆tulo');
+        content = content.replace(/autom\uFFFDtic/g, 'autom谩tic');
+        content = content.replace(/m\uFFFDs/g, 'm谩s');
+        content = content.replace(/ra\uFFFDa/g, 'ra铆z');
+        content = content.replace(/ra\uFFFDz/g, 'ra铆z');
+        content = content.replace(/ning\uFFFDn/g, 'ning煤n');
+        content = content.replace(/est\uFFFD/g, 'est谩');
+        content = content.replace(/vac\uFFFDo/g, 'vac铆o');
+        content = content.replace(/Funci\uFFFDn/g, 'Funci贸n');
+        
+        // Blind replace for any remaining diamond questions in comments? Better to be safe.
+        // Actually, if we miss any, we can do a general replace or just let it be.
+        modified = true;
+    }
+    
+    if (replacements) {
+        for (const r of replacements) {
+            const before = content;
+            content = content.replace(r.from, r.to);
+            if (content !== before) modified = true;
+        }
+    }
+    
+    if (modified) {
+        fs.writeFileSync(filePath, content, 'utf8');
+        console.log(`Fixed ${filePath}`);
+    }
 }
 
-fs.writeFileSync(file, content, 'utf8');
-console.log("Fixed encoding strings in masivoZip.js");
+// 1. Fix Recurso schema
+replaceInFile('C:\\Biblioteca_Digital\\models\\Recurso.js', [
+    { from: /Pendiente de configuraci.n/g, to: 'Pendiente de configuraci贸n' }
+]);
+
+// 2. Fix masivoZip.js and ensure tamano_bytes is used correctly
+replaceInFile('C:\\Biblioteca_Digital\\controllers\\admin\\recurso\\masivoZip.js', [
+    { from: /tama帽o_bytes/g, to: 'tamano_bytes' }, // Revert user's manual change if any
+    { from: /Pendiente de configuraci.n/g, to: 'Pendiente de configuraci贸n' }
+]);
+
+// 3. Fix payload.js
+replaceInFile('C:\\Biblioteca_Digital\\controllers\\admin\\recurso\\payload.js', [
+    { from: /Pendiente de configuraci.n/g, to: 'Pendiente de configuraci贸n' }
+]);
+
+// 4. Fix other corrupted files
+replaceInFile('C:\\Biblioteca_Digital\\public\\js\\user\\pdf-immersive.js');
+replaceInFile('C:\\Biblioteca_Digital\\views\\admin\\recursos\\nuevo.ejs');
+replaceInFile('C:\\Biblioteca_Digital\\views\\user\\archivo\\ver.ejs');
+
+console.log("Done");
