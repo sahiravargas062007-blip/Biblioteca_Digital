@@ -175,13 +175,44 @@ async function buildRecursoPayload(req) {
       ? Number(req.body.duracion_segundos) : undefined,
     imagen,
     categorias,
-    estado: req.body.estado || (publicado ? 'Activo' : 'Pendiente de configuración'),
+    
     digital:           digitalPayload,
     fisico:            buildFisico(req.body),
     publicado,
-    publicado_en:      publicado ? new Date() : undefined,
+    
     actualizado_en:    new Date(),
   };
+
+  
+  // --- Validacion y Estado automatico ---
+  const tit = payload.titulo || '';
+  const aut = payload.autor || '';
+  const desc = payload.descripcion || '';
+  const lang = payload.idioma || '';
+  
+  const isComplete = 
+    tit.trim() !== '' && tit.toLowerCase() !== 'pendiente de completar' &&
+    aut.trim() !== '' && aut.toLowerCase() !== 'pendiente de completar' &&
+    desc.trim() !== '' && desc.toLowerCase() !== 'pendiente de completar' &&
+    lang.trim() !== '' && lang.toLowerCase() !== 'pendiente de completar' &&
+    payload.categorias && payload.categorias.length > 0;
+  
+  if (publicado || req.body.estado === 'Activo') {
+    if (!isComplete) {
+      const err = new Error("No se puede publicar ni activar el recurso: faltan metadatos requeridos (t\u00EDtulo, autor, descripci\u00F3n, idioma, o categor\u00EDas).");
+      err.isValidationError = true;
+      throw err;
+    }
+    payload.estado = 'Activo';
+    payload.publicado = true;
+    payload.publicado_en = payload.publicado_en || new Date();
+  } else {
+    if (isComplete && req.body.estado === 'Pendiente de configuraci\u00F3n') {
+      payload.estado = 'Activo';
+    } else {
+      payload.estado = req.body.estado || 'Pendiente de configuraci\u00F3n';
+    }
+  }
 
   if (req.body.tipo_contenido === 'Lectura') {
     const { validarMetadatos } = require('../../../validators/metadatos.validator');

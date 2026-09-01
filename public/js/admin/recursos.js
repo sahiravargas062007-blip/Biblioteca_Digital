@@ -113,56 +113,24 @@ function renderMetadatosDinamicos() {
 
 // Sincroniza la fila de autocompletar (ISBN para Libro, DOI para Artículo, oculto para otros)
 function syncAutocompletarRow() {
-  var row = document.getElementById('isbn-row');
-  if (!row) return;
+    var row = document.getElementById('meta-row');
+    if (!row) return;
 
-  var content = val('tipo_contenido');
-  var material = val('tipo_material');
+    var content = val('tipo_contenido');
+    var material = val('tipo_material');
+    var isbnCont = document.getElementById('isbn-container');
+    var doiCont = document.getElementById('doi-container');
 
-  if (content === 'Lectura' && (material === 'Libro' || material === 'Artículo')) {
-    row.style.display = '';
-
-    var cardLabel = row.querySelector('.af-card__label');
-    var inputSpan = row.querySelector('.af-label span');
-    var inputEl = document.getElementById('isbn-input');
-    var btn = document.getElementById('isbn-search-btn');
-
-    if (material === 'Libro') {
-      if (cardLabel) cardLabel.innerHTML = 'ISBN (opcional — autocompleta metadatos)';
-      if (inputSpan) {
-        inputSpan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> ISBN';
-      }
-      if (inputEl) {
-        inputEl.placeholder = '978-...';
-        if (!inputEl.value && window.RECURSO_METADATOS && window.RECURSO_METADATOS.isbn) {
-          inputEl.value = window.RECURSO_METADATOS.isbn;
-        }
-      }
-      if (btn) {
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar ISBN';
-      }
-    } else if (material === 'Artículo') {
-      if (cardLabel) cardLabel.innerHTML = 'DOI (opcional — autocompleta metadatos)';
-      if (inputSpan) {
-        inputSpan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> DOI';
-      }
-      if (inputEl) {
-        inputEl.placeholder = 'e.g., 10.1000/xyz123';
-        if ((!inputEl.value || inputEl.value.includes('-')) && window.RECURSO_METADATOS && window.RECURSO_METADATOS.doi) {
-          inputEl.value = window.RECURSO_METADATOS.doi;
-        }
-      }
-      if (btn) {
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar DOI';
-      }
+    if (content === 'Lectura' && (material === 'Libro' || material === 'Art\u00EDculo')) {
+      row.style.display = '';
+      if (isbnCont) isbnCont.style.display = (material === 'Libro') ? '' : 'none';
+      if (doiCont) doiCont.style.display = (material === 'Art\u00EDculo') ? '' : 'none';
+    } else {
+      row.style.display = 'none';
     }
-  } else {
-    row.style.display = 'none';
   }
-}
 
-// ── Mostrar / ocultar secciones según tipo de contenido y naturaleza ──────
-function syncForm() {
+  function syncForm() {
   var contenido  = val('tipo_contenido');
   var naturaleza = val('tipo_naturaleza');
 
@@ -189,29 +157,7 @@ function syncForm() {
   document.getElementById('audio-fields').style.display = audio ? '' : 'none';
   document.getElementById('video-fields').style.display = video ? '' : 'none';
 
-  // ISBN: visible en Lectura y Audio (pero para Lectura lo delegamos a syncAutocompletarRow)
-  if (contenido === 'Audio') {
-    var isbnRow = document.getElementById('isbn-row');
-    if (isbnRow) {
-      isbnRow.style.display = '';
-      var cardLabel = isbnRow.querySelector('.af-card__label');
-      var inputSpan = isbnRow.querySelector('.af-label span');
-      var inputEl = document.getElementById('isbn-input');
-      var btn = document.getElementById('isbn-search-btn');
-      if (cardLabel) cardLabel.innerHTML = 'ISBN (opcional — autocompleta metadatos)';
-      if (inputSpan) {
-        inputSpan.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> ISBN';
-      }
-      if (inputEl) inputEl.placeholder = '978-...';
-      if (btn) {
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Buscar ISBN';
-      }
-    }
-  } else if (contenido === 'Video') {
-    hide('isbn-row');
-  } else {
-    syncAutocompletarRow();
-  }
+  syncAutocompletarRow();
 
   // Páginas estático: siempre oculto para Lectura (que usa dinámico en Libro), y oculto para los demás
   var paginasWrap = document.getElementById('paginas-wrap');

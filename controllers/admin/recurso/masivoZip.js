@@ -33,7 +33,7 @@ function analizarZip(zip, tipoContenido) {
   const errores = [];
   const gruposCarpeta = new Map();
   // Archivos sin carpeta (o cuya carpeta contenedora es única/compartida
-  // por todos): se emparejan por similitud de título, no por nombre exacto.
+  // por todos): se emparejan por similitud de titulo, no por nombre exacto.
   const sueltos = { mains: [], portadas: [], complementos: [] };
 
   const mainExts = MAIN_EXTS_POR_TIPO[tipoContenido] || [];
@@ -63,11 +63,18 @@ function analizarZip(zip, tipoContenido) {
   // ── Pasada 2: ¿el ZIP realmente tiene "una carpeta por recurso", o es
   //    todo (raíz, o una única carpeta contenedora tipo "Audiolibros/")
   //    envolviendo un solo lote de archivos sueltos? Solo si hay 2+
-  //    carpetas DISTINTAS asumimos que cada una es un recurso propio.
+  //    carpetas DISTINTAS asumimás que cada una es un recurso propio.
   const carpetasDistintas = new Set(
     archivos.filter(a => a.carpetaKey !== null).map(a => a.carpetaKey)
   );
-  const modoCarpetaPorRecurso = carpetasDistintas.size >= 2;
+  let modoCarpetaPorRecurso = carpetasDistintas.size >= 2;
+  if (tipoContenido === 'Audio' && carpetasDistintas.size === 1) {
+    const folderName = Array.from(carpetasDistintas)[0].toLowerCase().trim();
+    const genericNames = ['audiolibros', 'audio libros', 'libros', 'audios', 'audio', 'audiobooks', 'audiobook', 'books'];
+    if (!genericNames.includes(folderName)) {
+      modoCarpetaPorRecurso = true;
+    }
+  }
 
   for (const { entry, base, ext, carpetaKey } of archivos) {
     if (modoCarpetaPorRecurso && carpetaKey !== null) {
@@ -85,7 +92,7 @@ function analizarZip(zip, tipoContenido) {
         grupo.complemento = entry;
       }
     } else {
-      // ── Modo "archivos sueltos": se emparejan por título parecido ──────
+      // ── Modo "archivos sueltos": se emparejan por titulo parecido ──────
       // (aplica tanto a archivos en la raíz como a los que comparten una
       // única carpeta contenedora envolviendo todo el lote)
       if (mainExts.includes(ext)) {
@@ -173,7 +180,7 @@ exports.analizarZip = analizarZip;
 
 /**
  * Busca en la BD un conjunto amplio de candidatos que podrían coincidir
- * con alguno de los títulos detectados, usando sus palabras significativas
+ * con alguno de los titulos detectados, usando sus palabras significativas
  * como filtro (para no traer toda la colección). La comparación fina y
  * difusa se hace después con tituloService, no aquí.
  */
@@ -189,7 +196,7 @@ async function buscarCandidatosPorTitulo(titulos) {
 }
 
 /** Marca cada recurso detectado como Nuevo / Error / ya existente en BD, usando
- * comparación difusa de títulos (mismo criterio en previsualizar y confirmar). */
+ * comparación difusa de titulos (mismo criterio en previsualizar y confirmar). */
 async function marcarEstadoDeteccion(recursos) {
   const titulos = recursos.map(r => r.titulo);
   const candidatosDB = await buscarCandidatosPorTitulo(titulos);
@@ -311,11 +318,11 @@ exports.confirmarMasivo = async (req, res, next) => {
     // Responder de inmediato al frontend
     res.json({ success: true, jobId, message: 'Procesamiento en segundo plano iniciado.' });
 
-    // Funci�n autoejecutable para procesar en segundo plano
+    // Funci�n autoejecutable para procesar en segundo plano
     (async () => {
       const job = global.bulkJobs.get(jobId);
       
-      // Funci�n para procesar un solo recurso
+      // Funci�n para procesar un solo recurso
       const procesarRecurso = async (recurso) => {
         job.currentTitle = recurso.titulo;
         try {
@@ -339,7 +346,7 @@ exports.confirmarMasivo = async (req, res, next) => {
                 es_principal: isPrincipal,
                 nombre_capitulo: entry.name,
                 orden:        index + 1,
-                tamano_bytes: mainSubido.tamano_bytes,
+                tamaño_bytes: mainSubido.tamaño_bytes,
                 subido_en:    new Date(),
               });
               index++;
@@ -354,7 +361,7 @@ exports.confirmarMasivo = async (req, res, next) => {
               url:          compSubido.url,
               public_id:    compSubido.public_id,
               es_principal: false,
-              tamano_bytes: compSubido.tamano_bytes,
+              tamaño_bytes: compSubido.tamaño_bytes,
               subido_en:    new Date(),
             });
           }
@@ -377,7 +384,7 @@ exports.confirmarMasivo = async (req, res, next) => {
             const nuevaImagen = recurso.portadaEntry ? imagen : doc.imagen;
 
             await Recurso.findByIdAndUpdate(doc._id, {
-              $set: { 'digital.archivos': todosArchivos, imagen: nuevaImagen, estado: 'Pendiente de configuraci�n', actualizado_en: new Date() }
+              $set: { 'digital.archivos': todosArchivos, imagen: nuevaImagen, estado: 'Pendiente de configuración', actualizado_en: new Date() }
             });
             job.actualizados++;
           } else {
@@ -392,7 +399,7 @@ exports.confirmarMasivo = async (req, res, next) => {
               idioma:          '',
               imagen,
               categorias:      [],
-              estado:          'Pendiente de configuraci�n',
+              estado:          'Pendiente de configuración',
               publicado:       false,
               digital: { tipo_licencia: 'Libre', archivos, licencias_en_uso: 0, estado_disponibilidad: 'Acceso libre' },
               fisico:          undefined,
@@ -428,7 +435,7 @@ exports.confirmarMasivo = async (req, res, next) => {
       // Finalizar
       if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
       job.status = 'completado';
-      job.errores = [...erroresDeteccion, ...job.errores]; // sumar errores de detecci�n
+      job.errores = [...erroresDeteccion, ...job.errores]; // sumar errores de detecci�n
       
     })();
     // ====== FIN BACKGROUND JOB ======

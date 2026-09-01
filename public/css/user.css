@@ -385,9 +385,9 @@
   color: #fff;
 }
 .empty-state-title {
-  font-family: "Playfair Display", serif;
-  font-size: 2rem;
-  color: #fff;
+    font-family: "Playfair Display", serif;
+    font-size: 2rem;
+    color: #146c5f;
   margin-bottom: 0.75rem;
 }
 .empty-state-text {

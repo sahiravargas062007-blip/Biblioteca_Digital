@@ -1,12 +1,19 @@
 
+  <% if (prestamos.length > 0) { %>
   <section class="panel page-title-panel">
     <p class="eyebrow">Actividad</p>
     <h1>Mis préstamos</h1>
     <p class="muted">Aquí se muestran los recursos que tienes prestados y sus fechas de vencimiento.</p>
   </section>
+<% } %>
 
   <% if (!prestamos.length) { %>
-    <section class="empty-state">
+    <section class="empty-state" style="position:relative; padding-top: 8rem;">
+      <div style="position: absolute; top: 30px; left: 30px; text-align: left;">
+        <p class="eyebrow" style="color:#146c5f; margin:0;">Actividad</p>
+        <h1 style="color:#2c2518; margin: 4px 0; font-size:1.8rem; font-family:'Playfair Display',serif;">Mis préstamos</h1>
+        <p class="muted" style="color:#5c5548; margin:0; font-size:0.9rem;">Aquí se muestran los recursos que tienes prestados y sus fechas de vencimiento.</p>
+      </div>
       <div class="empty-state-icon-wrapper">
         <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>

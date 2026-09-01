@@ -1,12 +1,19 @@
 
+  <% if (sanciones.length > 0) { %>
   <section class="panel page-title-panel">
     <p class="eyebrow">Estado del usuario</p>
     <h1>Mis sanciones</h1>
     <p class="muted">Consulta tus sanciones activas e historial de sanciones levantadas.</p>
   </section>
+<% } %>
 
   <% if (!sanciones.length) { %>
-    <section class="empty-state">
+    <section class="empty-state" style="position:relative; padding-top: 8rem;">
+      <div style="position: absolute; top: 30px; left: 30px; text-align: left;">
+        <p class="eyebrow" style="color:#146c5f; margin:0;">Estado del usuario</p>
+        <h1 style="color:#2c2518; margin: 4px 0; font-size:1.8rem; font-family:'Playfair Display',serif;">Mis sanciones</h1>
+        <p class="muted" style="color:#5c5548; margin:0; font-size:0.9rem;">Consulta tus sanciones activas e historial de sanciones levantadas.</p>
+      </div>
       <div class="empty-state-icon-wrapper">
         <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>

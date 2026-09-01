@@ -103,6 +103,17 @@ exports.actualizar = async (req, res, next) => {
       flash(req, 'error', 'El recurso no existe.');
       return res.redirect('/admin/recursos');
     }
+    
+    if (payload.digital && payload.digital.archivos && payload.digital.archivos.length > 0) {
+        const payloadUrl = payload.digital.archivos[0].url;
+        const mainAnterior = recursoAnterior.digital?.archivos?.find(a => a.es_principal) || recursoAnterior.digital?.archivos?.[0];
+        
+        // If the URL hasn't changed, preserve the existing files (important for audiobooks with multiple chapters)
+        if (mainAnterior && mainAnterior.url === payloadUrl) {
+            payload.digital.archivos = recursoAnterior.digital.archivos;
+        }
+    }
+
 
     await Recurso.findByIdAndUpdate(req.params.id, payload, { runValidators: true });
 

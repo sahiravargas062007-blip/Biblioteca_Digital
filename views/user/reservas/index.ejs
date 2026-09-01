@@ -1,12 +1,19 @@
 
+  <% if (reservas.length > 0) { %>
   <section class="panel page-title-panel">
     <p class="eyebrow">Actividad</p>
     <h1>Mis reservas</h1>
-    <p class="muted">Aqui se mostraran tus reservas activas y el estado de cada solicitud.</p>
+    <p class="muted">Gestiona los materiales que has reservado para préstamo físico.</p>
   </section>
+<% } %>
 
   <% if (!reservas.length) { %>
-    <section class="empty-state">
+    <section class="empty-state" style="position:relative; padding-top: 8rem;">
+      <div style="position: absolute; top: 30px; left: 30px; text-align: left;">
+        <p class="eyebrow" style="color:#146c5f; margin:0;">Actividad</p>
+        <h1 style="color:#2c2518; margin: 4px 0; font-size:1.8rem; font-family:'Playfair Display',serif;">Mis reservas</h1>
+        <p class="muted" style="color:#5c5548; margin:0; font-size:0.9rem;">Gestiona los materiales que has reservado para préstamo físico.</p>
+      </div>
       <div class="empty-state-icon-wrapper">
         <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>

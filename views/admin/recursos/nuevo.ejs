@@ -247,16 +247,7 @@
           </label>
         </div>
         <div>
-          <label class="af-label">
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-              SubcategorÃ­a
-            </span>
-            <select name="subcategoria_id" id="subcategoria-select">
-              <option value="">Sin subcategorÃ­a</option>
-            </select>
-          </label>
-          <label class="af-label" style="margin-top:14px">
+          <label class="af-label" >
             <span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
               CategorÃ­a
@@ -269,6 +260,15 @@
                   <%= cat.nombre %>
                 </option>
               <% }); %>
+            </select>
+          </label>
+          <label class="af-label" style="margin-top:14px">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              SubcategorÃ­a
+            </span>
+            <select name="subcategoria_id" id="subcategoria-select">
+              <option value="">Sin subcategorÃ­a</option>
             </select>
           </label>
         </div>
@@ -611,7 +611,7 @@ window.RECURSO_METADATOS              = <%- JSON.stringify(recurso?.metadatos ||
     </button>
   </div>
   <div style="padding:20px; flex-grow:1; display:flex; flex-direction:column; align-items:center;">
-    <p style="text-align:center; color:#666; font-size:0.9rem; margin-bottom:20px;">Enfoca el código de barras (ISBN) o código QR (DOI) dentro del recuadro.</p>
+    <p style="text-align:center; color:#666; font-size:0.9rem; margin-bottom:20px;">Enfoca el cï¿½digo de barras (ISBN) o cï¿½digo QR (DOI) dentro del recuadro.</p>
     <div id="scanner-container" style="width:100%; height: 300px; background:#000; position:relative; overflow:hidden; border-radius:12px; display:flex; align-items:center; justify-content:center;">
       <video id="scanner-video" style="width:100%; height:100%; object-fit:cover;" autoplay playsinline muted></video>
       <div style="position:absolute; width:80%; height:40%; border:2px solid rgba(255,255,255,0.8); box-shadow:0 0 0 9999px rgba(0,0,0,0.6); border-radius:8px;">
@@ -666,7 +666,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(val === 'Libro' || val === 'Audiolibro') {
       if(isbnContainer) isbnContainer.style.display = 'block';
       if(doiContainer) doiContainer.style.display = 'none';
-    } else if(val === 'Artículo') {
+    } else if(val === 'Artï¿½culo') {
       if(isbnContainer) isbnContainer.style.display = 'none';
       if(doiContainer) doiContainer.style.display = 'block';
     } else {
@@ -704,7 +704,7 @@ document.addEventListener("DOMContentLoaded", function() {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       } catch (err) {
         console.error("User denied camera permission or error:", err);
-        alert("Debes conceder permisos de cámara para poder escanear.");
+        alert("Debes conceder permisos de cï¿½mara para poder escanear.");
         return;
       }
 
@@ -713,33 +713,60 @@ document.addEventListener("DOMContentLoaded", function() {
         setTimeout(() => scannerDrawer.style.right = "0", 10); 
       }
       if(scannerOverlay) scannerOverlay.style.display = "block";
-      statusElem.textContent = "Iniciando cámara...";
+      statusElem.textContent = "Iniciando cï¿½mara...";
       
-      try {
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-        const videoInputDevices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-        if (videoInputDevices.length === 0) {
-          statusElem.textContent = "No se encontraron cámaras";
-          return;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep() {
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          oscillator.type = 'sine';
+          oscillator.frequency.value = 800;
+          gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+          oscillator.start(audioCtx.currentTime);
+          oscillator.stop(audioCtx.currentTime + 0.1);
         }
-        
-        const deviceId = videoInputDevices[0].deviceId; 
-        
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-        
-        statusElem.textContent = "Buscando identificador...";
-        codeReader.decodeFromVideoDevice(deviceId, videoElem, (result, err) => {
-          if (result) {
-            closeScanner();
-            processScannedCode(result.text);
+
+        try {
+          codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+          const videoInputDevices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+          if (videoInputDevices.length === 0) {
+            statusElem.textContent = "No se encontraron c\u00E1maras";
+            return;
           }
-        });
-      } catch (err) {
-        console.error(err);
-        statusElem.textContent = "Error al acceder a la cámara";
-      }
+          
+          let selectedDevice = videoInputDevices[0].deviceId;
+          for (const device of videoInputDevices) {
+            const label = device.label.toLowerCase();
+            if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('trasera')) {
+              selectedDevice = device.deviceId;
+              break;
+            }
+          }
+          
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+          }
+          
+          statusElem.textContent = "Buscando identificador...";
+          codeReader.decodeFromVideoDevice(selectedDevice, videoElem, (result, err) => {
+            if (result) {
+              playBeep();
+              statusElem.textContent = "Â¡C\u00F3digo detectado!";
+              statusElem.style.color = "#28a745";
+              document.getElementById('scanner-container').style.borderColor = "#28a745";
+              setTimeout(() => {
+                closeScanner();
+                processScannedCode(result.text);
+              }, 1000);
+            }
+          });
+        } catch (err) {
+          console.error(err);
+          statusElem.textContent = "Error al acceder a la c\u00E1mara";
+        }
     });
   }
 
@@ -767,11 +794,11 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("doi-input").value = doiMatch[0];
         fetchMetadata("doi", doiMatch[0]);
       } else {
-        hintElem.textContent = "Código QR no parece contener un DOI.";
+        hintElem.textContent = "Cï¿½digo QR no parece contener un DOI.";
         hintElem.style.color = "orange";
       }
     } else {
-      hintElem.textContent = "Código no reconocido: " + code;
+      hintElem.textContent = "Cï¿½digo no reconocido: " + code;
       hintElem.style.color = "orange";
     }
   }
