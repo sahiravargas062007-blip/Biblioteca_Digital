@@ -74,11 +74,11 @@ function analizarZip(zip, tipoContenido) {
       // ── Modo "una carpeta = un recurso" ─────────────────────────────
       const key = carpetaKey;
       if (!gruposCarpeta.has(key)) {
-        gruposCarpeta.set(key, { main: null, portada: null, complemento: null });
+        gruposCarpeta.set(key, { mains: [], portada: null, complemento: null });
       }
       const grupo = gruposCarpeta.get(key);
 
-      if (mainExts.includes(ext)) grupo.main = entry;
+      if (mainExts.includes(ext)) grupo.mains.push(entry);
       if (IMG_EXTS.includes(ext)) {
         grupo.portada = entry;
       } else if (tipoContenido === 'Lectura' && COMPLEMENTO_EXTS.includes(ext)) {
@@ -103,9 +103,9 @@ function analizarZip(zip, tipoContenido) {
   //    fue true (2+ carpetas distintas). Si el ZIP tenía 0 o 1 carpeta,
   //    gruposCarpeta queda vacío y este bloque no hace nada.
   for (const [base, grupo] of gruposCarpeta.entries()) {
-    if (!grupo.main && !grupo.portada && !grupo.complemento) continue;
+    if (grupo.mains.length === 0 && !grupo.portada && !grupo.complemento) continue;
 
-    if (!grupo.main) {
+    if (grupo.mains.length === 0) {
       errores.push(`Archivo "${base}" no tiene archivo principal valido para "${tipoContenido}".`);
       recursos.push({ titulo: base, tieneMain: false, tienePortada: !!grupo.portada });
       continue;
@@ -115,7 +115,7 @@ function analizarZip(zip, tipoContenido) {
       titulo:           base.replace(/_/g, ' ').replace(/-/g, ' '),
       tieneMain:        true,
       tienePortada:     !!grupo.portada,
-      mainEntry:        grupo.main,
+      mainEntry:        grupo.mains,
       portadaEntry:     grupo.portada     || null,
       complementoEntry: grupo.complemento || null,
     });
@@ -147,7 +147,7 @@ function analizarZip(zip, tipoContenido) {
       titulo:           mainInfo.base.replace(/_/g, ' ').replace(/-/g, ' '),
       tieneMain:        true,
       tienePortada:     !!portadaMatch,
-      mainEntry:        mainInfo.entry,
+      mainEntry: [mainInfo.entry],
       portadaEntry:     portadaMatch      ? portadaMatch.entry      : null,
       complementoEntry: complementoMatch  ? complementoMatch.entry  : null,
     });
@@ -253,6 +253,14 @@ exports.previsualizarMasivo = async (req, res, next) => {
 // CA5: subir a Cloudinary y guardar en MongoDB
 // CA6: si cancela, no guarda nada
 // ─────────────────────────────────────────────────────────────────────
+if (!global.bulkJobs) global.bulkJobs = new Map();
+
+exports.getProgresoMasivo = (req, res) => {
+  const job = global.bulkJobs.get(req.params.jobId);
+  if (!job) return res.status(404).json({ error: 'Job no encontrado' });
+  res.json(job);
+};
+
 exports.confirmarMasivo = async (req, res, next) => {
   const zipTempName = req.body.zip_temp_name;
   const zipTempPath = zipTempName ? path.join(os.tmpdir(), zipTempName) : null;
@@ -290,137 +298,150 @@ exports.confirmarMasivo = async (req, res, next) => {
     let actualizados = 0;
     const erroresSubida = [];
 
-    for (const recurso of recursosAGuardar) {
-      try {
-        const archivos = [];
+    // ====== INICIO BACKGROUND JOB ======
+    const jobId = Math.random().toString(36).substring(2, 15);
+    global.bulkJobs.set(jobId, {
+      status: 'procesando',
+      total: recursosAGuardar.length,
+      procesados: 0,
+      creados: 0,
+      actualizados: 0,
+      errores: [],
+      currentTitle: ''
+    });
 
-        // Subir archivo principal a Cloudinary solo si existe
-        if (recurso.mainEntry) {
-          const mainBuffer = recurso.mainEntry.getData();
-          const mainSubido = await subirArchivoCloudinary(
-            mainBuffer,
-            recurso.mainEntry.name,
-            '',
-            recurso.titulo
-          );
+    // Responder de inmediato al frontend
+    res.json({ success: true, jobId, message: 'Procesamiento en segundo plano iniciado.' });
 
-          archivos.push({
-            tipo:         tipoArchivoFromExt(mainSubido.ext),
-            url:          mainSubido.url,
-            public_id:    mainSubido.public_id,
-            es_principal: true,
-            tamano_bytes: mainSubido.tamano_bytes,
-            subido_en:    new Date(),
-          });
-        }
-
-        // Complemento de audio (solo Lectura y si hay main)
-        if (recurso.complementoEntry && recurso.mainEntry) {
-          const compBuffer = recurso.complementoEntry.getData();
-          const compSubido = await subirArchivoCloudinary(
-            compBuffer,
-            recurso.complementoEntry.name,
-            '',
-            `${recurso.titulo}_comp`
-          );
-          archivos.push({
-            tipo:         tipoArchivoFromExt(compSubido.ext),
-            url:          compSubido.url,
-            public_id:    compSubido.public_id,
-            es_principal: false,
-            tamano_bytes: compSubido.tamano_bytes,
-            subido_en:    new Date(),
-          });
-        }
-
-        // Portada: subir a Cloudinary o usar placeholder
-        let imagen = { url: '/img/placeholder.png', public_id: '', es_default: true };
-
-        if (recurso.portadaEntry) {
-          const portadaBuffer = recurso.portadaEntry.getData();
-          const portadaResult = await subirBuffer(portadaBuffer, {
-            resource_type: 'image',
-            public_id:     generarPublicId(recurso.titulo, 'portadas'),
-            upload_preset: UPLOAD_PRESET,
-          });
-          imagen = {
-            url:        portadaResult.secure_url,
-            public_id:  portadaResult.public_id,
-            es_default: false,
-          };
-        }
-
-        if (recurso.estadoDeteccion === 'Archivo pendiente encontrado' && recurso.existenteDoc) {
-          // Actualizar Recurso existente en MongoDB
-          const doc = recurso.existenteDoc;
-
-          // Mantener archivos anteriores que no sean principales si corresponde
-          const archivosFiltrados = (doc.digital?.archivos || []).filter(a => !a.es_principal);
-          const todosArchivos = [...archivos, ...archivosFiltrados];
-
-          // Actualizar imagen si se subió portada nueva, si no dejar la existente
-          const nuevaImagen = recurso.portadaEntry ? imagen : doc.imagen;
-
-          await Recurso.findByIdAndUpdate(doc._id, {
-            $set: {
-              'digital.archivos': todosArchivos,
-              imagen: nuevaImagen,
-              estado: 'Pendiente de configuración',
-              actualizado_en: new Date()
+    // Funci�n autoejecutable para procesar en segundo plano
+    (async () => {
+      const job = global.bulkJobs.get(jobId);
+      
+      // Funci�n para procesar un solo recurso
+      const procesarRecurso = async (recurso) => {
+        job.currentTitle = recurso.titulo;
+        try {
+          const archivos = [];
+          if (recurso.mainEntry && Array.isArray(recurso.mainEntry) && recurso.mainEntry.length > 0) {
+            recurso.mainEntry.sort((a, b) => a.name.localeCompare(b.name));
+            let index = 0;
+            for (const entry of recurso.mainEntry) {
+              const mainBuffer = entry.getData();
+              const isPrincipal = (index === 0);
+              const mainSubido = await subirArchivoCloudinary(
+                mainBuffer,
+                entry.name,
+                '',
+                recurso.titulo + (recurso.mainEntry.length > 1 ? ` - Cap ${index + 1}` : '')
+              );
+              archivos.push({
+                tipo:         tipoArchivoFromExt(mainSubido.ext),
+                url:          mainSubido.url,
+                public_id:    mainSubido.public_id,
+                es_principal: isPrincipal,
+                nombre_capitulo: entry.name,
+                orden:        index + 1,
+                tamano_bytes: mainSubido.tamano_bytes,
+                subido_en:    new Date(),
+              });
+              index++;
             }
-          });
-          actualizados += 1;
-        } else {
-          // Guardar en MongoDB con estado "Pendiente de configuración"
-          await Recurso.create({
-            nombreArchivoOriginal: recurso.mainEntry ? nombreBase(recurso.mainEntry.name) : recurso.titulo,
-            tipo_naturaleza: 'Digital',
-            tipo_contenido:  tipoContenido,
-            tipo_material:   materialFromContenido(tipoContenido),
-            titulo:          recurso.titulo,
-            autor:           'Pendiente de completar',
-            descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
-            idioma:          '',
-            imagen,
-            categorias:      [],
-            estado:          'Pendiente de configuración',
-            publicado:       false,
-            digital: {
-              tipo_licencia:         'Libre',
-              archivos,
-              licencias_en_uso:      0,
-              estado_disponibilidad: 'Acceso libre',
-            },
-            fisico:          undefined,
-            total_prestamos: 0,
-            total_reservas:  0,
-            creado_en:       new Date(),
-            actualizado_en:  new Date(),
-            ...(mongoose.isValidObjectId(req.session?.adminId)
-              ? { registrado_por: req.session.adminId }
-              : {}),
-          });
+          }
 
-          creados += 1;
+          if (recurso.complementoEntry && recurso.mainEntry) {
+            const compBuffer = recurso.complementoEntry.getData();
+            const compSubido = await subirArchivoCloudinary(compBuffer, recurso.complementoEntry.name, '', `${recurso.titulo}_comp`);
+            archivos.push({
+              tipo:         tipoArchivoFromExt(compSubido.ext),
+              url:          compSubido.url,
+              public_id:    compSubido.public_id,
+              es_principal: false,
+              tamano_bytes: compSubido.tamano_bytes,
+              subido_en:    new Date(),
+            });
+          }
+
+          let imagen = { url: '/img/placeholder.png', public_id: '', es_default: true };
+          if (recurso.portadaEntry) {
+            const portadaBuffer = recurso.portadaEntry.getData();
+            const portadaResult = await subirBuffer(portadaBuffer, {
+              resource_type: 'image',
+              public_id:     generarPublicId(recurso.titulo, 'portadas'),
+              upload_preset: UPLOAD_PRESET,
+            });
+            imagen = { url: portadaResult.secure_url, public_id: portadaResult.public_id, es_default: false };
+          }
+
+          if (recurso.estadoDeteccion === 'Archivo pendiente encontrado' && recurso.existenteDoc) {
+            const doc = recurso.existenteDoc;
+            const archivosFiltrados = (doc.digital?.archivos || []).filter(a => !a.es_principal);
+            const todosArchivos = [...archivos, ...archivosFiltrados];
+            const nuevaImagen = recurso.portadaEntry ? imagen : doc.imagen;
+
+            await Recurso.findByIdAndUpdate(doc._id, {
+              $set: { 'digital.archivos': todosArchivos, imagen: nuevaImagen, estado: 'Pendiente de configuraci�n', actualizado_en: new Date() }
+            });
+            job.actualizados++;
+          } else {
+            await Recurso.create({
+              nombreArchivoOriginal: recurso.mainEntry ? nombreBase(Array.isArray(recurso.mainEntry) ? recurso.mainEntry[0].name : recurso.mainEntry.name) : recurso.titulo,
+              tipo_naturaleza: 'Digital',
+              tipo_contenido:  tipoContenido,
+              tipo_material:   materialFromContenido(tipoContenido),
+              titulo:          recurso.titulo,
+              autor:           'Pendiente de completar',
+              descripcion:     'Recurso cargado masivamente. Pendiente de completar metadatos.',
+              idioma:          '',
+              imagen,
+              categorias:      [],
+              estado:          'Pendiente de configuraci�n',
+              publicado:       false,
+              digital: { tipo_licencia: 'Libre', archivos, licencias_en_uso: 0, estado_disponibilidad: 'Acceso libre' },
+              fisico:          undefined,
+              total_prestamos: 0,
+              total_reservas:  0,
+              creado_en:       new Date(),
+              actualizado_en:  new Date(),
+              ...(mongoose.isValidObjectId(req.session?.adminId) ? { registrado_por: req.session.adminId } : {}),
+            });
+            job.creados++;
+          }
+        } catch (errSubida) {
+          console.error(`[MasivoZIP] Error al procesar "${recurso.titulo}":`, errSubida);
+          job.errores.push(`"${recurso.titulo}": ${errSubida.message}`);
+        } finally {
+          job.procesados++;
         }
-      } catch (errSubida) {
-        console.error(`[MasivoZIP] Error al procesar "${recurso.titulo}":`, errSubida);
-        erroresSubida.push(`"${recurso.titulo}": ${errSubida.message}`);
-      }
-    }
+      };
 
-    const totalErrores   = [...erroresDeteccion, ...erroresSubida];
-    const detalleErrores = totalErrores.length ? ` Problemas: ${totalErrores.join(' | ')}` : '';
+      // Paralelismo limitado (procesar 3 a la vez)
+      const LIMIT = 3;
+      let i = 0;
+      const execWorker = async () => {
+        while (i < recursosAGuardar.length) {
+          const idx = i++;
+          await procesarRecurso(recursosAGuardar[idx]);
+        }
+      };
+      
+      const workers = Array(Math.min(LIMIT, recursosAGuardar.length)).fill(null).map(execWorker);
+      await Promise.all(workers);
 
-    flash(
-      req,
-      totalErrores.length ? 'error' : 'success',
-      `Carga completada. Recursos creados: ${creados}. Recursos actualizados: ${actualizados}.${detalleErrores}`
-    );
-    return res.redirect('/admin/recursos');
+      // Finalizar
+      if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
+      job.status = 'completado';
+      job.errores = [...erroresDeteccion, ...job.errores]; // sumar errores de detecci�n
+      
+    })();
+    // ====== FIN BACKGROUND JOB ======
+
+    // Evitar flash/redirect porque ahora es API
+    return;
   } catch (error) {
     next(error);
   } finally {
     if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
   }
 };
+
+

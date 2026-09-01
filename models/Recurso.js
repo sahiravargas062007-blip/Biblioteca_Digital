@@ -9,6 +9,8 @@ const archivoDigitalSchema = new mongoose.Schema({
   url: { type: String, required: true },
   public_id: String,
   es_principal: { type: Boolean, default: false },
+  nombre_capitulo: String,
+  orden: { type: Number, default: 0 },
   duracion_segundos: Number,
   tamano_bytes: Number,
   subido_en: { type: Date, default: Date.now }

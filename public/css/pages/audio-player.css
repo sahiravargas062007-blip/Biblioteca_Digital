@@ -308,3 +308,97 @@
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .ap-details-list strong { color: #ddd; display: block; margin-bottom: 4px; }
+
+.ap-playlist-container {
+  margin-top: 20px;
+}
+.ap-playlist-title {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.ap-playlist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 250px;
+  overflow-y: auto;
+}
+.ap-playlist-list::-webkit-scrollbar { width: 6px; }
+.ap-playlist-list::-webkit-scrollbar-thumb { background: #146c5f; border-radius: 4px; }
+.ap-playlist-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+.ap-playlist-item:hover {
+  background: rgba(20, 108, 95, 0.3);
+  color: #fff;
+}
+.ap-playlist-item.active {
+  background: #146c5f;
+  color: #fff;
+  font-weight: 600;
+}
+.ap-playlist-item-num {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  margin-right: 12px;
+  width: 20px;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .audio-player-wrapper {
+    height: auto;
+    min-height: 100vh;
+  }
+  .ap-main {
+    flex-direction: column;
+    padding: 20px;
+    gap: 30px;
+  }
+  .ap-header {
+    padding: 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ap-title-box h1 {
+    font-size: 1.3rem;
+  }
+  .ap-header-right {
+    display: none;
+  }
+  .disco {
+    width: 260px;
+    height: 260px;
+  }
+  .ap-side-toggles {
+    flex-direction: row;
+    justify-content: center;
+  }
+  .ap-side-right {
+    display: none; 
+  }
+  .ap-buttons-area {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .ap-volume-control, .ap-extra-controls {
+    width: 100%;
+    justify-content: center;
+  }
+  .ap-side-panel {
+    width: 100%;
+    right: -100%;
+  }
+}

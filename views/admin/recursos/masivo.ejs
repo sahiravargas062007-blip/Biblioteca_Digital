@@ -66,14 +66,105 @@
           Los recursos se crearán con estado <strong>Pendiente de configuración</strong> y no serán visibles al público hasta que complete sus metadatos individualmente.
         </div>
 
-        <div class="form-actions">
-          <button type="submit">
-            <span class="btn-label">Analizar ZIP →</span>
-            <span class="btn-spinner"><span class="spinner-icon"></span> Analizando…</span>
-          </button>
-          <a class="secondary-link" href="/admin/recursos">Cancelar</a>
-        </div>
+                  <div class="form-actions" id="bulk-actions">
+            <button type="button" id="btn-confirmar" name="accion" value="confirmar" class="af-btn-primary" <%= validos.length === 0 ? 'disabled' : '' %>>
+              <span class="btn-label">Confirmar y procesar (<%= validos.length %>)</span>
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar"
+              name="accion"
+              value="cancelar"
+              class="secondary-link"
+              style="background:none;border:none;cursor:pointer;padding:0"
+            >Cancelar y descartar</button>
+          </div>
+
+          <!-- Progress Modal -->
+          <div id="bulk-progress-container" style="display:none; margin-top:20px; padding:20px; background:#f9f9f9; border-radius:8px; border:1px solid #ddd; text-align:center;">
+            <h3 style="color:#146c5f; margin-bottom:15px;">Procesando carga masiva...</h3>
+            <p id="bulk-progress-text" style="color:#666; margin-bottom:10px;">Iniciando...</p>
+            <div style="width:100%; height:12px; background:#e0e0e0; border-radius:6px; overflow:hidden;">
+              <div id="bulk-progress-bar" style="width:0%; height:100%; background:#146c5f; transition:width 0.3s ease;"></div>
+            </div>
+          </div>
       </form>
+
+      <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const btnConfirm = document.getElementById('btn-confirmar');
+        const btnCancel = document.getElementById('btn-cancelar');
+        const progressContainer = document.getElementById('bulk-progress-container');
+        const progressBar = document.getElementById('bulk-progress-bar');
+        const progressText = document.getElementById('bulk-progress-text');
+        const actionsDiv = document.getElementById('bulk-actions');
+        
+        if (btnCancel) {
+          btnCancel.addEventListener('click', () => {
+            const form = btnCancel.closest('form');
+            const input = document.createElement('input');
+            input.type = 'hidden'; input.name = 'accion'; input.value = 'cancelar';
+            form.appendChild(input);
+            form.submit(); // cancelacin s es tradicional
+          });
+        }
+
+        if (btnConfirm) {
+          btnConfirm.addEventListener('click', async () => {
+            actionsDiv.style.display = 'none';
+            progressContainer.style.display = 'block';
+            
+            const form = btnConfirm.closest('form');
+            const formData = new FormData(form);
+            formData.append('accion', 'confirmar');
+            
+            try {
+              const res = await fetch(form.action, { method: 'POST', body: new URLSearchParams(formData) });
+              const data = await res.json();
+              if (data.success && data.jobId) {
+                iniciarPolling(data.jobId);
+              } else {
+                alert('Error al iniciar procesamiento.');
+                actionsDiv.style.display = 'block';
+                progressContainer.style.display = 'none';
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Error de red al iniciar carga.');
+            }
+          });
+        }
+        
+                function iniciarPolling(jobId) {
+          const interval = setInterval(async () => {
+            try {
+              const res = await fetch(`/admin/recursos/masivo/progreso/${jobId}`);
+              const job = await res.json();
+              
+              if (job.error) {
+                clearInterval(interval);
+                alert('Error: ' + job.error);
+                return;
+              }
+              
+              const pct = job.total > 0 ? Math.round((job.procesados / job.total) * 100) : 0;
+              progressBar.style.width = pct + '%';
+              progressText.innerHTML = `Procesados <strong>${job.procesados} de ${job.total}</strong> (${pct}%)<br><small>Subiendo: ${job.currentTitle || '...'}</small>`;
+              
+              if (job.status === 'completado') {
+                clearInterval(interval);
+                progressText.innerHTML = `<strong style="color:green;">�Carga completada!</strong><br>Creados: ${job.creados} | Actualizados: ${job.actualizados}`;
+                setTimeout(() => {
+                  window.location.href = '/admin/recursos';
+                }, 2000);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }, 1500);
+        }
+      });
+      </script>
     </section>
 
     <% } else { %>
@@ -204,20 +295,106 @@
         </div>
         <% } %>
 
-        <div class="form-actions">
-          <button type="submit" name="accion" value="confirmar" <%= validos.length === 0 ? 'disabled' : '' %>>
-            <span class="btn-label">Confirmar y procesar (<%= validos.length %>)</span>
-            <span class="btn-spinner"><span class="spinner-icon"></span> Procesando…</span>
-          </button>
-          <!-- CA6: cancelar limpia sin guardar nada -->
-          <button
-            type="submit"
-            name="accion"
-            value="cancelar"
-            class="secondary-link"
-            style="background:none;border:none;cursor:pointer;padding:0"
-          >Cancelar y descartar</button>
-        </div>
+                  <div class="form-actions" id="bulk-actions">
+            <button type="button" id="btn-confirmar" name="accion" value="confirmar" class="af-btn-primary" <%= validos.length === 0 ? 'disabled' : '' %>>
+              <span class="btn-label">Confirmar y procesar (<%= validos.length %>)</span>
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar"
+              name="accion"
+              value="cancelar"
+              class="secondary-link"
+              style="background:none;border:none;cursor:pointer;padding:0"
+            >Cancelar y descartar</button>
+          </div>
+
+          <!-- Progress Modal -->
+          <div id="bulk-progress-container" style="display:none; margin-top:20px; padding:20px; background:#f9f9f9; border-radius:8px; border:1px solid #ddd; text-align:center;">
+            <h3 style="color:#146c5f; margin-bottom:15px;">Procesando carga masiva...</h3>
+            <p id="bulk-progress-text" style="color:#666; margin-bottom:10px;">Iniciando...</p>
+            <div style="width:100%; height:12px; background:#e0e0e0; border-radius:6px; overflow:hidden;">
+              <div id="bulk-progress-bar" style="width:0%; height:100%; background:#146c5f; transition:width 0.3s ease;"></div>
+            </div>
+          </div>
       </form>
+
+      <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const btnConfirm = document.getElementById('btn-confirmar');
+        const btnCancel = document.getElementById('btn-cancelar');
+        const progressContainer = document.getElementById('bulk-progress-container');
+        const progressBar = document.getElementById('bulk-progress-bar');
+        const progressText = document.getElementById('bulk-progress-text');
+        const actionsDiv = document.getElementById('bulk-actions');
+        
+        if (btnCancel) {
+          btnCancel.addEventListener('click', () => {
+            const form = btnCancel.closest('form');
+            const input = document.createElement('input');
+            input.type = 'hidden'; input.name = 'accion'; input.value = 'cancelar';
+            form.appendChild(input);
+            form.submit(); // cancelacin s es tradicional
+          });
+        }
+
+        if (btnConfirm) {
+          btnConfirm.addEventListener('click', async () => {
+            actionsDiv.style.display = 'none';
+            progressContainer.style.display = 'block';
+            
+            const form = btnConfirm.closest('form');
+            const formData = new FormData(form);
+            formData.append('accion', 'confirmar');
+            
+            try {
+              const res = await fetch(form.action, { method: 'POST', body: new URLSearchParams(formData) });
+              const data = await res.json();
+              if (data.success && data.jobId) {
+                iniciarPolling(data.jobId);
+              } else {
+                alert('Error al iniciar procesamiento.');
+                actionsDiv.style.display = 'block';
+                progressContainer.style.display = 'none';
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Error de red al iniciar carga.');
+            }
+          });
+        }
+        
+                function iniciarPolling(jobId) {
+          const interval = setInterval(async () => {
+            try {
+              const res = await fetch(`/admin/recursos/masivo/progreso/${jobId}`);
+              const job = await res.json();
+              
+              if (job.error) {
+                clearInterval(interval);
+                alert('Error: ' + job.error);
+                return;
+              }
+              
+              const pct = job.total > 0 ? Math.round((job.procesados / job.total) * 100) : 0;
+              progressBar.style.width = pct + '%';
+              progressText.innerHTML = `Procesados <strong>${job.procesados} de ${job.total}</strong> (${pct}%)<br><small>Subiendo: ${job.currentTitle || '...'}</small>`;
+              
+              if (job.status === 'completado') {
+                clearInterval(interval);
+                progressText.innerHTML = `<strong style="color:green;">�Carga completada!</strong><br>Creados: ${job.creados} | Actualizados: ${job.actualizados}`;
+                setTimeout(() => {
+                  window.location.href = '/admin/recursos';
+                }, 2000);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }, 1500);
+        }
+      });
+      </script>
     </section>
     <% } %>
+
+

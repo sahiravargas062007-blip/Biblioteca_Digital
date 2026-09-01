@@ -78,21 +78,24 @@
       </div>
     </div>
 
-    <div class="af-card" id="isbn-row">
-      <p class="af-card__label">ISBN (opcional â€” autocompleta metadatos)</p>
-      <div class="af-isbn-row">
-        <label class="af-label" style="flex:1">
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            ISBN
-          </span>
-          <input name="isbn" id="isbn-input" value="<%= recurso?.isbn || '' %>" placeholder="978-...">
+       <div class="af-card" id="meta-row">
+      <p class="af-card__label">Identificador BibliogrÃ¡fico (Autocompleta metadatos)</p>
+      <div class="af-grid-2" style="margin-bottom: 1rem;">
+        <label class="af-label" id="isbn-container"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> ISBN</span><input name="isbn" id="isbn-input" value="<%= recurso?.isbn || '' %>" placeholder="978-...">
         </label>
-        <button type="button" id="isbn-search-btn" class="af-btn-isbn">
+        <label class="af-label" id="doi-container"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"></path></svg> DOI</span><input name="doi" id="doi-input" value="<%= recurso?.doi || '' %>" placeholder="10.xxxx/xxxxx">
+        </label>
+      </div>
+      <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <button type="button" id="meta-search-btn" class="af-btn-isbn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Buscar ISBN
+          Consultar
         </button>
-        <small id="isbn-hint" class="af-hint"></small>
+        <button type="button" id="scan-camera-btn" class="af-btn-isbn" style="background: #146c5f; color: #fff; border:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          Escanear CÃ³digo
+        </button>
+        <small id="isbn-hint" class="af-hint" style="margin-left:auto;"></small>
       </div>
     </div>
 
@@ -595,3 +598,304 @@ window.RECURSO_METADATOS              = <%- JSON.stringify(recurso?.metadatos ||
   });
 })();
 </script>
+
+<script type="text/javascript" src="https://unpkg.com/@zxing/browser@latest"></script>
+
+<!-- SCANNER DRAWER -->
+<div id="scanner-drawer-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9998;"></div>
+<div id="scanner-drawer" style="display:none; position:fixed; top:0; right:-100%; width:400px; max-width:100%; height:100%; background:#fff; z-index:9999; box-shadow:-4px 0 15px rgba(0,0,0,0.1); transition:right 0.3s ease; flex-direction:column;">
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid #eee;">
+    <h2 style="margin:0; font-size:1.2rem; color:#333;">Escanear recurso</h2>
+    <button type="button" class="af-modal-close" id="close-scanner-btn" style="background:none; border:none; cursor:pointer; color:#888;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div style="padding:20px; flex-grow:1; display:flex; flex-direction:column; align-items:center;">
+    <p style="text-align:center; color:#666; font-size:0.9rem; margin-bottom:20px;">Enfoca el código de barras (ISBN) o código QR (DOI) dentro del recuadro.</p>
+    <div id="scanner-container" style="width:100%; height: 300px; background:#000; position:relative; overflow:hidden; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+      <video id="scanner-video" style="width:100%; height:100%; object-fit:cover;" autoplay playsinline muted></video>
+      <div style="position:absolute; width:80%; height:40%; border:2px solid rgba(255,255,255,0.8); box-shadow:0 0 0 9999px rgba(0,0,0,0.6); border-radius:8px;">
+        <div style="position:absolute; top:50%; left:0; width:100%; height:2px; background:#20b2aa; animation: scanline 2s infinite linear; opacity:0.8; box-shadow:0 0 4px #20b2aa;"></div>
+      </div>
+    </div>
+    <p id="scanner-status" style="margin-top:20px; font-weight:600; color:#146c5f; display:flex; align-items:center; gap:8px;">
+      Buscando identificador...
+    </p>
+  </div>
+  <div style="padding:20px; border-top:1px solid #eee;">
+    <button type="button" id="cancel-scanner-btn" class="btn btn-secondary" style="width:100%;">Cancelar</button>
+  </div>
+</div>
+<style>
+@keyframes scanline {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+@media (max-width: 768px) {
+  #scanner-drawer { width: 100%; right: -100%; }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const scanBtn = document.getElementById("scan-camera-btn");
+  const metaSearchBtn = document.getElementById("meta-search-btn");
+  const scannerDrawer = document.getElementById("scanner-drawer");
+  const scannerOverlay = document.getElementById("scanner-drawer-overlay");
+  const cancelScannerBtn = document.getElementById("cancel-scanner-btn");
+  const closeScannerBtn = document.getElementById("close-scanner-btn");
+  const videoElem = document.getElementById("scanner-video");
+  const statusElem = document.getElementById("scanner-status");
+  const hintElem = document.getElementById("isbn-hint");
+
+  let codeReader;
+
+  if (scannerOverlay && scannerOverlay.parentNode !== document.body) {
+    document.body.appendChild(scannerOverlay);
+    document.body.appendChild(scannerDrawer);
+  }
+
+  const tipoMaterialSelect = document.getElementById("tipo_material");
+  const isbnContainer = document.getElementById("isbn-container");
+  const doiContainer = document.getElementById("doi-container");
+
+  function toggleMetaFields() {
+    if(!tipoMaterialSelect) return;
+    const val = tipoMaterialSelect.value;
+    if(val === 'Libro' || val === 'Audiolibro') {
+      if(isbnContainer) isbnContainer.style.display = 'block';
+      if(doiContainer) doiContainer.style.display = 'none';
+    } else if(val === 'Artículo') {
+      if(isbnContainer) isbnContainer.style.display = 'none';
+      if(doiContainer) doiContainer.style.display = 'block';
+    } else {
+      if(isbnContainer) isbnContainer.style.display = 'block';
+      if(doiContainer) doiContainer.style.display = 'block';
+    }
+  }
+
+  if(tipoMaterialSelect) {
+    tipoMaterialSelect.addEventListener("change", toggleMetaFields);
+    toggleMetaFields(); // init
+  }
+
+  const closeScanner = () => {
+    if(scannerDrawer) {
+      scannerDrawer.style.right = "-100%";
+      setTimeout(() => scannerDrawer.style.display = "none", 300);
+    }
+    if(scannerOverlay) scannerOverlay.style.display = "none";
+    if(codeReader) codeReader.reset();
+    if (videoElem && videoElem.srcObject) {
+      videoElem.srcObject.getTracks().forEach(track => track.stop());
+      videoElem.srcObject = null;
+    }
+  };
+
+  if (closeScannerBtn) closeScannerBtn.addEventListener("click", closeScanner);
+  if (cancelScannerBtn) cancelScannerBtn.addEventListener("click", closeScanner);
+  if (scannerOverlay) scannerOverlay.addEventListener("click", closeScanner);
+
+  if (scanBtn) {
+    scanBtn.addEventListener("click", async () => {
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      } catch (err) {
+        console.error("User denied camera permission or error:", err);
+        alert("Debes conceder permisos de cámara para poder escanear.");
+        return;
+      }
+
+      if(scannerDrawer) { 
+        scannerDrawer.style.display = "flex"; 
+        setTimeout(() => scannerDrawer.style.right = "0", 10); 
+      }
+      if(scannerOverlay) scannerOverlay.style.display = "block";
+      statusElem.textContent = "Iniciando cámara...";
+      
+      try {
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        const videoInputDevices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+        if (videoInputDevices.length === 0) {
+          statusElem.textContent = "No se encontraron cámaras";
+          return;
+        }
+        
+        const deviceId = videoInputDevices[0].deviceId; 
+        
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+        
+        statusElem.textContent = "Buscando identificador...";
+        codeReader.decodeFromVideoDevice(deviceId, videoElem, (result, err) => {
+          if (result) {
+            closeScanner();
+            processScannedCode(result.text);
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        statusElem.textContent = "Error al acceder a la cámara";
+      }
+    });
+  }
+
+  if (metaSearchBtn) {
+    metaSearchBtn.addEventListener("click", () => {
+      const isbn = document.getElementById("isbn-input").value.trim();
+      const doi = document.getElementById("doi-input").value.trim();
+      if (!isbn && !doi) {
+        hintElem.textContent = "Ingresa un ISBN o DOI primero.";
+        hintElem.style.color = "red";
+        return;
+      }
+      if (isbn) fetchMetadata("isbn", isbn);
+      else if (doi) fetchMetadata("doi", doi);
+    });
+  }
+
+  function processScannedCode(code) {
+    if (code.startsWith("978") || code.startsWith("979") || (!isNaN(code) && code.length >= 10)) {
+      document.getElementById("isbn-input").value = code;
+      fetchMetadata("isbn", code);
+    } else if (code.includes("10.") && code.includes("/")) {
+      let doiMatch = code.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
+      if (doiMatch) {
+        document.getElementById("doi-input").value = doiMatch[0];
+        fetchMetadata("doi", doiMatch[0]);
+      } else {
+        hintElem.textContent = "Código QR no parece contener un DOI.";
+        hintElem.style.color = "orange";
+      }
+    } else {
+      hintElem.textContent = "Código no reconocido: " + code;
+      hintElem.style.color = "orange";
+    }
+  }
+
+  async function fetchMetadata(type, value) {
+    hintElem.textContent = "Buscando metadatos...";
+    hintElem.style.color = "#146c5f";
+    
+    try {
+      if (type === "isbn") {
+        let res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${value}&format=json&jscmd=data`);
+        let data = await res.json();
+        let bookInfo = data[`ISBN:${value}`];
+        
+        if (bookInfo) {
+          fillForm(
+            bookInfo.title, 
+            bookInfo.authors?.[0]?.name, 
+            bookInfo.publishers?.[0]?.name, 
+            bookInfo.publish_date,
+            bookInfo.number_of_pages
+          );
+          hintElem.textContent = "Metadatos obtenidos de Open Library.";
+          return;
+        }
+        
+        res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${value}`);
+        data = await res.json();
+        if (data.items && data.items.length > 0) {
+          const vol = data.items[0].volumeInfo;
+          fillForm(
+            vol.title, 
+            vol.authors?.[0], 
+            vol.publisher, 
+            vol.publishedDate,
+            vol.pageCount
+          );
+          hintElem.textContent = "Metadatos obtenidos de Google Books.";
+          return;
+        }
+        
+        hintElem.textContent = "No se encontraron metadatos para este ISBN.";
+        hintElem.style.color = "orange";
+      } 
+      else if (type === "doi") {
+        let res = await fetch(`https://api.crossref.org/works/${value}`);
+        if (!res.ok) throw new Error("DOI not found");
+        let data = await res.json();
+        let item = data.message;
+        
+        let title = item.title?.[0] || "";
+        let author = item.author?.[0] ? `${item.author[0].given} ${item.author[0].family}` : "";
+        let publisher = item.publisher || "";
+        let year = item.created?.["date-parts"]?.[0]?.[0] || "";
+        
+        fillForm(title, author, publisher, year, null);
+        hintElem.textContent = "Metadatos obtenidos de Crossref.";
+      }
+    } catch (e) {
+      console.error(e);
+      hintElem.textContent = "Error consultando metadatos.";
+      hintElem.style.color = "red";
+    }
+  }
+
+  function fillForm(title, author, publisher, year, pages) {
+    if(title) {
+      let el = document.getElementById("titulo");
+      if(el) el.value = title;
+    }
+    if(author) {
+      let el = document.getElementById("autor");
+      if(el) el.value = author;
+    }
+    if(publisher) {
+      let el = document.querySelector('input[name="editorial"]');
+      if(el) el.value = publisher;
+      let elMeta = document.getElementById('meta-editorial');
+      if(elMeta) elMeta.value = publisher;
+    }
+    if(year) {
+      let y = year.toString().substring(0,4);
+      if(y.length === 4 && !isNaN(y)) {
+        let el = document.querySelector('input[name="fecha_publicacion"]');
+        if(el) el.value = y + "-01-01";
+      }
+    }
+    if(pages) {
+      let el = document.querySelector('input[name="cantidad_paginas"]');
+      if(el) el.value = pages;
+      let elMeta = document.getElementById('meta-paginas');
+      if(elMeta) elMeta.value = pages;
+    }
+    
+    let isbnStr = document.getElementById("isbn-input")?.value?.trim();
+    if(isbnStr) {
+      let el = document.getElementById('meta-isbn');
+      if(el) el.value = isbnStr;
+    }
+    
+    let doiStr = document.getElementById("doi-input")?.value?.trim();
+    if(doiStr) {
+      let el = document.getElementById('meta-doi');
+      if(el) el.value = doiStr;
+    }
+  }
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
