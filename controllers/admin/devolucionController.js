@@ -179,10 +179,11 @@ exports.crear = async (req, res, next) => {
       if (usuarioDoc && item) {
         await notifService.devolucionConfirmada(usuarioDoc, prestamo, item);
       }
-    } catch (_e) { }
+    } catch (error) { console.error('Error dev:', error); }
     flash(req, 'success', 'Devolución registrada correctamente.');
     return res.redirect(`/admin/prestamos/${prestamo._id}`);
   } catch (error) {
     next(error);
   }
 };
+

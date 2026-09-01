@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const Usuario = require("../../models/Usuario");
 const Administrador = require("../../models/Administrador");
-const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
@@ -634,3 +633,7 @@ exports.googleCallback = (req, res) => {
     return res.redirect("/catalogo");
   }
 };
+
+
+
+

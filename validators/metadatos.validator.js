@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 
 const METADATOS_SCHEMA = {
   "Libro": {
@@ -78,3 +77,4 @@ module.exports = {
   METADATOS_SCHEMA,
   validarMetadatos
 };
+

@@ -1,6 +1,5 @@
 // scripts/cleanOldRecords.js
 require('dotenv').config();
-const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Prestamo = require('../models/Prestamo');
 const Reserva = require('../models/Reserva');
@@ -121,3 +120,4 @@ async function cleanOldRecords() {
 }
 
 cleanOldRecords();
+

@@ -1,5 +1,4 @@
 const cron = require('node-cron');
-const mongoose = require('mongoose');
 const Reserva = require('../models/Reserva');
 const Prestamo = require('../models/Prestamo');
 const Usuario = require('../models/Usuario');
@@ -168,3 +167,4 @@ module.exports = {
   ejecutarLimpieza,
   initCron
 };
+

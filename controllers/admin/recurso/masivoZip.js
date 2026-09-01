@@ -294,9 +294,7 @@ exports.confirmarMasivo = async (req, res, next) => {
       return res.redirect('/admin/recursos/masivo');
     }
 
-    let creados = 0;
-    let actualizados = 0;
-    const erroresSubida = [];
+
 
     // ====== INICIO BACKGROUND JOB ======
     const jobId = Math.random().toString(36).substring(2, 15);
@@ -443,5 +441,6 @@ exports.confirmarMasivo = async (req, res, next) => {
     if (zipTempPath) await fs.unlink(zipTempPath).catch(() => {});
   }
 };
+
 
 

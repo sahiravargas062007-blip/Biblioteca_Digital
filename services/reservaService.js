@@ -1,5 +1,4 @@
 const Configuracion = require('../models/Configuracion');
-const Notificacion = require('../models/Notificacion');
 const Reserva = require('../models/Reserva');
 const Usuario = require('../models/Usuario');
 const notifService = require('./notificacionService');
@@ -80,7 +79,7 @@ exports.marcarDisponible = async (reserva, adminId) => {
       const horas = config?.reservas?.tiempo_max_reclamo_horas || 24;
       await notifService.turnoReservaDisponible(usuario, reserva, horas);
     }
-  } catch (_e) { }
+  } catch (error) { console.error('Error servicio reserva:', error); }
 
   return reserva;
 };
@@ -114,3 +113,5 @@ exports.obtenerTipoReserva = (recurso) => {
   }
   return TIPO_FISICO;
 };
+
+

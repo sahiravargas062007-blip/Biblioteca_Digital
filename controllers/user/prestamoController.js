@@ -1,7 +1,6 @@
 const Prestamo = require('../../models/Prestamo');
 const Recurso = require('../../models/Recurso');
 const Usuario = require('../../models/Usuario');
-const Notificacion = require('../../models/Notificacion');
 const cloudinary = require('../../config/cloudinary');
 const notifService = require('../../services/notificacionService');
 
@@ -121,7 +120,7 @@ exports.devolverDigital = async (req, res, next) => {
       if (usuario) {
         await notifService.devolucionConfirmada(usuario, prestamo, item);
       }
-    } catch (_e) { }
+    } catch (error) { console.error('Error prestamo:', error); }
 
     flash(req, 'success', 'Devolución registrada correctamente.');
     return res.redirect('/prestamos');
@@ -247,3 +246,5 @@ exports.descargarPrestamo = async (req, res, next) => {
     next(error);
   }
 };
+
+

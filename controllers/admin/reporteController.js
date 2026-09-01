@@ -110,7 +110,7 @@ exports.exportarExcel = async (req, res, next) => {
     xlsx.writeFile(wb, tmpPath);
 
     res.download(tmpPath, nombreArchivo, async () => {
-      try { await fs.unlink(tmpPath); } catch (_) {}
+      try { await fs.unlink(tmpPath); } catch (error) { console.error('Error reporte:', error); }
     });
   } catch (err) {
     next(err);

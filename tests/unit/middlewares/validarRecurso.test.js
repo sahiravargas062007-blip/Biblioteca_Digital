@@ -17,6 +17,7 @@ describe('validarRecurso', () => {
   });
 
   it('rechaza cuando falta el título', async () => {
+    // eslint-disable-next-line no-unused-vars
     const { titulo, ...resto } = payloadValido;
     const res = await enviar(validarRecurso, resto);
 
@@ -44,3 +45,6 @@ describe('validarRecurso', () => {
     expect(res.body.errores).toContain('tipo_naturaleza');
   });
 });
+
+
+

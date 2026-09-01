@@ -9,7 +9,6 @@ const cron = require('node-cron');
 const Reserva = require('../models/Reserva');
 const Usuario = require('../models/Usuario');
 const Administrador = require('../models/Administrador');
-const Recurso = require('../models/Recurso');
 const JobLog = require('../models/JobLog');
 const reservaService = require('../services/reservaService');
 const notifService = require('../services/notificacionService');
@@ -96,3 +95,4 @@ module.exports = function verificarReservas() {
     }
   });
 };
+

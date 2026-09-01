@@ -365,7 +365,7 @@ exports.procesar = async (req, res, next) => {
     // Notificar al usuario (préstamo físico aprobado/procesado desde reserva)
     try {
       await notifService.prestamoAprobado(usuario, prestamo, [reserva.recurso_titulo]);
-    } catch (_e) { }
+    } catch (error) { console.error('Error reserva:', error); }
 
     // Este flujo SÍ cambia de sección (termina en la ficha del préstamo),
     // por eso extra.redirectTo le pide al cliente navegar de página completa.
@@ -421,3 +421,4 @@ exports.notificarTodos = async (req, res, next) => {
     next(error);
   }
 };
+

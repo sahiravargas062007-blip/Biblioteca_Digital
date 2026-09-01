@@ -1,9 +1,5 @@
 const bcrypt = require('bcryptjs');
 const Administrador = require('../../models/Administrador');
-const Usuario = require('../../models/Usuario');
-const Prestamo = require('../../models/Prestamo');
-const Sancion = require('../../models/Sancion');
-const reporteService = require('../../services/reporteService');
 
 function flash(req, type, message) {
   req.session.flash = { type, message };
@@ -52,3 +48,4 @@ exports.login = async (req, res, next) => {
 };
 
 exports.logout = (req, res) => req.session.destroy(() => res.redirect('/admin/login'));
+

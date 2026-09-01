@@ -1,13 +1,10 @@
 const Recurso   = require('../models/Recurso');
 const Prestamo  = require('../models/Prestamo');
 const Sancion   = require('../models/Sancion');
-const Usuario   = require('../models/Usuario');
 
 /* ── Tarjetas resumen ───────────────────────────────────────────────────────── */
 exports.resumen = async () => {
-  const hoy     = new Date();
-  const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-
+    
   const [
     totalRecursos,
     prestamosActivos,
@@ -117,3 +114,9 @@ exports.usuariosMorosos = async () => {
     dias_retraso:    s.dias_retraso || 0
   }));
 };
+
+
+
+
+
+
