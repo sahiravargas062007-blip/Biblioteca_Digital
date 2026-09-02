@@ -601,6 +601,30 @@ window.RECURSO_METADATOS              = <%- JSON.stringify(recurso?.metadatos ||
 
 <script type="text/javascript" src="https://unpkg.com/@zxing/browser@latest"></script>
 
+
+<!-- METADATA LOADING OVERLAY -->
+<div id="meta-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+  <div id="meta-overlay-box" style="background:#fff; padding:30px; border-radius:12px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.3); max-width:400px; width:90%; transition:all 0.3s ease;">
+    <div id="meta-overlay-icon" style="margin-bottom:15px; display:flex; justify-content:center;">
+      <svg class="meta-spinner" viewBox="0 0 50 50" style="width:40px; height:40px; animation:spin 1s linear infinite;">
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#146c5f" stroke-width="4" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
+      </svg>
+    </div>
+    <h3 id="meta-overlay-title" style="margin:0 0 10px 0; color:#333; font-size:1.2rem;">Buscando metadatos</h3>
+    <p id="meta-overlay-text" style="margin:0; color:#666; font-size:0.95rem;">Consultando bases de datos globales (Google Books, OpenLibrary, Crossref)...</p>
+  </div>
+</div>
+<style>
+@keyframes spin { 100% { transform:rotate(360deg); } }
+@keyframes highlight-flash {
+  0% { background-color: #d4edda; }
+  100% { background-color: transparent; }
+}
+.meta-highlight {
+  animation: highlight-flash 1.5s ease-out;
+}
+</style>
+
 <!-- SCANNER DRAWER -->
 <div id="scanner-drawer-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9998;"></div>
 <div id="scanner-drawer" style="display:none; position:fixed; top:0; right:-100%; width:400px; max-width:100%; height:100%; background:#fff; z-index:9999; box-shadow:-4px 0 15px rgba(0,0,0,0.1); transition:right 0.3s ease; flex-direction:column;">
