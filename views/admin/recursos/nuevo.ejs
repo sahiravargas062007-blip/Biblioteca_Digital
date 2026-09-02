@@ -602,28 +602,7 @@ window.RECURSO_METADATOS              = <%- JSON.stringify(recurso?.metadatos ||
 <script type="text/javascript" src="https://unpkg.com/@zxing/browser@latest"></script>
 
 
-<!-- METADATA LOADING OVERLAY -->
-<div id="meta-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
-  <div id="meta-overlay-box" style="background:#fff; padding:30px; border-radius:12px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.3); max-width:400px; width:90%; transition:all 0.3s ease;">
-    <div id="meta-overlay-icon" style="margin-bottom:15px; display:flex; justify-content:center;">
-      <svg class="meta-spinner" viewBox="0 0 50 50" style="width:40px; height:40px; animation:spin 1s linear infinite;">
-        <circle cx="25" cy="25" r="20" fill="none" stroke="#146c5f" stroke-width="4" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
-      </svg>
-    </div>
-    <h3 id="meta-overlay-title" style="margin:0 0 10px 0; color:#333; font-size:1.2rem;">Buscando metadatos</h3>
-    <p id="meta-overlay-text" style="margin:0; color:#666; font-size:0.95rem;">Consultando bases de datos globales (Google Books, OpenLibrary, Crossref)...</p>
-  </div>
-</div>
-<style>
-@keyframes spin { 100% { transform:rotate(360deg); } }
-@keyframes highlight-flash {
-  0% { background-color: #d4edda; }
-  100% { background-color: transparent; }
-}
-.meta-highlight {
-  animation: highlight-flash 1.5s ease-out;
-}
-</style>
+
 
 <!-- SCANNER DRAWER -->
 <div id="scanner-drawer-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9998;"></div>
@@ -674,6 +653,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const hintElem = document.getElementById("isbn-hint");
 
   let codeReader;
+  let scannerControls = null;
+  let forceStopScanner = false;
 
   if (scannerOverlay && scannerOverlay.parentNode !== document.body) {
     document.body.appendChild(scannerOverlay);
@@ -690,7 +671,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(val === 'Libro' || val === 'Audiolibro') {
       if(isbnContainer) isbnContainer.style.display = 'block';
       if(doiContainer) doiContainer.style.display = 'none';
-    } else if(val === 'Art�culo') {
+    } else if(val === 'Artículo') {
       if(isbnContainer) isbnContainer.style.display = 'none';
       if(doiContainer) doiContainer.style.display = 'block';
     } else {
@@ -701,18 +682,32 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if(tipoMaterialSelect) {
     tipoMaterialSelect.addEventListener("change", toggleMetaFields);
-    toggleMetaFields(); // init
+    toggleMetaFields();
   }
 
   const closeScanner = () => {
+    forceStopScanner = true;
     if(scannerDrawer) {
       scannerDrawer.style.right = "-100%";
-      setTimeout(() => scannerDrawer.style.display = "none", 300);
+      setTimeout(() => { if(scannerDrawer) scannerDrawer.style.display = "none"; }, 300);
     }
     if(scannerOverlay) scannerOverlay.style.display = "none";
-    if(codeReader) codeReader.reset();
+    
+    if(scannerControls) {
+      try { scannerControls.stop(); } catch(e){}
+      scannerControls = null;
+    }
+    
+    try {
+      if(codeReader && typeof codeReader.reset === 'function') {
+        codeReader.reset();
+      }
+    } catch(e) {}
+    
     if (videoElem && videoElem.srcObject) {
-      videoElem.srcObject.getTracks().forEach(track => track.stop());
+      try {
+        videoElem.srcObject.getTracks().forEach(track => track.stop());
+      } catch(e){}
       videoElem.srcObject = null;
     }
   };
@@ -728,19 +723,21 @@ document.addEventListener("DOMContentLoaded", function() {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       } catch (err) {
         console.error("User denied camera permission or error:", err);
-        alert("Debes conceder permisos de c�mara para poder escanear.");
+        alert("Debes conceder permisos de cámara para poder escanear.");
         return;
       }
 
+      forceStopScanner = false;
       if(scannerDrawer) { 
         scannerDrawer.style.display = "flex"; 
         setTimeout(() => scannerDrawer.style.right = "0", 10); 
       }
       if(scannerOverlay) scannerOverlay.style.display = "block";
-      statusElem.textContent = "Iniciando c�mara...";
+      statusElem.textContent = "Iniciando cámara...";
       
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playBeep() {
+      function playBeep() {
+        try {
           const oscillator = audioCtx.createOscillator();
           const gainNode = audioCtx.createGain();
           oscillator.connect(gainNode);
@@ -751,85 +748,161 @@ document.addEventListener("DOMContentLoaded", function() {
           gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
           oscillator.start(audioCtx.currentTime);
           oscillator.stop(audioCtx.currentTime + 0.1);
-        }
+        } catch(e){}
+      }
 
-        try {
+      try {
+        if (!codeReader) {
           codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-          const videoInputDevices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-          if (videoInputDevices.length === 0) {
-            statusElem.textContent = "No se encontraron c\u00E1maras";
-            return;
-          }
-          
-          let selectedDevice = videoInputDevices[0].deviceId;
-          for (const device of videoInputDevices) {
-            const label = device.label.toLowerCase();
-            if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('trasera')) {
-              selectedDevice = device.deviceId;
-              break;
-            }
-          }
-          
-          if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-          }
-          
-          statusElem.textContent = "Buscando identificador...";
-          codeReader.decodeFromVideoDevice(selectedDevice, videoElem, (result, err) => {
-            if (result) {
-              playBeep();
-              statusElem.textContent = "¡C\u00F3digo detectado!";
-              statusElem.style.color = "#28a745";
-              document.getElementById('scanner-container').style.borderColor = "#28a745";
-              setTimeout(() => {
-                closeScanner();
-                processScannedCode(result.text);
-              }, 1000);
-            }
-          });
-        } catch (err) {
-          console.error(err);
-          statusElem.textContent = "Error al acceder a la c\u00E1mara";
         }
+        
+        const videoInputDevices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+        if (videoInputDevices.length === 0) {
+          statusElem.textContent = "No se encontraron cámaras";
+          return;
+        }
+        
+        let selectedDevice = videoInputDevices[0].deviceId;
+        for (const device of videoInputDevices) {
+          const label = device.label.toLowerCase();
+          if (label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('trasera')) {
+            selectedDevice = device.deviceId;
+            break;
+          }
+        }
+        
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+        
+        statusElem.textContent = "Buscando identificador...";
+        let codeDetected = false;
+        
+        const decodePromise = codeReader.decodeFromVideoDevice(selectedDevice, videoElem, (result, err) => {
+          if (result && !codeDetected) {
+            codeDetected = true;
+            playBeep();
+            statusElem.textContent = "¡Código detectado!";
+            statusElem.style.color = "#28a745";
+            if(document.getElementById('scanner-container')) {
+              document.getElementById('scanner-container').style.borderColor = "#28a745";
+            }
+            
+            // Immediately shut down scanner visually and logically
+            closeScanner();
+            
+            // Parse result and trigger the search button exactly as requested by user
+            
+            let rawCode = result.text || (typeof result.getText === 'function' ? result.getText() : '');
+            if (!rawCode) {
+              alert("Error: El código escaneado no contiene texto.");
+              return;
+            }
+            let cleanCode = rawCode.trim().replace(/-/g, '');
+            if (cleanCode.includes("10.") && cleanCode.includes("/")) {
+              let doiMatch = cleanCode.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
+              if (doiMatch) {
+                document.getElementById("doi-input").value = doiMatch[0];
+                document.getElementById("meta-search-btn").click();
+              } else {
+                alert("El código escaneado no parece un DOI válido: " + cleanCode);
+              }
+            } else {
+              document.getElementById("isbn-input").value = cleanCode;
+              document.getElementById("meta-search-btn").click();
+            }
+          }
+        });
+        
+        decodePromise.then(controls => {
+          if (forceStopScanner) {
+            controls.stop();
+          } else {
+            scannerControls = controls;
+          }
+        }).catch(err => {
+          console.error("decode promise error:", err);
+        });
+      } catch (err) {
+        console.error(err);
+        statusElem.textContent = "Error al acceder a la cámara";
+      }
     });
   }
 
   if (metaSearchBtn) {
-    metaSearchBtn.addEventListener("click", () => {
+    metaSearchBtn.addEventListener("click", async () => {
       const isbn = document.getElementById("isbn-input").value.trim();
       const doi = document.getElementById("doi-input").value.trim();
+      
       if (!isbn && !doi) {
-        hintElem.textContent = "Ingresa un ISBN o DOI primero.";
-        hintElem.style.color = "red";
+        alert("Ingresa un ISBN o DOI primero antes de consultar.");
         return;
       }
-      if (isbn) fetchMetadata("isbn", isbn);
-      else if (doi) fetchMetadata("doi", doi);
+      
+      const originalText = metaSearchBtn.innerHTML;
+      metaSearchBtn.innerHTML = "Buscando...";
+      metaSearchBtn.disabled = true;
+      
+      if (isbn) await fetchMetadata("isbn", isbn);
+      else if (doi) await fetchMetadata("doi", doi);
+      
+      metaSearchBtn.innerHTML = originalText;
+      metaSearchBtn.disabled = false;
     });
   }
 
-  function processScannedCode(code) {
-    if (code.startsWith("978") || code.startsWith("979") || (!isNaN(code) && code.length >= 10)) {
-      document.getElementById("isbn-input").value = code;
-      fetchMetadata("isbn", code);
-    } else if (code.includes("10.") && code.includes("/")) {
-      let doiMatch = code.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
-      if (doiMatch) {
-        document.getElementById("doi-input").value = doiMatch[0];
-        fetchMetadata("doi", doiMatch[0]);
-      } else {
-        hintElem.textContent = "C�digo QR no parece contener un DOI.";
-        hintElem.style.color = "orange";
+  function flashElement(el) {
+    if (!el) return;
+    el.classList.remove("meta-highlight");
+    void el.offsetWidth;
+    el.classList.add("meta-highlight");
+  }
+
+  function fillForm(title, author, publisher, year, pages) {
+    if(title) {
+      let el = document.getElementById("titulo");
+      if(el) { el.value = title; flashElement(el); }
+    }
+    if(author) {
+      let el = document.getElementById("autor");
+      if(el) { el.value = author; flashElement(el); }
+    }
+    if(publisher) {
+      let el = document.querySelector('input[name="editorial"]');
+      if(el) { el.value = publisher; flashElement(el); }
+      let elMeta = document.getElementById('meta-editorial');
+      if(elMeta) { elMeta.value = publisher; }
+    }
+    if(year) {
+      let y = year.toString().substring(0,4);
+      if(y.length === 4 && !isNaN(y)) {
+        let el = document.querySelector('input[name="fecha_publicacion"]');
+        if(el) { el.value = y + "-01-01"; flashElement(el); }
       }
-    } else {
-      hintElem.textContent = "C�digo no reconocido: " + code;
-      hintElem.style.color = "orange";
+    }
+    if(pages) {
+      let el = document.querySelector('input[name="cantidad_paginas"]');
+      if(el) { el.value = pages; flashElement(el); }
+      let elMeta = document.getElementById('meta-paginas');
+      if(elMeta) { elMeta.value = pages; }
+    }
+    
+    let isbnStr = document.getElementById("isbn-input")?.value?.trim();
+    if(isbnStr) {
+      let el = document.getElementById('meta-isbn');
+      if(el) { el.value = isbnStr; }
+    }
+    
+    let doiStr = document.getElementById("doi-input")?.value?.trim();
+    if(doiStr) {
+      let el = document.getElementById('meta-doi');
+      if(el) { el.value = doiStr; }
     }
   }
 
   async function fetchMetadata(type, value) {
-    hintElem.textContent = "Buscando metadatos...";
-    hintElem.style.color = "#146c5f";
+    if(typeof hintElem !== 'undefined') hintElem.textContent = "";
     
     try {
       if (type === "isbn") {
@@ -845,7 +918,7 @@ document.addEventListener("DOMContentLoaded", function() {
             bookInfo.publish_date,
             bookInfo.number_of_pages
           );
-          hintElem.textContent = "Metadatos obtenidos de Open Library.";
+          alert("¡Se han autocompletado los campos desde OpenLibrary!");
           return;
         }
         
@@ -860,12 +933,11 @@ document.addEventListener("DOMContentLoaded", function() {
             vol.publishedDate,
             vol.pageCount
           );
-          hintElem.textContent = "Metadatos obtenidos de Google Books.";
+          alert("¡Se han autocompletado los campos desde Google Books!");
           return;
         }
         
-        hintElem.textContent = "No se encontraron metadatos para este ISBN.";
-        hintElem.style.color = "orange";
+        alert("No se encontraron metadatos para este identificador. Tendrás que ingresar los datos manualmente.");
       } 
       else if (type === "doi") {
         let res = await fetch(`https://api.crossref.org/works/${value}`);
@@ -879,56 +951,14 @@ document.addEventListener("DOMContentLoaded", function() {
         let year = item.created?.["date-parts"]?.[0]?.[0] || "";
         
         fillForm(title, author, publisher, year, null);
-        hintElem.textContent = "Metadatos obtenidos de Crossref.";
+        alert("¡Se han autocompletado los campos desde Crossref!");
       }
     } catch (e) {
       console.error(e);
-      hintElem.textContent = "Error consultando metadatos.";
-      hintElem.style.color = "red";
+      alert("Ocurrió un error consultando los metadatos.");
     }
   }
 
-  function fillForm(title, author, publisher, year, pages) {
-    if(title) {
-      let el = document.getElementById("titulo");
-      if(el) el.value = title;
-    }
-    if(author) {
-      let el = document.getElementById("autor");
-      if(el) el.value = author;
-    }
-    if(publisher) {
-      let el = document.querySelector('input[name="editorial"]');
-      if(el) el.value = publisher;
-      let elMeta = document.getElementById('meta-editorial');
-      if(elMeta) elMeta.value = publisher;
-    }
-    if(year) {
-      let y = year.toString().substring(0,4);
-      if(y.length === 4 && !isNaN(y)) {
-        let el = document.querySelector('input[name="fecha_publicacion"]');
-        if(el) el.value = y + "-01-01";
-      }
-    }
-    if(pages) {
-      let el = document.querySelector('input[name="cantidad_paginas"]');
-      if(el) el.value = pages;
-      let elMeta = document.getElementById('meta-paginas');
-      if(elMeta) elMeta.value = pages;
-    }
-    
-    let isbnStr = document.getElementById("isbn-input")?.value?.trim();
-    if(isbnStr) {
-      let el = document.getElementById('meta-isbn');
-      if(el) el.value = isbnStr;
-    }
-    
-    let doiStr = document.getElementById("doi-input")?.value?.trim();
-    if(doiStr) {
-      let el = document.getElementById('meta-doi');
-      if(el) el.value = doiStr;
-    }
-  }
 });
 </script>
 
