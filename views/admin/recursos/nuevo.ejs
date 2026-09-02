@@ -793,18 +793,34 @@ document.addEventListener("DOMContentLoaded", function() {
             
             // Parse result and trigger the search button exactly as requested by user
             
-            let rawCode = result.text || (typeof result.getText === 'function' ? result.getText() : '');
-            if (!rawCode) {
-              alert("Error: El código escaneado no contiene texto.");
-              return;
+            
+            try {
+              let rawCode = result.text;
+              if (typeof result.getText === 'function') rawCode = result.getText();
+              
+              if (!rawCode) {
+                alert("Error: result no contiene texto");
+                return;
+              }
+              
+              let cleanCode = rawCode.trim().replace(/-/g, '');
+              
+              let isbnInput = document.getElementById("isbn-input");
+              if (!isbnInput) {
+                 alert("Error: No se encontro isbn-input en el DOM");
+                 return;
+              }
+              
+              isbnInput.value = cleanCode;
+              alert("DEBUG EXITOSO: El ISBN " + cleanCode + " se pego en el input. Haciendo click en consultar...");
+              
+              let btn = document.getElementById("meta-search-btn");
+              if (btn) btn.click();
+              
+            } catch(ex) {
+              alert("ERROR FATAL en JS: " + ex.message);
             }
-            let cleanCode = rawCode.trim().replace(/-/g, '');
-            if (cleanCode.includes("10.") && cleanCode.includes("/")) {
-              let doiMatch = cleanCode.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
-              if (doiMatch) {
-                document.getElementById("doi-input").value = doiMatch[0];
-                document.getElementById("meta-search-btn").click();
-              } else {
+ else {
                 alert("El código escaneado no parece un DOI válido: " + cleanCode);
               }
             } else {
