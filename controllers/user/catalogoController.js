@@ -507,11 +507,26 @@ exports.descargar = async (req, res, next) => {
       });
     }
 
-    if (recurso.digital.estado_disponibilidad !== 'Acceso libre') {
-      return res.status(403).render('error', {
-        title: 'Descarga no permitida',
-        message: 'Los recursos con licencia restringida solo pueden accederse dentro de la plataforma.'
-      });
+    const esLibre = recurso.digital.estado_disponibilidad === 'Acceso libre';
+    if (!esLibre) {
+      if (req.query.visor !== 'true') {
+        return res.status(403).render('error', {
+          title: 'Descarga no permitida',
+          message: 'Los recursos con licencia restringida solo pueden accederse dentro de la plataforma.'
+        });
+      } else {
+        // Es el visor interno solicitando el archivo, verificar préstamo activo
+        const prestamo = await Prestamo.findOne({
+          usuario_id: req.session.userId,
+          tipo: 'Digital',
+          estado: { $in: ['Activo', 'Parcialmente devuelto'] },
+          'items.recurso_id': recurso._id,
+          'items.estado': 'Activo'
+        }).lean();
+        if (!prestamo) {
+          return res.status(403).json({ success: false, message: 'Necesitas un préstamo activo.' });
+        }
+      }
     }
 
     const archivo = archivoPrincipal(recurso);
@@ -520,10 +535,6 @@ exports.descargar = async (req, res, next) => {
         title: 'Archivo no encontrado',
         message: 'No se encontró el archivo.'
       });
-    }
-
-    if (archivo.tipo === 'epub') {
-      return res.redirect(`/catalogo/${recurso._id}/ver`);
     }
 
     // Nombre de descarga limpio

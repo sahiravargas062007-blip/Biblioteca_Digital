@@ -368,17 +368,139 @@
 
     <% if (archivo.tipo === 'epub') { %>
       <!-- ePub: visor epub.js -->
-      <p class="acceso-label">📖 LEYENDO EN LA PLATAFORMA</p>
-      <div id="epub-visor" data-url="<%= archivo.url %>" data-recurso="<%= recurso._id %>" style="width:100%;height:650px;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#fff;">
-        <p style="padding:2rem;text-align:center;color:#888;">Cargando libro...</p>
+      <!-- ePub: visor epub.js -->
+      <style>
+        .page-title-panel h1, .page-title-panel p.author { color: #fdfcf8 !important; }
+        .page-title-panel .back-link { color: #fdfcf8 !important; border-color: #fdfcf8 !important; }
+        
+        .epub-layout {
+          display: flex;
+          gap: 1.5rem;
+          width: 95%;
+          max-width: 1600px;
+          margin: 0.5rem auto 1.5rem auto;
+          height: 88vh;
+        }
+        
+        /* Left Sidebar Toolbar */
+        .epub-toolbar {
+          width: 75px;
+          flex-shrink: 0;
+          background: rgba(20, 20, 20, 0.85);
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 1.5rem 0;
+          gap: 1.5rem;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .epub-tool-btn {
+          background: none; border: none; color: #fdfcf8; cursor: pointer;
+          display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+          font-size: 0.7rem; transition: color 0.2s;
+        }
+        .epub-tool-btn:hover { color: #146c5f; }
+        .epub-tool-btn svg { width: 22px; height: 22px; }
+
+        /* The Book Container */
+        .epub-book-container {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          align-items: stretch;
+          position: relative;
+          background: #2a1610; /* Dark leather cover */
+          padding: 15px 40px;
+          border-radius: 8px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .epub-page-wrapper {
+          flex: 1;
+          min-width: 0;
+          min-height: 0;
+          position: relative;
+          background: #fdfcf8;
+          border-radius: 4px;
+          box-shadow: 0 0 15px rgba(0,0,0,0.2), inset 0 0 30px rgba(0,0,0,0.05);
+          padding: 40px 50px; /* Márgenes reales del libro */
+        }
+
+        #epub-visor {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+        
+        .epub-spine-overlay {
+          position: absolute;
+          top: 0; bottom: 0; left: 50%;
+          width: 60px;
+          transform: translateX(-50%);
+          background: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.04) 30%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 70%, transparent 100%);
+          pointer-events: none;
+          z-index: 10;
+        }
+        
+        .epub-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(255,255,255,0.9);
+          border: 1px solid #ddd;
+          border-radius: 50%;
+          width: 40px; height: 40px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+          z-index: 20;
+          color: #333;
+          font-weight: bold;
+        }
+        .epub-nav-btn:hover { background: #fff; }
+        .epub-nav-prev { left: 8px; }
+        .epub-nav-next { right: 8px; }
+      </style>
+
+      <div class="epub-layout">
+        <!-- Sidebar -->
+        <div class="epub-toolbar">
+          <button class="epub-tool-btn" id="btn-epub-toc" title="Índice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            Índice
+          </button>
+          <button class="epub-tool-btn" id="btn-epub-notes" title="Notas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            Notas
+          </button>
+          <button class="epub-tool-btn" id="btn-epub-font" title="Tamaño de letra">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+            Texto
+          </button>
+          <button class="epub-tool-btn" id="btn-epub-read" title="Leer en voz alta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            Audio
+          </button>
+        </div>
+
+        <!-- Book -->
+        <div class="epub-book-container">
+          <button id="prev-btn" class="epub-nav-btn epub-nav-prev">←</button>
+          <div class="epub-page-wrapper">
+            <div id="epub-visor" data-url="<%= archivo.url %>" data-recurso="<%= recurso._id %>">
+              <p style="padding:2rem;text-align:center;color:#888;">Cargando libro...</p>
+            </div>
+            <div class="epub-spine-overlay"></div>
+          </div>
+          <button id="next-btn" class="epub-nav-btn epub-nav-next">→</button>
+        </div>
       </div>
-      <div style="display:flex;gap:1rem;margin-top:1rem;">
-        <button id="prev-btn" class="btn btn-secondary">← Anterior</button>
-        <button id="next-btn" class="btn btn-primary">Siguiente →</button>
-      </div>
+
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
-      <script src="/js/user/epub-immersive.js"></script>
+      <script src="/js/user/epub-immersive.js?v=<%= Date.now() %>"></script>
 
     <% } else { %>
       <!-- PDF: Google Docs Viewer como proxy de visualización -->

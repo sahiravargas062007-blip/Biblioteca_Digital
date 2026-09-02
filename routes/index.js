@@ -36,6 +36,7 @@ router.use('/historial', require('./user/historial.routes'));
 router.use('/reservas', require('./user/reservas.routes'));
 router.use('/sanciones', require('./user/sanciones.routes'));
 router.use('/perfil', require('./user/perfil.routes'));
+router.use('/user/anotaciones', require('./user/anotaciones.routes'));
 
 router.use(require('./notificaciones.routes'));
 
